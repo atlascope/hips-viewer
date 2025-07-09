@@ -1,0 +1,21 @@
+services:
+  django:
+    build:
+      context: ./atlascope_django
+      dockerfile: Dockerfile
+    command: ["./manage.py", "runserver"]
+    ports:
+      - 8000:8000
+    volumes:
+      - ./atlascope_django:/app
+    working_dir: /app
+  vue:
+    image: node:latest
+    command: ["npm", "run", "serve"]
+    ports:
+      - 8080:8080
+    volumes:
+      - ./atlascope_vue:/web
+    working_dir: /web
+    environment:
+      - API_ROOT=http://localhost:8000/api/
