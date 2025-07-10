@@ -21,7 +21,7 @@ The Atlascope Django application comes with a management script to populate the 
 
 By default, the populate script will download all cases except for the "test" case. The total size of all ten cases is approximately 33 GB. Each case takes a while to download, so it may be helpful to specify only a few desired case names to populate.
 
-You can add the `--cases` argument to the populate script to specify which cases to populate. For example, `--cases TCGA-3C-AALI-01Z-00-DX1,TCGA-3C-AALK-01Z-00-DX1`. Visit the above link to see the list of the ten available case names. The smallest case is `TCGA-3C-AALK-01Z-00-DX1`.
+You can add the `--cases` argument to the populate script to specify which cases to populate. For example, `--cases TCGA-3C-AALI-01Z-00-DX1 TCGA-3C-AALK-01Z-00-DX1`. Visit the above link to see the list of the ten available case names. The smallest case is `TCGA-3C-AALK-01Z-00-DX1`.
 
 You can also add the `--no-cache` argument to redownload case data and overwrite any existing local copies.
 
