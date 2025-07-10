@@ -3,17 +3,18 @@ services:
     build:
       context: ./atlascope_django
       dockerfile: Dockerfile
-    command: ["./manage.py", "runserver"]
+    command: ["./manage.py", "runserver", "0.0.0.0:8000"]
     ports:
       - 8000:8000
     volumes:
       - ./atlascope_django:/app
+      - ./data:/data
     working_dir: /app
   vue:
     image: node:latest
     command: ["npm", "run", "serve"]
     ports:
-      - 8080:8080
+      - 3000:3000
     volumes:
       - ./atlascope_vue:/web
     working_dir: /web
