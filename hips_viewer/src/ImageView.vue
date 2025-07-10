@@ -22,7 +22,10 @@ const cellDrawerHeight = ref(100);
 const cellDrawerResizing = ref(false)
 
 function init() {
-    status.value = 'Drawing image...'
+    status.value = 'Fetching cell data...'
+    fetchImageCells(props.image.id).then((data) => {
+        cells.value = data;
+    })
     fetch(props.image.tile_url).then(response => response.json().then(tileInfo => {
         const maxZoom = tileInfo.levels - 1;
         let params = geo.util.pixelCoordinateParams(
@@ -36,7 +39,7 @@ function init() {
         const cellLayer = map.createLayer('feature', {
             features: ['marker']
         });
-        cellFeature.value = cellLayer.createFeature('marker', {primitiveShape: 'triangle'}).style({
+        cellFeature.value = cellLayer.createFeature('marker').style({
             radius: (item: any) => item.width / (2 ** (maxZoom + 1)),
             rotation: (item: any) => item.width > item.height ? item.orientation : item.orientation + Math.PI / 2,
             symbolValue: (item: any) => Math.min(item.width, item.height) / Math.max(item.width, item.height),
@@ -65,10 +68,6 @@ function init() {
         })
 
         map.draw()
-        status.value = 'Fetching cell data...'
-        fetchImageCells(props.image.id).then((data) => {
-            cells.value = data;
-        })
     }));
 }
 
