@@ -1,5 +1,5 @@
 """
-WSGI config for atlascope_django project.
+WSGI config for hips_server project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'atlascope_django.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hips_server.settings')
 
 application = get_wsgi_application()

@@ -1,5 +1,5 @@
 """
-ASGI config for atlascope_django project.
+ASGI config for hips_server project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
