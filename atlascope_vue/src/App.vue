@@ -1,11 +1,74 @@
 <script setup lang="ts">
-  //
+import { onMounted, ref } from 'vue';
+import { fetchImages } from '@/api';
+import ImageView from '@/ImageView.vue';
+
+const icons = [
+  'account_circle',
+  'unfold_more'
+]
+
+const images = ref()
+const currentImage = ref()
+
+onMounted(() => {
+  fetchImages().then((data) => {
+    images.value = data;
+    console.log(images.value)
+    if (images.value.length) currentImage.value = images.value[0]
+  })
+})
 </script>
 
 <template>
-  <v-app>
-    <v-main>
-      Hello World!
-    </v-main>
-  </v-app>
+  <v-toolbar color="background" height="40">
+    <link rel="stylesheet" :href="'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=' + icons.join(',')" />
+    <v-img src="/logo.png" max-width="120" />
+    <span class="material-symbols-outlined">
+        account_circle
+    </span>
+    <template v-slot:extension>
+      <v-tabs
+        v-model="currentImage"
+        height="30"
+        center-active
+        grow
+      >
+        <v-tab
+          v-for="image, index in images"
+          :key="index"
+          :text="image.name"
+          :value="image"
+        />
+      </v-tabs>
+    </template>
+  </v-toolbar>
+
+  <v-tabs-window v-model="currentImage">
+    <v-tabs-window-item
+      v-for="image, index in images"
+      :key="index"
+      :value="image"
+    >
+      <ImageView :image="image" :id="index"/>
+    </v-tabs-window-item>
+  </v-tabs-window>
 </template>
+
+<style>
+html, body, #app, .v-window, .v-window__container, .v-window-item, .map-container, .map{
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+.v-toolbar__content {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 16px;
+}
+.v-toolbar__extension {
+  height: 30px !important;
+}
+</style>

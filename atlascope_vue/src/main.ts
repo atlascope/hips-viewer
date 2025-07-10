@@ -6,7 +6,7 @@ import App from './App.vue'
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 const vuetify = createVuetify({
   theme: {
-    defaultTheme: 'dark',
+    defaultTheme: 'light',
   },
 })
 
