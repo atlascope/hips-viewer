@@ -1,8 +1,8 @@
 from pathlib import Path
 
 
-SAMPLE_DATA_SERVER = 'https://data.kitware.com/api/v1'
-SAMPLE_DATA_COLLECTION = '66a14ec45d2551c516b1d5d7'
+SAMPLE_DATA_SERVER = 'https://demo.kitware.com/histomicstk/api/v1'
+SAMPLE_DATA_COLLECTION = '686fddd7f5546bd5eacbe40b'
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DOWNLOADS_FOLDER = Path(PROJECT_ROOT, 'data', 'downloads')
 IMAGE_SUFFIXES = ['.svs']
