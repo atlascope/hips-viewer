@@ -14,7 +14,6 @@ const currentImage = ref()
 onMounted(() => {
   fetchImages().then((data) => {
     images.value = data;
-    console.log(images.value)
     if (images.value.length) currentImage.value = images.value[0]
   })
 })
