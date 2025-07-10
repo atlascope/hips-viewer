@@ -1,5 +1,5 @@
-atlascope_django/db.sqlite3
-atlascope_vue/node_modules
+hips_server/db.sqlite3
+hips_viewer/node_modules
 
 data
 **/__pycache__

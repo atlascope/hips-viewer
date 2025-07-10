@@ -1,13 +1,13 @@
 services:
   django:
     build:
-      context: ./atlascope_django
+      context: ./hips_server
       dockerfile: Dockerfile
     command: ["./manage.py", "runserver", "0.0.0.0:8000"]
     ports:
       - 8000:8000
     volumes:
-      - ./atlascope_django:/app
+      - ./hips_server:/app
       - ./data:/data
     working_dir: /app
   vue:
@@ -16,7 +16,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./atlascope_vue:/web
+      - ./hips_viewer:/web
     working_dir: /web
     environment:
       - API_ROOT=http://localhost:8000/api/

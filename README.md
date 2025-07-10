@@ -1,4 +1,4 @@
-# Atlascope Phase II
+# Atlascope Phase II - HIPS Viewer App
 
 ### Overview
 
@@ -6,7 +6,7 @@ TODO
 
 ### Initial Setup
 
-1. To prepare the web client, install its requirements with `cd atlascope_vue && npm i`.
+1. To prepare the web client, install its requirements with `cd hips_viewer && npm i`.
 2. Run the docker containers with `docker compose up`. Be sure to check that containers were able to start and stay running successfully before continuing.
 3. While the containers are up, run the following commands in a separate terminal to prepare the database:
 
@@ -17,7 +17,7 @@ TODO
 
 ### Populate sample data
 
-The Atlascope Django application comes with a management script to populate the database with sample data from ((link)). Cases will be downloaded to the `data/downloads` directory.
+The HIPS Server comes with a management script to populate the database with sample data from ((link)). Cases will be downloaded to the `data/downloads` directory.
 
 By default, the populate script will download all cases except for the "test" case. The total size of all ten cases is approximately 33 GB. Each case takes a while to download, so it may be helpful to specify only a few desired case names to populate.
 
@@ -29,7 +29,7 @@ The populate script can either be run natively or within the Django docker conta
 
 To run natively:
 
-1.  `cd atlascope_django`
+1.  `cd hips_server`
 2.  `pip install -r requirements.txt`
 3.  `./manage.py populate`
 
