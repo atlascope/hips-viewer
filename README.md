@@ -17,7 +17,7 @@ TODO
 
 ### Populate sample data
 
-The HIPS Server comes with a management script to populate the database with sample data from ((link)). Cases will be downloaded to the `data/downloads` directory.
+The HIPS Server comes with a management script to populate the database with sample data from [demo.kitware.com](https://demo.kitware.com/histomicstk/#collection/686fddcaf5546bd5eacbe40a). Cases will be downloaded to the `data/downloads` directory.
 
 By default, the populate script will download all cases except for the "test" case. The total size of all ten cases is approximately 33 GB. Each case takes a while to download, so it may be helpful to specify only a few desired case names to populate.
 
