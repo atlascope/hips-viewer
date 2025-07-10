@@ -1,2 +1,5 @@
 atlascope_django/db.sqlite3
 atlascope_vue/node_modules
+
+data
+**/__pycache__

@@ -15,6 +15,28 @@ TODO
    b. Run `docker compose run --rm django ./manage.py createsuperuser`
    and follow the prompts to create your own user.
 
+### Populate sample data
+
+The Atlascope Django application comes with a management script to populate the database with sample data from ((link)). Cases will be downloaded to the `data/downloads` directory.
+
+By default, the populate script will download all cases except for the "test" case. The total size of all ten cases is approximately 33 GB. Each case takes a while to download, so it may be helpful to specify only a few desired case names to populate.
+
+You can add the `--cases` argument to the populate script to specify which cases to populate. For example, `--cases TCGA-3C-AALI-01Z-00-DX1,TCGA-3C-AALK-01Z-00-DX1`. Visit the above link to see the list of the ten available case names. The smallest case is `TCGA-3C-AALK-01Z-00-DX1`.
+
+You can also add the `--no-cache` argument to redownload case data and overwrite any existing local copies.
+
+The populate script can either be run natively or within the Django docker container. In both contexts, the data will be downloaded to the same location.
+
+To run natively:
+
+1.  `cd atlascope_django`
+2.  `pip install -r requirements.txt`
+3.  `./manage.py populate`
+
+To run within the Django docker container:
+
+1.  `docker compose run --rm django ./manage.py populate`
+
 ### Run Application
 
 1. Run `docker compose up`.
