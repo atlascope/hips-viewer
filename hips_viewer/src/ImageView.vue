@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import geo from 'geojs';
+import { addZoomCallback, createFeatures, createMap } from '@/map';
 import { fetchImageCells } from '@/api';
 import type { Image } from '@/types'
 import CellDrawer from '@/CellDrawer.vue';
@@ -14,6 +14,7 @@ const ZOOM_THRESHOLD = 7
 const defaultColor = '#00ff00'
 
 const mapId = computed(() => 'map-' + props.id)
+const map = ref();
 const status = ref();
 const cells = ref();
 const cellFeature = ref()
@@ -26,49 +27,13 @@ function init() {
     fetchImageCells(props.image.id).then((data) => {
         cells.value = data;
     })
-    fetch(props.image.tile_url).then(response => response.json().then(tileInfo => {
-        const maxZoom = tileInfo.levels - 1;
-        let params = geo.util.pixelCoordinateParams(
-            '#' + mapId.value, tileInfo.sizeX, tileInfo.sizeY, tileInfo.tileWidth, tileInfo.tileHeight
-        );
-        const map = geo.map(params.map);
-        params.layer.url = `${props.image.tile_url}/zxy/{z}/{x}/{y}`;
-        map.createLayer('osm', params.layer);
-        const ui = map.createLayer('ui');
-        ui.createWidget('slider', {position: {right: 40, top: 40}});
-        const cellLayer = map.createLayer('feature', {
-            features: ['marker']
-        });
-        cellFeature.value = cellLayer.createFeature('marker').style({
-            radius: (item: any) => item.width / (2 ** (maxZoom + 1)),
-            rotation: (item: any) => item.width > item.height ? item.orientation : item.orientation + Math.PI / 2,
-            symbolValue: (item: any) => Math.min(item.width, item.height) / Math.max(item.width, item.height),
-            symbol: geo.markerFeature.symbols.ellipse,
-            scaleWithZoom: geo.markerFeature.scaleMode.fill,
-            rotateWithMap: true,
-            strokeColor: defaultColor,
-            strokeWidth: 2,
-            strokeOffset: 1,
-            strokeOpacity: 1,
-            fillOpacity: 0,
-        })
-        cellFeature.value.visible(false)
-
-        pointFeature.value = cellLayer.createFeature('point', {
-            style: {
-                strokeWidth: 0,
-                fillColor: defaultColor,
-            }
-        });
-        pointFeature.value.clustering({radius: 10})
-
-        map.geoOn(geo.event.zoom, ({zoomLevel}: any) => {
-            cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
-            pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
-        })
-
-        map.draw()
-    }));
+    createMap(mapId.value, props.image.tile_url).then((result) => {
+        map.value = result;
+        const features = createFeatures(map.value, defaultColor)
+        cellFeature.value = features.cellFeature
+        pointFeature.value = features.pointFeature
+        addZoomCallback(map.value, onZoom)
+    })
 }
 
 function drawCells() {
@@ -76,6 +41,11 @@ function drawCells() {
     cellFeature.value.data(cells.value).draw()
     pointFeature.value.data(cells.value).draw()
     status.value = undefined;
+}
+
+function onZoom({zoomLevel}: any) {
+    cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
+    pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
 }
 
 function resizeCellDrawer(e: MouseEvent) {
