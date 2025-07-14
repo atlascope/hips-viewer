@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
-import { addZoomCallback, createFeatures, createMap } from '@/map';
+import { addHoverCallback, addZoomCallback, createFeatures, createMap } from '@/map';
 import { fetchImageCells } from '@/api';
 import type { Image } from '@/types'
 import CellDrawer from '@/CellDrawer.vue';
@@ -16,11 +16,16 @@ const defaultColor = '#00ff00'
 const mapId = computed(() => 'map-' + props.id)
 const map = ref();
 const status = ref();
+
 const cells = ref();
 const cellFeature = ref()
 const pointFeature = ref()
 const cellDrawerHeight = ref(100);
 const cellDrawerResizing = ref(false)
+
+const tooltipEnabled = ref(true)
+const tooltipContent = ref()
+const tooltipPosition = ref()
 
 function init() {
     status.value = 'Fetching cell data...'
@@ -33,6 +38,7 @@ function init() {
         cellFeature.value = features.cellFeature
         pointFeature.value = features.pointFeature
         addZoomCallback(map.value, onZoom)
+        addHoverCallback(cellFeature.value, onHoverOver)
     })
 }
 
@@ -46,6 +52,13 @@ function drawCells() {
 function onZoom({zoomLevel}: any) {
     cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
     pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
+}
+
+function onHoverOver({data, mouse}: any) {
+    if (tooltipEnabled.value) {
+        tooltipContent.value = data
+        tooltipPosition.value = mouse.map
+    }
 }
 
 function resizeCellDrawer(e: MouseEvent) {
@@ -76,6 +89,22 @@ watch(cells, drawCells)
         <v-card class="cell-drawer" :style="{height: cellDrawerHeight + 'px'}">
             <CellDrawer v-if="cells?.length" :cells="cells" :height="cellDrawerHeight" :tile_url="props.image.tile_url"/>
         </v-card>
+        <div class="actions">
+            <v-btn icon v-tooltip="'Toggle Tooltip'" @click="tooltipEnabled = !tooltipEnabled">
+                <span class="material-symbols-outlined">
+                    {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
+                </span>
+            </v-btn>
+        </div>
+        <v-card
+            v-if="tooltipEnabled && tooltipContent && tooltipPosition"
+            :style="{top: tooltipPosition.y + 'px', left: tooltipPosition.x + 'px'}"
+            class="tooltip"
+        >
+            <div v-for="[key, value] in Object.entries(tooltipContent)">
+                {{ key }}: {{ value }}
+            </div>
+        </v-card>
     </div>
 </template>
 
@@ -99,5 +128,18 @@ watch(cells, drawCells)
     z-index: 2;
     cursor: ns-resize;
     user-select: none;
+}
+.actions {
+    position: absolute;
+    top: 15px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+.tooltip {
+    position: absolute !important;
+    width: fit-content;
+    padding: 10px !important;
 }
 </style>

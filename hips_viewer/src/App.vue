@@ -3,10 +3,6 @@ import { onMounted, ref } from 'vue';
 import { fetchImages } from '@/api';
 import ImageView from '@/ImageView.vue';
 
-const icons = [
-  'account_circle',
-  'unfold_more'
-]
 
 const images = ref()
 const currentImage = ref()
@@ -21,11 +17,7 @@ onMounted(() => {
 
 <template>
   <v-toolbar color="background" height="40">
-    <link rel="stylesheet" :href="'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=' + icons.join(',')" />
     <v-img src="/logo.png" max-width="120" />
-    <span class="material-symbols-outlined">
-        account_circle
-    </span>
     <template v-slot:extension>
       <v-tabs
         v-model="currentImage"

@@ -46,6 +46,10 @@ export function createFeatures(map: any, color: string) {
     return { cellFeature, pointFeature }
 }
 
-export async function addZoomCallback(map: any, callback: Function) {
+export function addZoomCallback(map: any, callback: Function) {
     map.geoOn(geo.event.zoom, callback)
+}
+
+export function addHoverCallback(feature: any, callback: Function) {
+    feature.geoOn(geo.event.feature.mouseover, callback)
 }
