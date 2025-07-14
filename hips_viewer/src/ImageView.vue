@@ -3,7 +3,9 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { addHoverCallback, addZoomCallback, createFeatures, createMap } from '@/map';
 import { fetchImageCells } from '@/api';
 import type { Image } from '@/types'
+
 import CellDrawer from '@/CellDrawer.vue';
+import ColorOptions from '@/ColorOptions.vue';
 
 const props = defineProps<{
     id: number;
@@ -90,6 +92,12 @@ watch(cells, drawCells)
             <CellDrawer v-if="cells?.length" :cells="cells" :height="cellDrawerHeight" :tile_url="props.image.tile_url"/>
         </v-card>
         <div class="actions">
+            <v-btn icon>
+                <span class="material-symbols-outlined">palette</span>
+                <v-menu activator="parent" location="end" open-on-hover :close-on-content-click="false">
+                    <ColorOptions />
+                </v-menu>
+            </v-btn>
             <v-btn icon v-tooltip="'Toggle Tooltip'" @click="tooltipEnabled = !tooltipEnabled">
                 <span class="material-symbols-outlined">
                     {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
@@ -141,5 +149,10 @@ watch(cells, drawCells)
     position: absolute !important;
     width: fit-content;
     padding: 10px !important;
+}
+.menu-title {
+    background-color: #ddd;
+    padding: 5px 10px;
+    width: 100%
 }
 </style>
