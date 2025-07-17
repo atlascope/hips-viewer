@@ -7,6 +7,7 @@ import {
     status, cells, cellFeature, pointFeature,
     cellDrawerHeight, cellDrawerResizing,
     tooltipEnabled, tooltipContent, tooltipPosition,
+    colormapName, map,
 } from '@/store';
 
 import CellDrawer from '@/CellDrawer.vue';
@@ -30,20 +31,24 @@ function init() {
         createFeatures(defaultColor)
         addZoomCallback(onZoom)
         addHoverCallback(onHoverOver, cellFeature.value)
+        if (cells.value) drawCells()
     })
 }
 
 function drawCells() {
-    status.value = 'Drawing cells...'
-    cellFeature.value.data(cells.value).draw()
-    pointFeature.value.data(cells.value).draw()
-    updateColors()
-    status.value = undefined;
+    if (cellFeature.value && pointFeature.value) {
+        status.value = 'Drawing cells...'
+        cellFeature.value.data(cells.value).draw()
+        pointFeature.value.data(cells.value).draw()
+        updateColors()
+        status.value = undefined;
+    }
 }
 
 function onZoom({zoomLevel}: any) {
-    cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
-    pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
+    cellFeature.value.visible((zoomLevel > ZOOM_THRESHOLD) && !!colormapName.value)
+    pointFeature.value.visible((zoomLevel <= ZOOM_THRESHOLD) && !!colormapName.value)
+    map.value.draw()
 }
 
 function onHoverOver({data, mouse}: any) {
@@ -59,6 +64,9 @@ function resizeCellDrawer(e: MouseEvent) {
 
 onMounted(init)
 watch(cells, drawCells)
+watch(colormapName, () => {
+    onZoom({zoomLevel: map.value.zoom()})
+})
 </script>
 
 <template>

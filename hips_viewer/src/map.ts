@@ -5,7 +5,7 @@ import {
     cells, map, maxZoom, cellFeature, pointFeature,
     colorBy, colormapName, colorLegend,
 } from '@/store'
-import { colorInterpolate } from './utils';
+import { colorInterpolate, hexToRgb } from './utils';
 
 
 export async function createMap(mapId: string, tileUrl: string) {
@@ -72,6 +72,7 @@ export function updateColors() {
         const colormapSets = colorbrewer[colormapName.value]
         let colors = colormapSets[values.length];
         if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map((v) => parseInt(v)))]
+        const rgbColors = colors.map(hexToRgb)
 
         let colormapFunction;
         if (values.every((v) => typeof v === 'number')) {
@@ -84,12 +85,14 @@ export function updateColors() {
                 colors,
             }])
             colormapFunction = (v: number) => {
-                // TODO: fix linear interpolation logic
                 const valueProportion = (v - range[0]) / (range[1] - range[0])
-                if (valueProportion === 1) return colors[colors.length - 1]
-                const index = Math.floor(colors.length * valueProportion)
-                const indexProportion = index / colors.length
-                return colorInterpolate(colors[index], colors[index+1], valueProportion - indexProportion)
+                const maxIndex = rgbColors.length - 1
+                if (valueProportion === 1) return rgbColors[maxIndex]
+                const index = Math.floor(maxIndex * valueProportion)
+                const indexProportion = index / maxIndex
+                const interpolationProportion = (valueProportion - indexProportion) * maxIndex
+                const interpolated = colorInterpolate(rgbColors[index], rgbColors[index+1], interpolationProportion)
+                return interpolated
             }
         } else {
             colorLegend.value.categories([{
@@ -101,10 +104,10 @@ export function updateColors() {
             }])
             colormapFunction = (v: any) => {
                 const proportion = values.indexOf(v) / values.length
-                return colors[Math.round(colors.length * proportion)]
+                return rgbColors[Math.round(rgbColors.length * proportion)]
             }
         }
-        // TODO: set colorLegend.value.width to colorLegend.value.canvas().clientWidth
+        colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
 
         if (colormapFunction) {
             const cellColors = cells.value.map((cell: any) => {
@@ -120,7 +123,5 @@ export function updateColors() {
         }
     } else {
         colorLegend.value.categories([])
-        cellFeature.value.visible(false)
-        pointFeature.value.visible(false)
     }
 }

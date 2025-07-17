@@ -1,3 +1,5 @@
+interface RGB {r: number, g: number, b: number}
+
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
 export function hexToRgb(hex: string) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -12,7 +14,7 @@ export function hexToRgb(hex: string) {
 }
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-export function rgbToHex(color: {r: number, g: number, b: number}) {
+export function rgbToHex(color: RGB) {
    let {r, g, b} = color
     r *= 255;
     g *= 255;
@@ -21,15 +23,10 @@ export function rgbToHex(color: {r: number, g: number, b: number}) {
 }
 
 // from https://stackoverflow.com/questions/66123016/interpolate-between-two-colours-based-on-a-percentage-value
-export function colorInterpolate(colorA: string, colorB: string, proportion: number) {
-    const rgbA = hexToRgb(colorA)
-    const rgbB = hexToRgb(colorB)
-    if (rgbA && rgbB) {
-        return rgbToHex({
-            r: rgbA.r * (1 - proportion) + rgbB.r * proportion,
-            g: rgbA.g * (1 - proportion) + rgbB.g * proportion,
-            b: rgbA.b * (1 - proportion) + rgbB.b * proportion,
-        })
+export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
+    return {
+        r: rgbA.r * (1 - proportion) + rgbB.r * proportion,
+        g: rgbA.g * (1 - proportion) + rgbB.g * proportion,
+        b: rgbA.b * (1 - proportion) + rgbB.b * proportion,
     }
-    return null
 }
