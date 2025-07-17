@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import colorbrewer from 'colorbrewer';
+import {
+    selectedColor, colorBy, attributeOptions, colormap
+} from '@/store';
 
-const selectedColor = ref('#0f0')
 const showPicker = ref(false)
-const colorBy = ref('classification')
-const attributeOptions = ref([
-    'classification'
-])
 const colormapType = ref<
     'qualitative' | 'sequential' | 'diverging'
 >('qualitative')
-const colormap = ref<string | undefined>('Paired')
 
 watch(colormapType, () => colormap.value = undefined)
 </script>

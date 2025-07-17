@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { addHoverCallback, addZoomCallback, createFeatures, createMap } from '@/map';
 import { fetchImageCells } from '@/api';
 import type { Image } from '@/types'
+import {
+    status, cells, cellFeature, pointFeature,
+    cellDrawerHeight, cellDrawerResizing,
+    tooltipEnabled, tooltipContent, tooltipPosition,
+} from '@/store';
 
 import CellDrawer from '@/CellDrawer.vue';
 import ColorOptions from '@/ColorOptions.vue';
@@ -14,33 +19,17 @@ const props = defineProps<{
 
 const ZOOM_THRESHOLD = 7
 const defaultColor = '#00ff00'
-
 const mapId = computed(() => 'map-' + props.id)
-const map = ref();
-const status = ref();
-
-const cells = ref();
-const cellFeature = ref()
-const pointFeature = ref()
-const cellDrawerHeight = ref(100);
-const cellDrawerResizing = ref(false)
-
-const tooltipEnabled = ref(true)
-const tooltipContent = ref()
-const tooltipPosition = ref()
 
 function init() {
     status.value = 'Fetching cell data...'
     fetchImageCells(props.image.id).then((data) => {
         cells.value = data;
     })
-    createMap(mapId.value, props.image.tile_url).then((result) => {
-        map.value = result;
-        const features = createFeatures(map.value, defaultColor)
-        cellFeature.value = features.cellFeature
-        pointFeature.value = features.pointFeature
-        addZoomCallback(map.value, onZoom)
-        addHoverCallback(cellFeature.value, onHoverOver)
+    createMap(mapId.value, props.image.tile_url).then(() => {
+        createFeatures(defaultColor)
+        addZoomCallback(onZoom)
+        addHoverCallback(onHoverOver, cellFeature.value)
     })
 }
 
