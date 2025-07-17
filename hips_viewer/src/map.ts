@@ -110,16 +110,12 @@ export function updateColors() {
         colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
 
         if (colormapFunction) {
-            const cellColors = cells.value.map((cell: any) => {
+            const styleCellFunction = (cell: any) => {
                 // TODO: if selected, return selectedColor
                 return colormapFunction(cell[colorBy.value])
-            })
-            cellFeature.value.updateStyleFromArray({
-                strokeColor: cellColors
-            }, null, true)
-            pointFeature.value.updateStyleFromArray({
-                fillColor: cellColors
-            }, null, true)
+            }
+            cellFeature.value.style('strokeColor', styleCellFunction).draw()
+            pointFeature.value.style('fillColor', styleCellFunction).draw()
         }
     } else {
         colorLegend.value.categories([])
