@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
-import { addHoverCallback, addZoomCallback, createFeatures, createMap } from '@/map';
+import { addHoverCallback, addZoomCallback, createFeatures, createMap, updateColors } from '@/map';
 import { fetchImageCells } from '@/api';
 import type { Image } from '@/types'
 import {
@@ -37,6 +37,7 @@ function drawCells() {
     status.value = 'Drawing cells...'
     cellFeature.value.data(cells.value).draw()
     pointFeature.value.data(cells.value).draw()
+    updateColors()
     status.value = undefined;
 }
 

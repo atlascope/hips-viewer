@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import colorbrewer from 'colorbrewer';
 import {
-    selectedColor, colorBy, attributeOptions, colormap
+    selectedColor, colorBy, attributeOptions, colormapName
 } from '@/store';
 
 const showPicker = ref(false)
@@ -10,7 +10,7 @@ const colormapType = ref<
     'qualitative' | 'sequential' | 'diverging'
 >('qualitative')
 
-watch(colormapType, () => colormap.value = undefined)
+watch(colormapType, () => colormapName.value = undefined)
 </script>
 
 <template>
@@ -46,7 +46,7 @@ watch(colormapType, () => colormap.value = undefined)
                 <v-tab value="diverging">Diverging</v-tab>
             </v-tabs>
             <v-select
-                v-model="colormap"
+                v-model="colormapName"
                 label="Colormap"
                 :items="colorbrewer.schemeGroups[colormapType]"
             ></v-select>
