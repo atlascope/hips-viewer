@@ -5,7 +5,7 @@ import {
     cells, map, maxZoom, cellFeature, pointFeature,
     colorBy, colormapName, colorLegend,
 } from '@/store'
-import { colorInterpolate, hexToRgb } from './utils';
+import { clusterFirstPoint, colorInterpolate, hexToRgb } from './utils';
 
 
 export async function createMap(mapId: string, tileUrl: string) {
@@ -27,7 +27,7 @@ export async function createMap(mapId: string, tileUrl: string) {
     map.value.draw()
 }
 
-export function createFeatures(color: string) {
+export function createFeatures(color: string, zoomThreshold: number) {
     const cellLayer = map.value.createLayer('feature', {
         features: ['marker']
     });
@@ -52,7 +52,7 @@ export function createFeatures(color: string) {
             fillColor: color,
         }
     });
-    pointFeature.value.clustering({radius: 10})
+    pointFeature.value.clustering({radius: 10, maxZoom: zoomThreshold})
 }
 
 export function addZoomCallback(callback: Function) {
@@ -103,15 +103,23 @@ export function updateColors() {
                 colors,
             }])
             colormapFunction = (v: any) => {
-                const proportion = values.indexOf(v) / values.length
-                return rgbColors[Math.round(rgbColors.length * proportion)]
+                const index = values.indexOf(v)
+                if (index >= 0) {
+                    const proportion = values.indexOf(v) / values.length
+                    return rgbColors[Math.round(rgbColors.length * proportion)]
+                }
+
+                return {r: 0, g: 0, b: 0}
             }
         }
         colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
 
         if (colormapFunction) {
-            const styleCellFunction = (cell: any) => {
+            const styleCellFunction = (cell: any, i: number) => {
                 // TODO: if selected, return selectedColor
+                if (cell.__cluster) {
+                    cell = clusterFirstPoint(cells.value, cell, i)
+                }
                 return colormapFunction(cell[colorBy.value])
             }
             cellFeature.value.style('strokeColor', styleCellFunction).draw()

@@ -28,7 +28,7 @@ function init() {
         cells.value = data;
     })
     createMap(mapId.value, props.image.tile_url).then(() => {
-        createFeatures(defaultColor)
+        createFeatures(defaultColor, ZOOM_THRESHOLD)
         addZoomCallback(onZoom)
         addHoverCallback(onHoverOver, cellFeature.value)
         if (cells.value) drawCells()

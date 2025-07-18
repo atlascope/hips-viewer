@@ -30,3 +30,14 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
         b: rgbA.b * (1 - proportion) + rgbB.b * proportion,
     }
 }
+
+export function clusterFirstPoint (data: any, d: any, i: number) {
+  if (d.__cluster) {
+    d = d.obj;
+  }
+  if (d._points === undefined)  return d;
+  if (d._points.length) {
+    return data[d._points[0].index];
+  }
+  return clusterFirstPoint(data, d._clusters[0], i);
+}
