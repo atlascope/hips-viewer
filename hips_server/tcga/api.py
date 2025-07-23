@@ -3,6 +3,8 @@ from ninja.pagination import paginate
 from typing import List
 from .models import Image, Cell
 
+from tcga.constants import VECTOR_COLUMNS
+
 
 api = NinjaAPI()
 
@@ -21,6 +23,7 @@ class CellSchema(Schema):
     height: float
     orientation: float
     classification: str
+    vector_text: str
 
 
 @api.get("/images", response=List[ImageSchema])
@@ -32,3 +35,8 @@ def images(request):
 @paginate()
 def cells(request, image_id):
     return Cell.objects.filter(image__id=image_id)
+
+
+@api.get("/cells/columns")
+def cell_columns(request):
+    return VECTOR_COLUMNS
