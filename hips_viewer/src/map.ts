@@ -3,9 +3,13 @@ import colorbrewer from 'colorbrewer';
 
 import {
     cells, map, maxZoom, cellFeature, pointFeature,
-    colorBy, colormapName, colorLegend,
+    colorBy, colormapName, colorLegend, cellColors,
 } from '@/store'
-import { clusterFirstPoint, colorInterpolate, getCellAttribute, hexToRgb } from './utils';
+import {
+    clusterFirstPoint, colorInterpolate,
+    getCellAttribute, hexToRgb, rgbToHex
+} from './utils';
+import type { Cell } from './types';
 
 
 export async function createMap(mapId: string, tileUrl: string) {
@@ -122,16 +126,20 @@ export function updateColors() {
     colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
 
     if (colormapFunction) {
-        const styleCellFunction = (cell: any, i: number) => {
+        const getCellColor = (cell: any) => {
             // TODO: if selected, return selectedColor
-            if (cell.__cluster) {
-                cell = clusterFirstPoint(cells.value, cell, i)
-            }
             const value = getCellAttribute(cell, colorBy.value)
             if (value === undefined) return { r: 0, g: 0, b: 0 }
             return colormapFunction(value)
         }
+        const styleCellFunction = (cell: any, i: number) => {
+            if (cell.__cluster) {
+                cell = clusterFirstPoint(cells.value, cell, i)
+            }
+            return getCellColor(cell)
+        }
         cellFeature.value.style('strokeColor', styleCellFunction).draw()
         pointFeature.value.style('fillColor', styleCellFunction).draw()
+        cellColors.value = Object.fromEntries(cells.value.map((cell: Cell) => [cell.id, rgbToHex(getCellColor(cell))]))
     }
 }

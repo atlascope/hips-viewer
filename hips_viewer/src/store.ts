@@ -8,6 +8,7 @@ export const fetchProgress = ref(0);
 
 export const cells = ref();
 export const cellColumns = ref();
+export const cellColors = ref();
 export const cellFeature = ref()
 export const pointFeature = ref()
 export const cellDrawerHeight = ref(0);

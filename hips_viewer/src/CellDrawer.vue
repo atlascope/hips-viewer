@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Cell, Thumbnail } from '@/types';
+import { cellColors } from './store';
 
 const props = defineProps<{
     cells: Cell[],
@@ -44,8 +45,15 @@ function loadThumbnails({ done }: any) {
                 v-for="(thumbnail, index) in thumbnails"
                 :key="index"
                 :src="thumbnail.src"
-                :width="thumbnail.width"
-                :height="thumbnail.height"
+                :width="thumbnail.width + 4"
+                :height="thumbnail.height + 4"
+                :style="`border-color:${
+                    cellColors[thumbnail.id]
+                };border-width:${
+                    cellColors[thumbnail.id] ? 4 : 0
+                }px;padding:${
+                    cellColors[thumbnail.id] ? 0 : 4
+                }px`"
                 class="cell-thumbnail"
             />
         </div>
@@ -61,5 +69,7 @@ function loadThumbnails({ done }: any) {
 .cell-thumbnail {
     margin: 5px;
     display: inline;
+    border-width: 4px;
+    border-style: solid;
 }
 </style>

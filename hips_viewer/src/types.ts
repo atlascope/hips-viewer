@@ -5,6 +5,7 @@ export interface Image {
 }
 
 export interface Cell  {
+    id: number;
     x: number;
     y: number;
     width: number;
@@ -15,6 +16,7 @@ export interface Cell  {
 }
 
 export interface Thumbnail {
+    id: number;
     src: string;
     width: number;
     height: number;
