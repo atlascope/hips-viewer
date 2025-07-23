@@ -23,15 +23,17 @@ const defaultColor = '#00ff00'
 const mapId = computed(() => 'map-' + props.id)
 
 function init() {
-    status.value = 'Fetching cell data...'
-    fetchImageCells(props.image.id).then((data) => {
-        cells.value = data;
-    })
     createMap(mapId.value, props.image.tile_url).then(() => {
         createFeatures(defaultColor, ZOOM_THRESHOLD)
         addZoomCallback(onZoom)
         addHoverCallback(onHoverOver, cellFeature.value)
-        if (cells.value) drawCells()
+    })
+}
+
+function getCells() {
+    status.value = 'Fetching cell data...'
+    fetchImageCells(props.image.id).then((data) => {
+        cells.value = data;
     })
 }
 
@@ -41,6 +43,7 @@ function drawCells() {
         cellFeature.value.data(cells.value).draw()
         pointFeature.value.data(cells.value).draw()
         updateColors()
+        cellDrawerHeight.value = 100;
         status.value = undefined;
     }
 }
@@ -75,9 +78,14 @@ watch(colormapName, () => {
         @mousemove="resizeCellDrawer"
     >
         <div :id="mapId" class="map" :style="{height: `calc(100% - ${cellDrawerHeight + 70}px) !important`}"></div>
-        <v-card v-if="status" class="status" :style="{bottom: cellDrawerHeight + 80 + 'px'}">
-            {{ status }}
-        </v-card>
+        <div class="status" :style="{bottom: cellDrawerHeight + 80 + 'px'}">
+            <v-card v-if="status" class="px-4 py-2">
+                {{ status }}
+            </v-card>
+            <v-btn v-else-if="!cells" @click="getCells" color="black">
+                Fetch Cell Data
+            </v-btn>
+        </div>
         <span
             class="material-symbols-outlined cell-drawer-resize"
             :style="{bottom: cellDrawerHeight + 55 + 'px'}"

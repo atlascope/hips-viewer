@@ -10,7 +10,7 @@ export const status = ref();
 export const cells = ref();
 export const cellFeature = ref()
 export const pointFeature = ref()
-export const cellDrawerHeight = ref(100);
+export const cellDrawerHeight = ref(0);
 export const cellDrawerResizing = ref(false)
 
 export const tooltipEnabled = ref(true)
