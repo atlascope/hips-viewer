@@ -22,9 +22,13 @@ export const tooltipPosition = ref()
 export const colorLegend = ref()
 export const selectedColor = ref('#0f0')
 export const colorBy = ref('classification')
+export const colormapType = ref<
+    'qualitative' | 'sequential' | 'diverging'
+>('qualitative')
 export const colormapName = ref<string | undefined>('Paired')
 export const attributeOptions = ref()
 
 
 // Store watchers
+watch(colormapType, () => colormapName.value = undefined)
 watch([selectedColor, colorBy, colormapName], updateColors)

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, computed } from 'vue';
 import colorbrewer from 'colorbrewer';
 import {
-    selectedColor, colorBy, attributeOptions, colormapName
+    selectedColor, colorBy, attributeOptions, colormapName, colormapType
 } from '@/store';
 
 interface TreeItem {
@@ -12,9 +12,6 @@ interface TreeItem {
 }
 
 const showPicker = ref(false)
-const colormapType = ref<
-    'qualitative' | 'sequential' | 'diverging'
->('qualitative')
 const nestedAttributeOptions = computed(() => {
     const nested: TreeItem[] = []
     attributeOptions.value.forEach((attrName: string) => {
@@ -40,7 +37,6 @@ function select(selected: any) {
     }
 }
 
-watch(colormapType, () => colormapName.value = undefined)
 </script>
 
 <template>
