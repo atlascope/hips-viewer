@@ -8,9 +8,8 @@ import {
     cellDrawerHeight, cellDrawerResizing,
     tooltipEnabled, tooltipContent, tooltipPosition,
     colormapName, map, fetchProgress,
-    attributeOptions,
-    cellColumns,
-    colorBy
+    attributeOptions, cellColumns,
+    colorBy, colorLegend
 } from '@/store';
 
 import CellDrawer from '@/CellDrawer.vue';
@@ -29,6 +28,10 @@ const defaultAttributes = [
 ]
 const tooltipExclude = ['id', 'vector_text']
 const mapId = computed(() => 'map-' + props.id)
+const colorLegendShown = computed(() =>
+    cells.value && colorBy.value && colormapName.value &&
+    colorLegend.value && colorLegend.value.categories().length
+)
 
 function init() {
     createMap(mapId.value, props.image.tile_url).then(() => {
@@ -54,7 +57,7 @@ function drawCells() {
         cellFeature.value.data(cells.value).draw()
         pointFeature.value.data(cells.value).draw()
         updateColors()
-        cellDrawerHeight.value = 100;
+        cellDrawerHeight.value = 80;
         status.value = undefined;
     }
 }
@@ -94,7 +97,7 @@ watch(colormapName, () => {
         @mousemove="resizeCellDrawer"
     >
         <div :id="mapId" class="map" :style="{height: `calc(100% - ${cellDrawerHeight + 70}px) !important`}"></div>
-        <div class="status" :style="{bottom: cellDrawerHeight + 80 + 'px'}">
+        <div class="status" :style="{bottom: cellDrawerHeight + (colorLegendShown ? 180 : 80) + 'px'}">
             <v-card v-if="status" class="px-4 py-2">
                 {{ status }}
                 <v-progress-linear v-if="fetchProgress" :model-value="fetchProgress"></v-progress-linear>

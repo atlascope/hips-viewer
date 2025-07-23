@@ -31,4 +31,10 @@ export const attributeOptions = ref()
 
 // Store watchers
 watch(colormapType, () => colormapName.value = undefined)
-watch([selectedColor, colorBy, colormapName], updateColors)
+watch([selectedColor, colorBy, colormapName], () => {
+    status.value = 'Updating colors...'
+    setTimeout(() => {
+        updateColors()
+        status.value = undefined
+    }, 1)
+})
