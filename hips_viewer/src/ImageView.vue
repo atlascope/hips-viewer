@@ -7,7 +7,7 @@ import {
     status, cells, cellFeature, pointFeature,
     cellDrawerHeight, cellDrawerResizing,
     tooltipEnabled, tooltipContent, tooltipPosition,
-    colormapName, map,
+    colormapName, map, fetchProgress
 } from '@/store';
 
 import CellDrawer from '@/CellDrawer.vue';
@@ -39,7 +39,6 @@ function getCells() {
 
 function drawCells() {
     if (cellFeature.value && pointFeature.value) {
-        status.value = 'Drawing cells...'
         cellFeature.value.data(cells.value).draw()
         pointFeature.value.data(cells.value).draw()
         updateColors()
@@ -81,6 +80,7 @@ watch(colormapName, () => {
         <div class="status" :style="{bottom: cellDrawerHeight + 80 + 'px'}">
             <v-card v-if="status" class="px-4 py-2">
                 {{ status }}
+                <v-progress-linear v-if="fetchProgress" :model-value="fetchProgress"></v-progress-linear>
             </v-card>
             <v-btn v-else-if="!cells" @click="getCells" color="black">
                 Fetch Cell Data

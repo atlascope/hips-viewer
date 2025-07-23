@@ -6,6 +6,7 @@ import { updateColors } from '@/map';
 export const map = ref();
 export const maxZoom = ref();
 export const status = ref();
+export const fetchProgress = ref(0);
 
 export const cells = ref();
 export const cellFeature = ref()
