@@ -12,6 +12,7 @@ interface TreeItem {
 }
 
 const showPicker = ref(false)
+const attrSelection = ref()
 const nestedAttributeOptions = computed(() => {
     const nested: TreeItem[] = []
     attributeOptions.value.forEach((attrName: string) => {
@@ -33,6 +34,7 @@ const nestedAttributeOptions = computed(() => {
 
 function select(selected: any) {
     if (selected.length) {
+        if (attrSelection.value) attrSelection.value.blur()
         colorBy.value = selected[0]
     }
 }
@@ -60,6 +62,7 @@ function select(selected: any) {
             ></v-color-picker>
             <v-label>All Other Cells</v-label>
             <v-select
+                ref="attrSelection"
                 :model-value="colorBy"
                 label="Color By Attribute"
                 density="compact"

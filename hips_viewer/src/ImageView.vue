@@ -120,7 +120,7 @@ watch(colormapName, () => {
         <div v-if="cells" class="actions">
             <v-btn icon>
                 <span class="material-symbols-outlined">palette</span>
-                <v-menu activator="parent" location="end" open-on-hover :close-on-content-click="false">
+                <v-menu activator="parent" location="end" :close-on-content-click="false">
                     <ColorOptions />
                 </v-menu>
             </v-btn>
