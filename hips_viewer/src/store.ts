@@ -9,12 +9,13 @@ export const status = ref();
 export const fetchProgress = ref(0);
 
 export const cells = ref();
+export const cellColumns = ref();
 export const cellFeature = ref()
 export const pointFeature = ref()
 export const cellDrawerHeight = ref(0);
 export const cellDrawerResizing = ref(false)
 
-export const tooltipEnabled = ref(true)
+export const tooltipEnabled = ref(false)
 export const tooltipContent = ref()
 export const tooltipPosition = ref()
 
@@ -22,9 +23,7 @@ export const colorLegend = ref()
 export const selectedColor = ref('#0f0')
 export const colorBy = ref('classification')
 export const colormapName = ref<string | undefined>('Paired')
-export const attributeOptions = ref([
-    'classification', 'orientation', 'width', 'height', 'x', 'y'
-])
+export const attributeOptions = ref()
 
 
 // Store watchers

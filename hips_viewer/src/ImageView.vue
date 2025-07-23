@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
 import { addHoverCallback, addZoomCallback, createFeatures, createMap, updateColors } from '@/map';
-import { fetchImageCells } from '@/api';
+import { fetchCellColumns, fetchImageCells } from '@/api';
 import type { Image } from '@/types'
 import {
     status, cells, cellFeature, pointFeature,
     cellDrawerHeight, cellDrawerResizing,
     tooltipEnabled, tooltipContent, tooltipPosition,
-    colormapName, map, fetchProgress
+    colormapName, map, fetchProgress,
+    attributeOptions,
+    cellColumns,
+    colorBy
 } from '@/store';
 
 import CellDrawer from '@/CellDrawer.vue';
 import ColorOptions from '@/ColorOptions.vue';
+import { getCellAttribute } from './utils';
 
 const props = defineProps<{
     id: number;
@@ -20,6 +24,10 @@ const props = defineProps<{
 
 const ZOOM_THRESHOLD = 7
 const defaultColor = '#00ff00'
+const defaultAttributes = [
+    'classification', 'orientation', 'width', 'height', 'x', 'y'
+]
+const tooltipExclude = ['id', 'vector_text']
 const mapId = computed(() => 'map-' + props.id)
 
 function init() {
@@ -34,6 +42,10 @@ function getCells() {
     status.value = 'Fetching cell data...'
     fetchImageCells(props.image.id).then((data) => {
         cells.value = data;
+    })
+    fetchCellColumns().then((data) => {
+        cellColumns.value = data
+        attributeOptions.value = [ ...defaultAttributes, ...data ]
     })
 }
 
@@ -55,7 +67,12 @@ function onZoom({zoomLevel}: any) {
 
 function onHoverOver({data, mouse}: any) {
     if (tooltipEnabled.value) {
-        tooltipContent.value = data
+        tooltipContent.value = Object.fromEntries(
+            Object.entries(data).filter(([k]) => !tooltipExclude.includes(k))
+        )
+        if (colorBy.value && !tooltipContent.value[colorBy.value]) {
+            tooltipContent.value[colorBy.value] = getCellAttribute(data, colorBy.value)
+        }
         tooltipPosition.value = mouse.map
     }
 }
@@ -97,7 +114,7 @@ watch(colormapName, () => {
         <v-card class="cell-drawer" :style="{height: cellDrawerHeight + 'px'}">
             <CellDrawer v-if="cells?.length" :cells="cells" :height="cellDrawerHeight" :tile_url="props.image.tile_url"/>
         </v-card>
-        <div class="actions">
+        <div v-if="cells" class="actions">
             <v-btn icon>
                 <span class="material-symbols-outlined">palette</span>
                 <v-menu activator="parent" location="end" open-on-hover :close-on-content-click="false">

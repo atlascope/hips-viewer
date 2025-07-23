@@ -1,14 +1,44 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import colorbrewer from 'colorbrewer';
 import {
     selectedColor, colorBy, attributeOptions, colormapName
 } from '@/store';
 
+interface TreeItem {
+    title: string,
+    value?: string,
+    children?: TreeItem[],
+}
+
 const showPicker = ref(false)
 const colormapType = ref<
     'qualitative' | 'sequential' | 'diverging'
 >('qualitative')
+const nestedAttributeOptions = computed(() => {
+    const nested: TreeItem[] = []
+    attributeOptions.value.forEach((attrName: string) => {
+        if (attrName.includes('.')) {
+            // only nest one level
+            const components = attrName.split('.')
+            let parent = nested.find((item) => item.title === components[0])
+            if (!parent) {
+                parent = {title: components[0], children:[]}
+                nested.push(parent)
+            }
+            parent.children?.push({title: attrName, value: attrName})
+        } else {
+            nested.push({title: attrName, value: attrName})
+        }
+    })
+    return nested
+})
+
+function select(selected: any) {
+    if (selected.length) {
+        colorBy.value = selected[0]
+    }
+}
 
 watch(colormapType, () => colormapName.value = undefined)
 </script>
@@ -34,12 +64,23 @@ watch(colormapType, () => colormapName.value = undefined)
             ></v-color-picker>
             <v-label>All Other Cells</v-label>
             <v-select
-                v-model="colorBy"
+                :model-value="colorBy"
                 label="Color By Attribute"
-                :items="attributeOptions"
                 density="compact"
                 hide-details
-            ></v-select>
+            >
+                <template v-slot:no-data>
+                    <v-treeview
+                        :model-value:selected="[colorBy]"
+                        :items="nestedAttributeOptions"
+                        select-strategy="single-leaf"
+                        @update:selected="select"
+                        density="compact"
+                        open-on-click
+                        fluid
+                    ></v-treeview>
+                </template>
+            </v-select>
             <v-tabs v-model="colormapType" density="compact">
                 <v-tab value="qualitative">Qualitative</v-tab>
                 <v-tab value="sequential">Sequential</v-tab>
@@ -66,5 +107,8 @@ watch(colormapType, () => colormapName.value = undefined)
 .v-color-picker-preview__track {
     width: 350px !important;
     padding-left: 20px;
+}
+ .v-treeview-node__content {
+    padding-left: 0px !important;
 }
 </style>
