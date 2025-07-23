@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { Cell, Thumbnail } from '@/types';
-import { cellColors } from './store';
+import { cellColors, selectedCellIds, selectedColor } from './store';
+import { clickCell, rgbToHex, type RGB } from './utils';
 
 const props = defineProps<{
     cells: Cell[],
@@ -11,6 +12,9 @@ const props = defineProps<{
 
 const pageLength = 10;
 const thumbnails = ref<Thumbnail[]>([]);
+const hexCellColors = computed(() => Object.fromEntries(
+    Object.entries(cellColors.value).map(([cellId, rgbColor]) => [cellId, rgbToHex(rgbColor as RGB)])
+))
 
 function loadThumbnails({ done }: any) {
     if (props.cells.length === thumbnails.value.length) done('empty')
@@ -52,13 +56,14 @@ function loadThumbnails({ done }: any) {
                 :width="thumbnail.width + 4"
                 :height="thumbnail.height + 4"
                 :style="`border-color:${
-                    cellColors[thumbnail.id]
+                    selectedCellIds.includes(thumbnail.id) ? selectedColor: hexCellColors[thumbnail.id]
                 };border-width:${
                     cellColors[thumbnail.id] ? 4 : 0
                 }px;padding:${
                     cellColors[thumbnail.id] ? 0 : 4
                 }px`"
                 class="cell-thumbnail"
+                @click="(e) => clickCell(e, thumbnail.id)"
             />
         </div>
     </v-infinite-scroll>

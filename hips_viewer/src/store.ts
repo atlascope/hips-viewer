@@ -1,4 +1,6 @@
 import { ref, watch } from 'vue';
+import { clusterFirstPoint } from './utils';
+
 
 // Store variables
 export const map = ref();
@@ -9,6 +11,8 @@ export const fetchProgress = ref(0);
 export const cells = ref();
 export const cellColumns = ref();
 export const cellColors = ref();
+export const selectedCellIds = ref<number[]>([]);
+
 export const cellFeature = ref()
 export const pointFeature = ref()
 export const cellDrawerHeight = ref(0);
@@ -20,7 +24,7 @@ export const tooltipPosition = ref()
 
 export const unappliedColorChanges = ref(false);
 export const colorLegend = ref()
-export const selectedColor = ref('#0f0')
+export const selectedColor = ref('#fffb00')
 export const colorBy = ref('classification')
 export const colormapType = ref<
     'qualitative' | 'sequential' | 'diverging'
@@ -31,8 +35,23 @@ export const attributeOptions = ref()
 
 // Store watchers
 watch(colormapType, () => colormapName.value = undefined)
+
 watch([selectedColor, colorBy, colormapName], () => {
     unappliedColorChanges.value = !!(
         selectedColor.value && colorBy.value && colormapName.value
     );
+})
+
+watch(selectedCellIds, () => {
+    if (cellFeature.value && pointFeature.value) {
+        const styleCellFunction = (cell: any, i: number) => {
+            if (cell.__cluster) {
+                cell = clusterFirstPoint(cells.value, cell, i)
+            }
+            if (selectedCellIds.value.includes(cell.id)) return selectedColor.value
+            return cellColors.value[cell.id]
+        }
+        cellFeature.value.style('strokeColor', styleCellFunction).draw()
+        pointFeature.value.style('fillColor', styleCellFunction).draw()
+    }
 })

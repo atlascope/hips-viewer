@@ -1,7 +1,7 @@
-import { cellColumns } from "./store";
+import { cellColumns, cells, selectedCellIds } from "./store";
 import type { Cell } from "./types";
 
-interface RGB { r: number, g: number, b: number }
+export interface RGB { r: number, g: number, b: number }
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
 export function hexToRgb(hex: string) {
@@ -45,6 +45,19 @@ export function clusterFirstPoint(data: any, d: any, i: number) {
 	return clusterFirstPoint(data, d._clusters[0], i);
 }
 
+export function clusterAllPoints(data: any, d: any, i: number, allPoints: any[]) {
+	if (d.__cluster) {
+		d = d.obj;
+	}
+	if (d._points === undefined) return d;
+	if (d._points.length) {
+		const indexes = d._points.map((p: { index: number }) => p.index)
+		const points = indexes.map((i: number) => data[i])
+		return [...allPoints, ...points];
+	}
+	return clusterAllPoints(data, d._clusters[0], i, allPoints)
+}
+
 export function getCellAttribute(cell: Cell, attrName: string) {
 	if (cell[attrName]) return cell[attrName]
 	else if (cellColumns.value && cell.vector_text) {
@@ -57,4 +70,31 @@ export function getCellAttribute(cell: Cell, attrName: string) {
 		}
 	}
 	return undefined
+}
+
+export function clickCell(event: any, cellId: number | undefined) {
+	const toggleMode = event.ctrlKey != undefined ? event.ctrlKey : event.sourceEvent.modifiers.ctrl;
+	if (!cellId) {
+		if (event.data.__cluster) {
+			const allPoints = clusterAllPoints(cells.value, event.data, event.index, [])
+			allPoints.forEach((cell: { id: number }) => clickCell(
+				{ ctrlKey: toggleMode }, cell.id
+			))
+		} else {
+			cellId = cells.value[event.index]?.id
+		}
+	}
+	if (cellId) {
+		if (toggleMode) {
+			if (selectedCellIds.value.includes(cellId)) {
+				selectedCellIds.value = selectedCellIds.value.filter(
+					(id) => id !== cellId
+				);
+			} else {
+				selectedCellIds.value.push(cellId);
+			}
+		} else {
+			selectedCellIds.value = [cellId];
+		}
+	}
 }

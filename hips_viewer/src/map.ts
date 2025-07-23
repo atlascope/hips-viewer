@@ -4,10 +4,12 @@ import colorbrewer from 'colorbrewer';
 import {
     cells, map, maxZoom, cellFeature, pointFeature,
     colorBy, colormapName, colorLegend, cellColors,
+    selectedCellIds, selectedColor,
 } from '@/store'
 import {
+    clickCell,
     clusterFirstPoint, colorInterpolate,
-    getCellAttribute, hexToRgb, rgbToHex
+    getCellAttribute, hexToRgb
 } from './utils';
 import type { Cell } from './types';
 
@@ -49,6 +51,7 @@ export function createFeatures(color: string, zoomThreshold: number) {
         fillOpacity: 0,
     })
     cellFeature.value.visible(false)
+    cellFeature.value.geoOn(geo.event.feature.mouseclick, clickCell)
 
     pointFeature.value = cellLayer.createFeature('point', {
         style: {
@@ -57,6 +60,7 @@ export function createFeatures(color: string, zoomThreshold: number) {
         }
     });
     pointFeature.value.clustering({ radius: 10, maxZoom: zoomThreshold })
+    pointFeature.value.geoOn(geo.event.feature.mouseclick, clickCell)
 }
 
 export function addZoomCallback(callback: Function) {
@@ -127,19 +131,19 @@ export function updateColors() {
 
     if (colormapFunction) {
         const getCellColor = (cell: any) => {
-            // TODO: if selected, return selectedColor
             const value = getCellAttribute(cell, colorBy.value)
             if (value === undefined) return { r: 0, g: 0, b: 0 }
             return colormapFunction(value)
         }
+        cellColors.value = Object.fromEntries(cells.value.map((cell: Cell) => [cell.id, getCellColor(cell)]))
         const styleCellFunction = (cell: any, i: number) => {
             if (cell.__cluster) {
                 cell = clusterFirstPoint(cells.value, cell, i)
             }
-            return getCellColor(cell)
+            if (selectedCellIds.value.includes(cell.id)) return selectedColor.value
+            return cellColors.value[cell.id]
         }
         cellFeature.value.style('strokeColor', styleCellFunction).draw()
         pointFeature.value.style('fillColor', styleCellFunction).draw()
-        cellColors.value = Object.fromEntries(cells.value.map((cell: Cell) => [cell.id, rgbToHex(getCellColor(cell))]))
     }
 }
