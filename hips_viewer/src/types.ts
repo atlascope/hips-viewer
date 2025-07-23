@@ -4,7 +4,7 @@ export interface Image {
     tile_url: string,
 }
 
-export interface Cell  {
+export interface Cell {
     id: number;
     x: number;
     y: number;
