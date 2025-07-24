@@ -49,13 +49,16 @@ export function clusterAllPoints(data: any, d: any, i: number, allPoints: any[])
 	if (d.__cluster) {
 		d = d.obj;
 	}
-	if (d._points === undefined) return d;
+	if (d._points === undefined) return [...allPoints, d];
 	if (d._points.length) {
 		const indexes = d._points.map((p: { index: number }) => p.index)
 		const points = indexes.map((i: number) => data[i])
-		return [...allPoints, ...points];
+		allPoints = [...allPoints, ...points];
 	}
-	return clusterAllPoints(data, d._clusters[0], i, allPoints)
+	d._clusters.forEach((cluster: any) => {
+		allPoints = clusterAllPoints(data, cluster, i, allPoints)
+	})
+	return allPoints
 }
 
 export function getCellAttribute(cell: Cell, attrName: string) {
