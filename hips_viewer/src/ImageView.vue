@@ -65,6 +65,8 @@ function resizeCellDrawer(e: MouseEvent) {
 onMounted(init)
 watch(cells, drawCells)
 watch(colormapName, () => {
+    // When colormap changed, reevaluate feature visibilty
+    // based on current zoom level and whether colormap is defined
     onZoom({zoomLevel: map.value.zoom()})
 })
 </script>
