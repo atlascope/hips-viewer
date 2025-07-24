@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { debounce } from 'vuetify/lib/util/helpers.mjs';
 import colorbrewer from 'colorbrewer';
 import {
     selectedColor, colorBy, attributeOptions, colormapName
@@ -10,6 +11,9 @@ const colormapType = ref<
     'qualitative' | 'sequential' | 'diverging'
 >('qualitative')
 
+const debouncedUpdateSelectedColor = debounce(
+    (color: string) => selectedColor.value = color, 100
+)
 watch(colormapType, () => colormapName.value = undefined)
 </script>
 
@@ -25,7 +29,8 @@ watch(colormapType, () => colormapName.value = undefined)
             ></div>
             <v-color-picker
                 v-if="showPicker"
-                v-model="selectedColor"
+                :model-value="selectedColor"
+                @update:model-value="debouncedUpdateSelectedColor"
                 class="mb-3"
                 mode="rgb"
                 width="375px"
