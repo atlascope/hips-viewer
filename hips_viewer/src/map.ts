@@ -71,6 +71,8 @@ export function updateColors() {
 
     const values = [...new Set(cells.value.map(
         (cell: any) => getCellAttribute(cell, colorBy.value)
+    ).map(
+        (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v)
     ).filter((v: any) => v))]
     // @ts-ignore
     const colormapSets = colorbrewer[colormapName.value]
