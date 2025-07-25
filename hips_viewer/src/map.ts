@@ -18,9 +18,9 @@ export async function createMap(mapId: string, tileUrl: string) {
     params.layer.url = `${tileUrl}/zxy/{z}/{x}/{y}`;
     map.value.createLayer('osm', params.layer);
     const ui = map.value.createLayer('ui');
-    ui.createWidget('slider', {position: {right: 40, top: 40}});
+    ui.createWidget('slider', { position: { right: 40, top: 40 } });
     colorLegend.value = ui.createWidget('colorLegend', {
-        position: {bottom: 10, left: 10, right: 10},
+        position: { bottom: 10, left: 10, right: 10 },
         ticks: 10,
         width: '1000'
     })
@@ -52,7 +52,7 @@ export function createFeatures(color: string, zoomThreshold: number) {
             fillColor: color,
         }
     });
-    pointFeature.value.clustering({radius: 10, maxZoom: zoomThreshold})
+    pointFeature.value.clustering({ radius: 10, maxZoom: zoomThreshold })
 }
 
 export function addZoomCallback(callback: Function) {
@@ -64,70 +64,71 @@ export function addHoverCallback(callback: Function, feature: any) {
 }
 
 export function updateColors() {
-    if (colormapName.value && colorBy.value && cells.value && colorLegend.value) {
-        const values = [...new Set(cells.value.map(
-            (cell: any) => getCellAttribute(cell, colorBy.value)
-        ))]
-        // @ts-ignore
-        const colormapSets = colorbrewer[colormapName.value]
-        let colors = colormapSets[values.length];
-        if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map((v) => parseInt(v)))]
-        const rgbColors = colors.map(hexToRgb)
+    if (!(colormapName.value && colorBy.value && cells.value && colorLegend.value)) {
+        colorLegend.value.categories([])
+        return
+    }
 
-        let colormapFunction;
-        if (values.every((v) => typeof v === 'number')) {
-            const range = [Math.min(...values), Math.max(...values)]
-            colorLegend.value.categories([{
-                name: colorBy.value,
-                type: 'continuous',
-                scale: 'linear',
-                domain: range,
-                colors,
-            }])
-            colormapFunction = (v: any) => {
-                const valueProportion = (v - range[0]) / (range[1] - range[0])
-                const maxIndex = rgbColors.length - 1
-                if (valueProportion === 1) return rgbColors[maxIndex]
-                const index = Math.floor(maxIndex * valueProportion)
-                const indexProportion = index / maxIndex
-                const interpolationProportion = (valueProportion - indexProportion) * maxIndex
-                const interpolated = colorInterpolate(rgbColors[index], rgbColors[index+1], interpolationProportion)
-                return interpolated
-            }
-        } else {
-            colorLegend.value.categories([{
-                name: colorBy.value,
-                type: 'discrete',
-                scale: 'ordinal',
-                domain: values,
-                colors,
-            }])
-            colormapFunction = (v: any) => {
-                const index = values.indexOf(v)
-                if (index >= 0) {
-                    const proportion = values.indexOf(v) / values.length
-                    return rgbColors[Math.round(rgbColors.length * proportion)]
-                }
+    const values = [...new Set(cells.value.map(
+        (cell: any) => getCellAttribute(cell, colorBy.value)
+    ))]
+    // @ts-ignore
+    const colormapSets = colorbrewer[colormapName.value]
+    let colors = colormapSets[values.length];
+    if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map((v) => parseInt(v)))]
+    const rgbColors = colors.map(hexToRgb)
 
-                return {r: 0, g: 0, b: 0}
-            }
-        }
-        colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
-
-        if (colormapFunction) {
-            const styleCellFunction = (cell: any, i: number) => {
-                // TODO: if selected, return selectedColor
-                if (cell.__cluster) {
-                    cell = clusterFirstPoint(cells.value, cell, i)
-                }
-                const value = getCellAttribute(cell, colorBy.value)
-                if (!value) return {r:0, g:0, b:0}
-                return colormapFunction(value)
-            }
-            cellFeature.value.style('strokeColor', styleCellFunction).draw()
-            pointFeature.value.style('fillColor', styleCellFunction).draw()
+    let colormapFunction;
+    if (values.every((v) => typeof v === 'number')) {
+        const range = [Math.min(...values), Math.max(...values)]
+        colorLegend.value.categories([{
+            name: colorBy.value,
+            type: 'continuous',
+            scale: 'linear',
+            domain: range,
+            colors,
+        }])
+        colormapFunction = (v: any) => {
+            const valueProportion = (v - range[0]) / (range[1] - range[0])
+            const maxIndex = rgbColors.length - 1
+            if (valueProportion === 1) return rgbColors[maxIndex]
+            const index = Math.floor(maxIndex * valueProportion)
+            const indexProportion = index / maxIndex
+            const interpolationProportion = (valueProportion - indexProportion) * maxIndex
+            const interpolated = colorInterpolate(rgbColors[index], rgbColors[index + 1], interpolationProportion)
+            return interpolated
         }
     } else {
-        colorLegend.value.categories([])
+        colorLegend.value.categories([{
+            name: colorBy.value,
+            type: 'discrete',
+            scale: 'ordinal',
+            domain: values,
+            colors,
+        }])
+        colormapFunction = (v: any) => {
+            const index = values.indexOf(v)
+            if (index >= 0) {
+                const proportion = values.indexOf(v) / values.length
+                return rgbColors[Math.round(rgbColors.length * proportion)]
+            }
+
+            return { r: 0, g: 0, b: 0 }
+        }
+    }
+    colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
+
+    if (colormapFunction) {
+        const styleCellFunction = (cell: any, i: number) => {
+            // TODO: if selected, return selectedColor
+            if (cell.__cluster) {
+                cell = clusterFirstPoint(cells.value, cell, i)
+            }
+            const value = getCellAttribute(cell, colorBy.value)
+            if (!value) return { r: 0, g: 0, b: 0 }
+            return colormapFunction(value)
+        }
+        cellFeature.value.style('strokeColor', styleCellFunction).draw()
+        pointFeature.value.style('fillColor', styleCellFunction).draw()
     }
 }

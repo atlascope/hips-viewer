@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { debounce } from 'vuetify/lib/util/helpers.mjs';
 import colorbrewer from 'colorbrewer';
 import {
     selectedColor, colorBy, attributeOptions, colormapName, colormapType
@@ -39,6 +40,9 @@ function select(selected: any) {
     }
 }
 
+const debouncedUpdateSelectedColor = debounce(
+    (color: string) => selectedColor.value = color, 100
+)
 </script>
 
 <template>
@@ -53,7 +57,8 @@ function select(selected: any) {
             ></div>
             <v-color-picker
                 v-if="showPicker"
-                v-model="selectedColor"
+                :model-value="selectedColor"
+                @update:model-value="debouncedUpdateSelectedColor"
                 class="mb-3"
                 mode="rgb"
                 width="375px"
