@@ -1,6 +1,4 @@
 import { ref, watch } from 'vue';
-import { updateColors } from '@/map';
-
 
 // Store variables
 export const map = ref();
@@ -9,23 +7,31 @@ export const status = ref();
 export const fetchProgress = ref(0);
 
 export const cells = ref();
+export const cellColumns = ref();
 export const cellFeature = ref()
 export const pointFeature = ref()
 export const cellDrawerHeight = ref(0);
 export const cellDrawerResizing = ref(false)
 
-export const tooltipEnabled = ref(true)
+export const tooltipEnabled = ref(false)
 export const tooltipContent = ref()
 export const tooltipPosition = ref()
 
+export const unappliedColorChanges = ref(false);
 export const colorLegend = ref()
 export const selectedColor = ref('#0f0')
 export const colorBy = ref('classification')
+export const colormapType = ref<
+    'qualitative' | 'sequential' | 'diverging'
+>('qualitative')
 export const colormapName = ref<string | undefined>('Paired')
-export const attributeOptions = ref([
-    'classification', 'orientation', 'width', 'height', 'x', 'y'
-])
+export const attributeOptions = ref()
 
 
 // Store watchers
-watch([selectedColor, colorBy, colormapName], updateColors)
+watch(colormapType, () => colormapName.value = undefined)
+watch([selectedColor, colorBy, colormapName], () => {
+    unappliedColorChanges.value = !!(
+        selectedColor.value && colorBy.value && colormapName.value
+    );
+})

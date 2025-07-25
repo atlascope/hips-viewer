@@ -5,7 +5,7 @@ import {
     cells, map, maxZoom, cellFeature, pointFeature,
     colorBy, colormapName, colorLegend,
 } from '@/store'
-import { clusterFirstPoint, colorInterpolate, hexToRgb } from './utils';
+import { clusterFirstPoint, colorInterpolate, getCellAttribute, hexToRgb } from './utils';
 
 
 export async function createMap(mapId: string, tileUrl: string) {
@@ -68,9 +68,12 @@ export function updateColors() {
         colorLegend.value.categories([])
         return
     }
-    // TODO: update this for other columns
-    // This only works for columns saved as fields
-    const values = [...new Set(cells.value.map((cell: any) => cell[colorBy.value]))]
+
+    const values = [...new Set(cells.value.map(
+        (cell: any) => getCellAttribute(cell, colorBy.value)
+    ).map(
+        (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v)
+    ).filter((v: any) => v))]
     // @ts-ignore
     const colormapSets = colorbrewer[colormapName.value]
     let colors = colormapSets[values.length];
@@ -87,7 +90,7 @@ export function updateColors() {
             domain: range,
             colors,
         }])
-        colormapFunction = (v: number) => {
+        colormapFunction = (v: any) => {
             const valueProportion = (v - range[0]) / (range[1] - range[0])
             const maxIndex = rgbColors.length - 1
             if (valueProportion === 1) return rgbColors[maxIndex]
@@ -123,7 +126,9 @@ export function updateColors() {
             if (cell.__cluster) {
                 cell = clusterFirstPoint(cells.value, cell, i)
             }
-            return colormapFunction(cell[colorBy.value])
+            const value = getCellAttribute(cell, colorBy.value)
+            if (!value) return { r: 0, g: 0, b: 0 }
+            return colormapFunction(value)
         }
         cellFeature.value.style('strokeColor', styleCellFunction).draw()
         pointFeature.value.style('fillColor', styleCellFunction).draw()

@@ -44,3 +44,8 @@ export async function fetchImageCells(imageId: number) {
   await new Promise(r => setTimeout(r, 150));
   return results
 }
+
+export async function fetchCellColumns() {
+  const url = `${baseURL}/cells/columns`
+  return await cachedFetch(url, 'cell-data-cache')
+}

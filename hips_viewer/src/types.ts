@@ -10,6 +10,8 @@ export interface Cell  {
     width: number;
     height: number;
     orientation: number;
+    vector_text?: string;
+    [vector_column: string]: string | number | undefined;
 }
 
 export interface Thumbnail {

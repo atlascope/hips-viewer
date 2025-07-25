@@ -1,3 +1,6 @@
+import { cellColumns } from "./store";
+import type { Cell } from "./types";
+
 interface RGB {r: number, g: number, b: number}
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
@@ -40,4 +43,18 @@ export function clusterFirstPoint (data: any, d: any, i: number) {
     return data[d._points[0].index];
   }
   return clusterFirstPoint(data, d._clusters[0], i);
+}
+
+export function getCellAttribute(cell: Cell, attrName: string) {
+  if (cell[attrName]) return cell[attrName]
+  else if (cellColumns.value && cell.vector_text) {
+    const index = cellColumns.value.indexOf(attrName)
+    const vector = cell.vector_text.split(',')
+    if (index >=0 && vector && vector[index]) {
+      const value = vector[index]
+      if (parseFloat(value)) return parseFloat(value)
+      return value
+    }
+  }
+  return undefined
 }
