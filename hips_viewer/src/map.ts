@@ -71,7 +71,7 @@ export function updateColors() {
 
     const values = [...new Set(cells.value.map(
         (cell: any) => getCellAttribute(cell, colorBy.value)
-    ))]
+    ).filter((v: any) => v))]
     // @ts-ignore
     const colormapSets = colorbrewer[colormapName.value]
     let colors = colormapSets[values.length];
