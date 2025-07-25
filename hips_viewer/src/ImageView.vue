@@ -1,9 +1,17 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { addHoverCallback, addZoomCallback, createFeatures, createMap } from '@/map';
+import { computed, onMounted, watch } from 'vue';
+import { addHoverCallback, addZoomCallback, createFeatures, createMap, updateColors } from '@/map';
 import { fetchImageCells } from '@/api';
 import type { Image } from '@/types'
+import {
+    status, cells, cellFeature, pointFeature,
+    cellDrawerHeight, cellDrawerResizing,
+    tooltipEnabled, tooltipContent, tooltipPosition,
+    colormapName, map,
+} from '@/store';
+
 import CellDrawer from '@/CellDrawer.vue';
+import ColorOptions from '@/ColorOptions.vue';
 
 const props = defineProps<{
     id: number;
@@ -12,46 +20,35 @@ const props = defineProps<{
 
 const ZOOM_THRESHOLD = 7
 const defaultColor = '#00ff00'
-
 const mapId = computed(() => 'map-' + props.id)
-const map = ref();
-const status = ref();
-
-const cells = ref();
-const cellFeature = ref()
-const pointFeature = ref()
-const cellDrawerHeight = ref(100);
-const cellDrawerResizing = ref(false)
-
-const tooltipEnabled = ref(true)
-const tooltipContent = ref()
-const tooltipPosition = ref()
 
 function init() {
     status.value = 'Fetching cell data...'
     fetchImageCells(props.image.id).then((data) => {
         cells.value = data;
     })
-    createMap(mapId.value, props.image.tile_url).then((result) => {
-        map.value = result;
-        const features = createFeatures(map.value, defaultColor)
-        cellFeature.value = features.cellFeature
-        pointFeature.value = features.pointFeature
-        addZoomCallback(map.value, onZoom)
-        addHoverCallback(cellFeature.value, onHoverOver)
+    createMap(mapId.value, props.image.tile_url).then(() => {
+        createFeatures(defaultColor, ZOOM_THRESHOLD)
+        addZoomCallback(onZoom)
+        addHoverCallback(onHoverOver, cellFeature.value)
+        if (cells.value) drawCells()
     })
 }
 
 function drawCells() {
-    status.value = 'Drawing cells...'
-    cellFeature.value.data(cells.value).draw()
-    pointFeature.value.data(cells.value).draw()
-    status.value = undefined;
+    if (cellFeature.value && pointFeature.value) {
+        status.value = 'Drawing cells...'
+        cellFeature.value.data(cells.value).draw()
+        pointFeature.value.data(cells.value).draw()
+        updateColors()
+        status.value = undefined;
+    }
 }
 
 function onZoom({zoomLevel}: any) {
-    cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
-    pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
+    cellFeature.value.visible((zoomLevel > ZOOM_THRESHOLD) && !!colormapName.value)
+    pointFeature.value.visible((zoomLevel <= ZOOM_THRESHOLD) && !!colormapName.value)
+    map.value.draw()
 }
 
 function onHoverOver({data, mouse}: any) {
@@ -67,6 +64,11 @@ function resizeCellDrawer(e: MouseEvent) {
 
 onMounted(init)
 watch(cells, drawCells)
+watch(colormapName, () => {
+    // When colormap changed, reevaluate feature visibilty
+    // based on current zoom level and whether colormap is defined
+    onZoom({zoomLevel: map.value.zoom()})
+})
 </script>
 
 <template>
@@ -90,6 +92,12 @@ watch(cells, drawCells)
             <CellDrawer v-if="cells?.length" :cells="cells" :height="cellDrawerHeight" :tile_url="props.image.tile_url"/>
         </v-card>
         <div class="actions">
+            <v-btn icon>
+                <span class="material-symbols-outlined">palette</span>
+                <v-menu activator="parent" location="end" open-on-hover :close-on-content-click="false">
+                    <ColorOptions />
+                </v-menu>
+            </v-btn>
             <v-btn icon v-tooltip="'Toggle Tooltip'" @click="tooltipEnabled = !tooltipEnabled">
                 <span class="material-symbols-outlined">
                     {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
@@ -141,5 +149,10 @@ watch(cells, drawCells)
     position: absolute !important;
     width: fit-content;
     padding: 10px !important;
+}
+.menu-title {
+    background-color: #ddd;
+    padding: 5px 10px;
+    width: 100%
 }
 </style>
