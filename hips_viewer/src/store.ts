@@ -1,6 +1,4 @@
 import { ref, watch } from 'vue';
-import { updateColors } from '@/map';
-
 
 // Store variables
 export const map = ref();
@@ -19,6 +17,7 @@ export const tooltipEnabled = ref(false)
 export const tooltipContent = ref()
 export const tooltipPosition = ref()
 
+export const unappliedColorChanges = ref(false);
 export const colorLegend = ref()
 export const selectedColor = ref('#0f0')
 export const colorBy = ref('classification')
@@ -32,9 +31,7 @@ export const attributeOptions = ref()
 // Store watchers
 watch(colormapType, () => colormapName.value = undefined)
 watch([selectedColor, colorBy, colormapName], () => {
-    status.value = 'Updating colors...'
-    setTimeout(() => {
-        updateColors()
-        status.value = undefined
-    }, 1)
+    unappliedColorChanges.value = !!(
+        selectedColor.value && colorBy.value && colormapName.value
+    );
 })

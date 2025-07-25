@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { debounce } from 'vuetify/lib/util/helpers.mjs';
 import colorbrewer from 'colorbrewer';
 import {
-    selectedColor, colorBy, attributeOptions, colormapName, colormapType
+    selectedColor, colorBy, attributeOptions,
+    colormapName, colormapType, status,
+    unappliedColorChanges
 } from '@/store';
+import { updateColors } from '@/map';
 
 interface TreeItem {
     title: string,
@@ -40,9 +42,14 @@ function select(selected: any) {
     }
 }
 
-const debouncedUpdateSelectedColor = debounce(
-    (color: string) => selectedColor.value = color, 100
-)
+function update() {
+    unappliedColorChanges.value = false
+    status.value = 'Updating colors...'
+    setTimeout(() => {
+        updateColors()
+        status.value = undefined
+    }, 1)
+}
 </script>
 
 <template>
@@ -57,8 +64,7 @@ const debouncedUpdateSelectedColor = debounce(
             ></div>
             <v-color-picker
                 v-if="showPicker"
-                :model-value="selectedColor"
-                @update:model-value="debouncedUpdateSelectedColor"
+                v-model="selectedColor"
                 class="mb-3"
                 mode="rgb"
                 width="375px"
@@ -95,6 +101,9 @@ const debouncedUpdateSelectedColor = debounce(
                 label="Colormap"
                 :items="colorbrewer.schemeGroups[colormapType]"
             ></v-select>
+            <v-btn v-if="unappliedColorChanges" @click="update" color="black" block>
+                Update Colors
+            </v-btn>
         </v-card-text>
     </v-card>
 </template>
