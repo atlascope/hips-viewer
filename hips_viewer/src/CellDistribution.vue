@@ -9,17 +9,19 @@ import { colorBy, distNumBuckets, showHistogram } from './store';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
-const logScaleHistogram = ref(false)
+const histogramScale = ref<'linear' | 'log'>('linear')
 
 const colorInfo = computed(() => cellCounts())
 const chartData = computed(() => {
     const labels = colorInfo.value.map((ci) => ci.key)
     const colors = colorInfo.value.map((ci) => ci.color)
-    const counts = colorInfo.value.map((ci) => logScaleHistogram.value ? Math.log(ci.count) : ci.count)
+    const counts = colorInfo.value.map((ci) =>
+        histogramScale.value === 'log' ? Math.log(ci.count) : ci.count
+    )
     return {
         labels,
         datasets: [{
-            label: logScaleHistogram.value ? "Log(Count)" : "Count",
+            label: histogramScale.value === 'log' ? "Log(Count)" : "Count",
             data: counts,
             backgroundColor: colors,
         }]
@@ -58,17 +60,13 @@ const chartOptions = { responsive: true }
                     ></v-text-field>
                 </template>
             </v-slider>
-            <v-btn
-                v-if="showHistogram"
-                @click="logScaleHistogram = !logScaleHistogram"
-                color="black"
-                class="mt-3"
-            >
-                <span class="material-symbols-outlined">
-                    {{ logScaleHistogram ? 'close' : 'show_chart' }}
-                </span>
-                Log Scale Histogram
-            </v-btn>
+            <div>
+                <label class="text-subtitle-1 pr-2">Chart scale:</label>
+                <v-btn-toggle v-model="histogramScale" divided>
+                    <v-btn value="linear">Linear</v-btn>
+                    <v-btn value="log">Logarithmic</v-btn>
+                </v-btn-toggle>
+            </div>
         </v-card-text>
     </v-card>
 </template>
