@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref, watchEffect, watch } from 'vue';
 
 import { cellCounts } from '@/map';
 
@@ -11,14 +11,31 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 const histogramScale = ref<'linear' | 'log'>('linear')
 
-const colorInfo = computed(() => cellCounts())
-const chartData = computed(() => {
-    const labels = colorInfo.value.map((ci) => ci.key)
-    const colors = colorInfo.value.map((ci) => ci.color)
-    const counts = colorInfo.value.map((ci) =>
-        histogramScale.value === 'log' ? Math.log(ci.count) : ci.count
+const cellData = ref<null | {key: string | number, color: string, count: number}[]>(null)
+const chartData = ref()
+const chartOptions = { responsive: true }
+
+watchEffect(async () => {
+    if (chartData.value) return
+
+    await new Promise(r => setTimeout(r, 100)) // wait for DOM update
+    cellData.value = cellCounts()
+})
+
+watch(distNumBuckets, () => {
+    cellData.value = cellCounts()
+})
+
+watch([cellData, histogramScale], () => {
+    if (!cellData.value) return
+
+    const labels = cellData.value.map((c) => c.key)
+    const colors = cellData.value.map((c) => c.color)
+    const counts = cellData.value.map((c) =>
+        histogramScale.value === 'log' ? Math.log(c.count) : c.count
     )
-    return {
+
+    chartData.value = {
         labels,
         datasets: [{
             label: histogramScale.value === 'log' ? "Log(Count)" : "Count",
@@ -27,19 +44,24 @@ const chartData = computed(() => {
         }]
     }
 })
-const chartOptions = { responsive: true }
 </script>
 
 <template>
-    <v-card variant="outlined">
+    <v-card class="chart-container" variant="outlined">
         <div class="menu-title">Cell Distribution</div>
         <v-card-text>
             <v-label>{{ colorBy }}</v-label>
-            <Bar
-                :options="chartOptions"
-                :data="chartData"
-                width="400px"
-            />
+
+            <template v-if="!chartData">
+                <v-skeleton-loader type="card"/>
+            </template>
+            <template v-else>
+                <Bar
+                    :options="chartOptions"
+                    :data="chartData"
+                />
+            </template>
+
             <v-slider
                 v-if="showHistogram"
                 v-model="distNumBuckets"
@@ -72,16 +94,7 @@ const chartOptions = { responsive: true }
 </template>
 
 <style>
-.swatch {
-    width: 100%;
-    height: 20px;
-    border: 1px solid black;
-}
-.v-color-picker-preview__dot {
-    display: none
-}
-.v-color-picker-preview__track {
-    width: 350px !important;
-    padding-left: 20px;
+.chart-container {
+    min-width: 500px;
 }
 </style>
