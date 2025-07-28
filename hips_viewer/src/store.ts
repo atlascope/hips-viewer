@@ -27,6 +27,10 @@ export const tooltipContent = ref()
 export const tooltipPosition = ref()
 
 export const unappliedColorChanges = ref(false)
+
+export const distNumBuckets = ref(50)
+export const showHistogram = ref(false)
+
 export const colorLegend = ref()
 export const selectedColor = ref('#000')
 export const colorBy = ref('classification')
