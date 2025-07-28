@@ -76,28 +76,30 @@ export function getCellAttribute(cell: Cell, attrName: string) {
 }
 
 export function clickCell(event: any, cellId: number | undefined) {
+	// create local copy without proxy for set operations
+	let currentIds = new Set(selectedCellIds.value)
 	const toggleMode = event.ctrlKey != undefined ? event.ctrlKey : event.sourceEvent.modifiers.ctrl;
 	if (!cellId) {
 		if (event.data.__cluster) {
-			const allPoints = clusterAllPoints(cells.value, event.data, event.index, [])
-			allPoints.forEach((cell: { id: number }) => clickCell(
-				{ ctrlKey: toggleMode }, cell.id
-			))
-		} else {
-			cellId = cells.value[event.index]?.id
-		}
-	}
-	if (cellId) {
-		if (toggleMode) {
-			if (selectedCellIds.value.includes(cellId)) {
-				selectedCellIds.value = selectedCellIds.value.filter(
-					(id) => id !== cellId
-				);
+			const clusterPoints = clusterAllPoints(cells.value, event.data, event.index, [])
+			const clusterPointIds = new Set(clusterPoints.map((cell) => cell.id))
+			if (toggleMode) {
+				if (currentIds.intersection(clusterPointIds).size === clusterPointIds.size) {
+					currentIds = currentIds.difference(clusterPointIds)
+				} else {
+					currentIds = currentIds.union(clusterPointIds)
+				}
 			} else {
-				selectedCellIds.value.push(cellId);
+				currentIds = clusterPointIds
 			}
+		}
+	} else {
+		if (toggleMode) {
+			if (currentIds.has(cellId)) currentIds.delete(cellId)
+			else currentIds.add(cellId);
 		} else {
-			selectedCellIds.value = [cellId];
+			currentIds = new Set([cellId]);
 		}
 	}
+	selectedCellIds.value = currentIds
 }

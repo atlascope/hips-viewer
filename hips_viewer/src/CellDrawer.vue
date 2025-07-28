@@ -56,7 +56,7 @@ function loadThumbnails({ done }: any) {
                 :width="thumbnail.width + 4"
                 :height="thumbnail.height + 4"
                 :style="`border-color:${
-                    selectedCellIds.includes(thumbnail.id) ? selectedColor: hexCellColors[thumbnail.id]
+                    selectedCellIds.has(thumbnail.id) ? selectedColor: hexCellColors[thumbnail.id]
                 };border-width:${
                     cellColors[thumbnail.id] ? 4 : 0
                 }px;padding:${

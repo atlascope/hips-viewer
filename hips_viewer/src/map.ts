@@ -51,7 +51,9 @@ export function createFeatures(color: string, zoomThreshold: number) {
         fillOpacity: 0,
     })
     cellFeature.value.visible(false)
-    cellFeature.value.geoOn(geo.event.feature.mouseclick, clickCell)
+    cellFeature.value.geoOn(geo.event.feature.mouseclick, (e: any) => {
+        clickCell(e, e.data.id)
+    })
 
     pointFeature.value = cellLayer.createFeature('point', {
         style: {
@@ -140,7 +142,9 @@ export function updateColors() {
             if (cell.__cluster) {
                 cell = clusterFirstPoint(cells.value, cell, i)
             }
-            if (selectedCellIds.value.includes(cell.id)) return selectedColor.value
+            if (selectedCellIds.value.has(cell.id)) {
+                return selectedColor.value
+            }
             return cellColors.value[cell.id]
         }
         cellFeature.value.style('strokeColor', styleCellFunction).draw()

@@ -11,7 +11,7 @@ export const fetchProgress = ref(0);
 export const cells = ref();
 export const cellColumns = ref();
 export const cellColors = ref();
-export const selectedCellIds = ref<number[]>([]);
+export const selectedCellIds = ref<Set<number>>(new Set<number>());
 
 export const cellFeature = ref()
 export const pointFeature = ref()
@@ -48,7 +48,7 @@ watch(selectedCellIds, () => {
             if (cell.__cluster) {
                 cell = clusterFirstPoint(cells.value, cell, i)
             }
-            if (selectedCellIds.value.includes(cell.id)) return selectedColor.value
+            if (selectedCellIds.value.has(cell.id)) return selectedColor.value
             return cellColors.value[cell.id]
         }
         cellFeature.value.style('strokeColor', styleCellFunction).draw()
