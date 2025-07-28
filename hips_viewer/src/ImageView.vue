@@ -63,8 +63,8 @@ function drawCells() {
 }
 
 function onZoom({zoomLevel}: any) {
-    cellFeature.value.visible((zoomLevel > ZOOM_THRESHOLD) && !!colormapName.value)
-    pointFeature.value.visible((zoomLevel <= ZOOM_THRESHOLD) && !!colormapName.value)
+    cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
+    pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
     map.value.draw()
 }
 
@@ -86,11 +86,6 @@ function resizeCellDrawer(e: MouseEvent) {
 
 onMounted(init)
 watch(cells, drawCells)
-watch(colormapName, () => {
-    // When colormap changed, reevaluate feature visibilty
-    // based on current zoom level and whether colormap is defined
-    onZoom({zoomLevel: map.value.zoom()})
-})
 </script>
 
 <template>
