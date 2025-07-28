@@ -1,17 +1,20 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue';
 import { addHoverCallback, addZoomCallback, createFeatures, createMap, updateColors } from '@/map';
-import { fetchImageCells } from '@/api';
+import { fetchCellColumns, fetchImageCells } from '@/api';
 import type { Image } from '@/types'
 import {
     status, cells, cellFeature, pointFeature,
     cellDrawerHeight, cellDrawerResizing,
     tooltipEnabled, tooltipContent, tooltipPosition,
-    colormapName, map, fetchProgress
+    colormapName, map, fetchProgress,
+    attributeOptions, cellColumns,
+    colorBy, colorLegend
 } from '@/store';
 
 import CellDrawer from '@/CellDrawer.vue';
 import ColorOptions from '@/ColorOptions.vue';
+import { getCellAttribute } from './utils';
 
 const props = defineProps<{
     id: number;
@@ -20,7 +23,15 @@ const props = defineProps<{
 
 const ZOOM_THRESHOLD = 7
 const defaultColor = '#00ff00'
+const defaultAttributes = [
+    'classification', 'orientation', 'width', 'height', 'x', 'y'
+]
+const tooltipExclude = ['id', 'vector_text']
 const mapId = computed(() => 'map-' + props.id)
+const colorLegendShown = computed(() =>
+    cells.value && colorBy.value && colormapName.value &&
+    colorLegend.value && colorLegend.value.categories().length
+)
 
 function init() {
     createMap(mapId.value, props.image.tile_url).then(() => {
@@ -35,6 +46,10 @@ function getCells() {
     fetchImageCells(props.image.id).then((data) => {
         cells.value = data;
     })
+    fetchCellColumns().then((data) => {
+        cellColumns.value = data
+        attributeOptions.value = [ ...defaultAttributes, ...data ]
+    })
 }
 
 function drawCells() {
@@ -42,20 +57,25 @@ function drawCells() {
         cellFeature.value.data(cells.value).draw()
         pointFeature.value.data(cells.value).draw()
         updateColors()
-        cellDrawerHeight.value = 100;
+        cellDrawerHeight.value = 80;
         status.value = undefined;
     }
 }
 
 function onZoom({zoomLevel}: any) {
-    cellFeature.value.visible((zoomLevel > ZOOM_THRESHOLD) && !!colormapName.value)
-    pointFeature.value.visible((zoomLevel <= ZOOM_THRESHOLD) && !!colormapName.value)
+    cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
+    pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
     map.value.draw()
 }
 
 function onHoverOver({data, mouse}: any) {
     if (tooltipEnabled.value) {
-        tooltipContent.value = data
+        tooltipContent.value = Object.fromEntries(
+            Object.entries(data).filter(([k]) => !tooltipExclude.includes(k))
+        )
+        if (colorBy.value && !tooltipContent.value[colorBy.value]) {
+            tooltipContent.value[colorBy.value] = getCellAttribute(data, colorBy.value)
+        }
         tooltipPosition.value = mouse.map
     }
 }
@@ -66,11 +86,6 @@ function resizeCellDrawer(e: MouseEvent) {
 
 onMounted(init)
 watch(cells, drawCells)
-watch(colormapName, () => {
-    // When colormap changed, reevaluate feature visibilty
-    // based on current zoom level and whether colormap is defined
-    onZoom({zoomLevel: map.value.zoom()})
-})
 </script>
 
 <template>
@@ -79,7 +94,7 @@ watch(colormapName, () => {
         @mousemove="resizeCellDrawer"
     >
         <div :id="mapId" class="map" :style="{height: `calc(100% - ${cellDrawerHeight + 70}px) !important`}"></div>
-        <div class="status" :style="{bottom: cellDrawerHeight + 80 + 'px'}">
+        <div class="status" :style="{bottom: cellDrawerHeight + (colorLegendShown ? 180 : 80) + 'px'}">
             <v-card v-if="status" class="px-4 py-2">
                 {{ status }}
                 <v-progress-linear v-if="fetchProgress" :model-value="fetchProgress"></v-progress-linear>
@@ -99,10 +114,10 @@ watch(colormapName, () => {
         <v-card class="cell-drawer" :style="{height: cellDrawerHeight + 'px'}">
             <CellDrawer v-if="cells?.length" :cells="cells" :height="cellDrawerHeight" :tile_url="props.image.tile_url"/>
         </v-card>
-        <div class="actions">
+        <div v-if="cells" class="actions">
             <v-btn icon>
                 <span class="material-symbols-outlined">palette</span>
-                <v-menu activator="parent" location="end" open-on-hover :close-on-content-click="false">
+                <v-menu activator="parent" location="end" :close-on-content-click="false">
                     <ColorOptions />
                 </v-menu>
             </v-btn>
