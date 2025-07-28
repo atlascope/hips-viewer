@@ -73,7 +73,7 @@ export function updateColors() {
         (cell: any) => getCellAttribute(cell, colorBy.value)
     ).map(
         (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v)
-    ).filter((v: any) => v))]
+    ).filter((v: any) => v !== undefined))];
     // @ts-ignore
     const colormapSets = colorbrewer[colormapName.value]
     let colors = colormapSets[values.length];
@@ -93,6 +93,7 @@ export function updateColors() {
         colormapFunction = (v: any) => {
             const valueProportion = (v - range[0]) / (range[1] - range[0])
             const maxIndex = rgbColors.length - 1
+            if (valueProportion === 0) return rgbColors[0]
             if (valueProportion === 1) return rgbColors[maxIndex]
             const index = Math.floor(maxIndex * valueProportion)
             const indexProportion = index / maxIndex
@@ -127,7 +128,7 @@ export function updateColors() {
                 cell = clusterFirstPoint(cells.value, cell, i)
             }
             const value = getCellAttribute(cell, colorBy.value)
-            if (!value) return { r: 0, g: 0, b: 0 }
+            if (value === undefined) return { r: 0, g: 0, b: 0 }
             return colormapFunction(value)
         }
         cellFeature.value.style('strokeColor', styleCellFunction).draw()

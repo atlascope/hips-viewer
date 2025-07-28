@@ -52,7 +52,7 @@ export function getCellAttribute(cell: Cell, attrName: string) {
     const vector = cell.vector_text.split(',')
     if (index >=0 && vector && vector[index]) {
       const value = vector[index]
-      if (parseFloat(value)) return parseFloat(value)
+      if (!isNaN(parseFloat(value))) return parseFloat(value)
       return value
     }
   }
