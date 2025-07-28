@@ -206,22 +206,22 @@ export function cellCounts() {
         (cell: any) => getCellAttribute(cell, colorBy.value)
     ).map(
         (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v)
-    ).filter((v: any) => v !== undefined))];
-    // @ts-ignore
+    ).filter((v: any) => v !== undefined))
+    ].filter((v: any) => typeof v === 'number' || typeof v === 'string');
 
-    const counts = {}
+    const counts: Record<string | number, number> = {}
     cells.value.forEach((cell: any) => {
         const key = getCellAttribute(cell, colorBy.value);
-        counts[key] = (counts[key] ?? 0) + 1;
+        if (key !== undefined) counts[key] = (counts[key] ?? 0) + 1;
     })
 
+    // @ts-ignore
     const colormapSets = colorbrewer[colormapName.value]
 
     const buckets = distNumBuckets.value;
-    showHistogram.value = values.length > buckets && values.every((v) => typeof v === 'number');
-    console.log('showHistogram', showHistogram.value, values.length, buckets, values.every((v) => typeof v === 'number'));
+    showHistogram.value = values.length > buckets;
 
-    if (!showHistogram.value) {
+    if (!showHistogram.value || !values.every((v) => typeof v === 'number')) {
         let colors = colormapSets[values.length];
         if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map((v) => parseInt(v)))]
         return values.map((v, i) => ({key: v, count: counts[v], color: colors[i]}))
@@ -240,7 +240,7 @@ export function cellCounts() {
         bucketedMin[bucketKey] = Math.min(bucketedMin[bucketKey] ?? vmax, value);
     });
 
-    // from above, TODO: refactor
+    // from above, TODO: refactor (make a function to return colormapFunction)
     let colors = colormapSets[Object.keys(bucketedCounts).length];
     if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map((v) => parseInt(v)))]
     const rgbColors = colors.map(hexToRgb)
