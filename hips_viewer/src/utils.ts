@@ -1,4 +1,4 @@
-import { cellColumns, cells, selectedCellIds } from "./store";
+import { cellColumns, cells, selectedCellIds, map, maxZoom } from "./store";
 import type { Cell } from "./types";
 
 export interface RGB { r: number, g: number, b: number }
@@ -75,7 +75,7 @@ export function getCellAttribute(cell: Cell, attrName: string) {
 	return undefined
 }
 
-export function clickCell(event: any, cellId: number | undefined) {
+export function selectCell(event: any, cellId: number | undefined) {
 	// create local copy without proxy for set operations
 	let currentIds = new Set(selectedCellIds.value)
 	const toggleMode = event.ctrlKey != undefined ? event.ctrlKey : event.sourceEvent.modifiers.ctrl;
@@ -102,4 +102,25 @@ export function clickCell(event: any, cellId: number | undefined) {
 		}
 	}
 	selectedCellIds.value = currentIds
+}
+
+const dblClickLength = 300;
+let clickCount = 0;
+let clickTimer: any = undefined;
+export function clickCell(event: any, cellId: number | undefined) {
+	clickCount += 1;
+	selectCell(event, cellId)
+	if (clickCount === 2) {
+		if (clickTimer) clearTimeout(clickTimer)
+		clickCount = 0
+		const cell = cells.value?.find((cell: Cell) => cell.id === cellId)
+		if (cell && map.value && maxZoom.value) {
+			map.value.center({ x: cell.x, y: cell.y })
+			map.value.zoom(maxZoom.value)
+		}
+	} else {
+		clickTimer = setTimeout(() => {
+			clickCount = 0
+		}, dblClickLength)
+	}
 }

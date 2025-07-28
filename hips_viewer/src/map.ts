@@ -7,7 +7,7 @@ import {
     selectedCellIds, selectedColor,
 } from '@/store'
 import {
-    clickCell,
+    selectCell,
     clusterFirstPoint, colorInterpolate,
     getCellAttribute, hexToRgb
 } from './utils';
@@ -52,7 +52,7 @@ export function createFeatures(color: string, zoomThreshold: number) {
     })
     cellFeature.value.visible(false)
     cellFeature.value.geoOn(geo.event.feature.mouseclick, (e: any) => {
-        clickCell(e, e.data.id)
+        selectCell(e, e.data.id)
     })
 
     pointFeature.value = cellLayer.createFeature('point', {
@@ -62,7 +62,7 @@ export function createFeatures(color: string, zoomThreshold: number) {
         }
     });
     pointFeature.value.clustering({ radius: 10, maxZoom: zoomThreshold })
-    pointFeature.value.geoOn(geo.event.feature.mouseclick, clickCell)
+    pointFeature.value.geoOn(geo.event.feature.mouseclick, selectCell)
 }
 
 export function addZoomCallback(callback: Function) {
