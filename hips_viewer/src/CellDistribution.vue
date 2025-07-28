@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import { cellCounts } from '@/map';
 
@@ -9,16 +9,17 @@ import { colorBy, distNumBuckets, showHistogram } from './store';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
+const logScaleHistogram = ref(false)
 
 const colorInfo = computed(() => cellCounts())
 const chartData = computed(() => {
     const labels = colorInfo.value.map((ci) => ci.key)
-    const counts = colorInfo.value.map((ci) => ci.count)
     const colors = colorInfo.value.map((ci) => ci.color)
+    const counts = colorInfo.value.map((ci) => logScaleHistogram.value ? Math.log(ci.count) : ci.count)
     return {
         labels,
         datasets: [{
-            label: "Count",
+            label: logScaleHistogram.value ? "Log(Count)" : "Count",
             data: counts,
             backgroundColor: colors,
         }]
@@ -57,6 +58,17 @@ const chartOptions = { responsive: true }
                     ></v-text-field>
                 </template>
             </v-slider>
+            <v-btn
+                v-if="showHistogram"
+                @click="logScaleHistogram = !logScaleHistogram"
+                color="black"
+                class="mt-3"
+            >
+                <span class="material-symbols-outlined">
+                    {{ logScaleHistogram ? 'close' : 'show_chart' }}
+                </span>
+                Log Scale Histogram
+            </v-btn>
         </v-card-text>
     </v-card>
 </template>
