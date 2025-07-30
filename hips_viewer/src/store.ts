@@ -54,7 +54,9 @@ watch(selectedCellIds, () => {
             if (selectedCellIds.value.has(cell.id)) return selectedColor.value
             return cellColors.value[cell.id]
         }
-        cellFeature.value.style('strokeColor', styleCellFunction).draw()
-        pointFeature.value.style('fillColor', styleCellFunction).draw()
+        cellFeature.value.style('strokeColor', styleCellFunction)
+        if (cellFeature.value.visible()) cellFeature.value.draw()
+        pointFeature.value.style('fillColor', styleCellFunction)
+        if (pointFeature.value.visible()) pointFeature.value.draw()
     }
 })
