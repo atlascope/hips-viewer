@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import type { Cell, Thumbnail } from '@/types';
 import { cellColors, selectedCellIds, selectedColor } from './store';
-import { clickCell, rgbToHex, type RGB } from './utils';
+import { clickCellThumbnail, rgbToHex, type RGB } from './utils';
 
 const props = defineProps<{
     cells: Cell[],
@@ -63,7 +63,7 @@ function loadThumbnails({ done }: any) {
                     cellColors[thumbnail.id] ? 0 : 4
                 }px`"
                 class="cell-thumbnail"
-                @click="(e) => clickCell(e, thumbnail.id)"
+                @click="(e) => clickCellThumbnail(e, thumbnail.id)"
             />
         </div>
     </v-infinite-scroll>

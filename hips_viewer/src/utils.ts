@@ -109,7 +109,7 @@ export function selectCell(event: any, cellId: number | undefined) {
 const dblClickLength = 300;
 let clickCount = 0;
 let clickTimer: any = undefined;
-export function clickCell(event: any, cellId: number | undefined) {
+export function clickCellThumbnail(event: any, cellId: number | undefined) {
 	clickCount += 1;
 	selectCell(event, cellId)
 	if (clickCount === 2) {
