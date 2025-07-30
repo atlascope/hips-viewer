@@ -34,28 +34,28 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
 	}
 }
 
-export function clusterFirstPoint(data: any, d: any, i: number) {
-	if (d.__cluster) {
-		d = d.obj;
+export function clusterFirstPoint(data: any, current: any, i: number) {
+	if (current.__cluster) {
+		current = current.obj;
 	}
-	if (d._points === undefined) return d;
-	if (d._points.length) {
-		return data[d._points[0].index];
+	if (current._points === undefined) return current;
+	if (current._points.length) {
+		return data[current._points[0].index];
 	}
-	return clusterFirstPoint(data, d._clusters[0], i);
+	return clusterFirstPoint(data, current._clusters[0], i);
 }
 
-export function clusterAllPoints(data: any, d: any, i: number, allPoints: any[]) {
-	if (d.__cluster) {
-		d = d.obj;
+export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[]) {
+	if (current.__cluster) {
+		current = current.obj;
 	}
-	if (d._points === undefined) return [...allPoints, d];
-	if (d._points.length) {
-		const indexes = d._points.map((p: { index: number }) => p.index)
+	if (current._points === undefined) return [...allPoints, current];
+	if (current._points.length) {
+		const indexes = current._points.map((p: { index: number }) => p.index)
 		const points = indexes.map((i: number) => data[i])
 		allPoints = [...allPoints, ...points];
 	}
-	d._clusters.forEach((cluster: any) => {
+	current._clusters.forEach((cluster: any) => {
 		allPoints = clusterAllPoints(data, cluster, i, allPoints)
 	})
 	return allPoints
