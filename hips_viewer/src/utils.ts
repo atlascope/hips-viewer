@@ -1,4 +1,4 @@
-import { cellColumns, cells, selectedCellIds, map, maxZoom } from "./store";
+import { cellColumns, cells, selectedCellIds, map, maxZoom, annotationMode } from "./store";
 import type { Cell } from "./types";
 
 export interface RGB { r: number, g: number, b: number }
@@ -76,6 +76,7 @@ export function getCellAttribute(cell: Cell, attrName: string) {
 }
 
 export function selectCell(event: any, cellId: number | undefined) {
+	if (annotationMode.value === 'polygon') return
 	// create local copy without proxy for set operations
 	let currentIds = new Set(selectedCellIds.value)
 	const toggleMode = event.ctrlKey != undefined ? event.ctrlKey : event.sourceEvent.modifiers.ctrl;
