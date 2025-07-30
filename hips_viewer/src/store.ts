@@ -27,7 +27,7 @@ export const tooltipPosition = ref()
 
 export const unappliedColorChanges = ref(false);
 export const colorLegend = ref()
-export const selectedColor = ref('#fffb00')
+export const selectedColor = ref('#000')
 export const colorBy = ref('classification')
 export const colormapType = ref<
     'qualitative' | 'sequential' | 'diverging'
