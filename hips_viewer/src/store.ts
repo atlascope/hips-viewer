@@ -15,6 +15,9 @@ export const selectedCellIds = ref<Set<number>>(new Set<number>());
 
 export const cellFeature = ref()
 export const pointFeature = ref()
+export const annotationLayer = ref()
+export const annotationMode = ref()
+
 export const cellDrawerHeight = ref(0);
 export const cellDrawerResizing = ref(false)
 

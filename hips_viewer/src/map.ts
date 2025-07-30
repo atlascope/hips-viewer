@@ -4,7 +4,8 @@ import colorbrewer from 'colorbrewer';
 import {
     cells, map, maxZoom, cellFeature, pointFeature,
     colorBy, colormapName, colorLegend, cellColors,
-    selectedCellIds, selectedColor,
+    selectedCellIds, selectedColor, annotationLayer,
+    annotationMode,
 } from '@/store'
 import {
     selectCell,
@@ -30,6 +31,13 @@ export async function createMap(mapId: string, tileUrl: string) {
         ticks: 10,
         width: '1000'
     })
+    annotationLayer.value = map.value.createLayer('annotation', {
+        showLabels: false,
+        clickToEdit: false,
+    })
+    annotationLayer.value.geoOn(
+        geo.event.annotation.mode, lassoSelect
+    )
     map.value.draw()
 }
 
@@ -71,6 +79,17 @@ export function addZoomCallback(callback: Function) {
 
 export function addHoverCallback(callback: Function, feature: any) {
     feature.geoOn(geo.event.feature.mouseover, callback)
+}
+
+export function lassoSelect(e: any) {
+    annotationMode.value = e.mode
+    const currentAnnotations = annotationLayer.value.annotations()
+    if (!annotationMode.value && currentAnnotations.length) {
+        const selectionPolygon = currentAnnotations[0].coordinates()
+        const foundCells = cellFeature.value.polygonSearch({ outer: selectionPolygon }).found
+        selectedCellIds.value = new Set(foundCells.map((cell: Cell) => cell.id))
+        annotationLayer.value.removeAllAnnotations()
+    }
 }
 
 export function updateColors() {
