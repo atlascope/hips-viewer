@@ -9,6 +9,8 @@ export default tseslint.config(
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
       '@stylistic/indent': ['error', 2],
     },
   },
