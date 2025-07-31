@@ -84,9 +84,13 @@ export function addHoverCallback(callback: Function, feature: any) {
 }
 
 export function lassoSelect(e: any) {
-    annotationMode.value = e.mode
+    const mode = e.mode
+    setTimeout(() => {
+        annotationMode.value = mode
+    }, 0);
+
     const currentAnnotations = annotationLayer.value.annotations()
-    if (!annotationMode.value && currentAnnotations.length) {
+    if (!mode && currentAnnotations.length) {
         const selectionPolygon = currentAnnotations[0].coordinates()
         const foundCells = cellFeature.value.polygonSearch({ outer: selectionPolygon }).found
         selectedCellIds.value = new Set(foundCells.map((cell: Cell) => cell.id))
