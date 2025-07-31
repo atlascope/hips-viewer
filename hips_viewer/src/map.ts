@@ -5,12 +5,13 @@ import {
     cells, map, maxZoom, cellFeature, pointFeature,
     colorBy, colormapName, colorLegend, cellColors,
     selectedCellIds, selectedColor, annotationLayer,
-    annotationMode,
+    annotationMode, annotationBoolean,
+    lastAnnotation,
 } from '@/store'
 import {
     selectCell,
     clusterFirstPoint, colorInterpolate,
-    getCellAttribute, hexToRgb
+    getCellAttribute, hexToRgb, multiSelectCells
 } from './utils';
 import type { Cell } from './types';
 
@@ -36,7 +37,24 @@ export async function createMap(mapId: string, tileUrl: string) {
         clickToEdit: false,
     })
     annotationLayer.value.geoOn(
-        geo.event.annotation.mode, lassoSelect
+      geo.event.annotation.mode, (e: any) => {
+        const mode = e.mode
+        setTimeout(() => {
+          annotationMode.value = mode
+        }, 0);
+        if (!mode) annotationLayer.value.removeAllAnnotations()
+      }
+    )
+    annotationLayer.value.geoOn(
+      geo.event.annotation.remove, (event: any) => {
+        annotationBoolean.value = annotationLayer.value.currentBooleanOperation()
+        const annotation = event.annotation.coordinates()
+        // ensure that each annotation is only used once; union fires two remove events
+        if (JSON.stringify(lastAnnotation.value) !== JSON.stringify(annotation)) {
+          lassoSelect(annotation)
+          lastAnnotation.value = annotation
+        }
+      }
     )
     map.value.draw()
 }
@@ -83,19 +101,12 @@ export function addHoverCallback(callback: Function, feature: any) {
     feature.geoOn(geo.event.feature.mouseover, callback)
 }
 
-export function lassoSelect(e: any) {
-    const mode = e.mode
-    setTimeout(() => {
-        annotationMode.value = mode
-    }, 0);
-
-    const currentAnnotations = annotationLayer.value.annotations()
-    if (!mode && currentAnnotations.length) {
-        const selectionPolygon = currentAnnotations[0].coordinates()
-        const foundCells = cellFeature.value.polygonSearch({ outer: selectionPolygon }).found
-        selectedCellIds.value = new Set(foundCells.map((cell: Cell) => cell.id))
-        annotationLayer.value.removeAllAnnotations()
-    }
+export function lassoSelect(polygon: {x: number, y: number}[]) {
+  const foundCells = cellFeature.value.polygonSearch({ outer: polygon }).found
+  multiSelectCells({
+    ctrlKey: annotationBoolean.value === 'difference',
+    shiftKey: annotationBoolean.value === 'union'
+  }, foundCells.map((cell: Cell) => cell.id))
 }
 
 export function updateColors() {

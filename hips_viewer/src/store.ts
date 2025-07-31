@@ -17,6 +17,8 @@ export const cellFeature = ref()
 export const pointFeature = ref()
 export const annotationLayer = ref()
 export const annotationMode = ref()
+export const annotationBoolean = ref()
+export const lastAnnotation = ref()
 
 export const cellDrawerHeight = ref(0);
 export const cellDrawerResizing = ref(false)

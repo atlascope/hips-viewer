@@ -79,32 +79,41 @@ export function selectCell(event: any, cellId: number | undefined) {
     if (annotationMode.value === 'polygon') return
     // create local copy without proxy for set operations
     let currentIds = new Set(selectedCellIds.value)
-    const toggleMode = event.ctrlKey != undefined ? event.ctrlKey : event.sourceEvent.modifiers.ctrl;
+    const add = event.shiftKey != undefined ? event.shiftKey : event.sourceEvent.modifiers.shift;
+    const subtract = event.ctrlKey != undefined ? event.ctrlKey : event.sourceEvent.modifiers.ctrl;
     if (!cellId) {
         if (event.data.id) {
             return selectCell(event, event.data.id)
         } else if (event.data.__cluster) {
             const clusterPoints = clusterAllPoints(cells.value, event.data, event.index, [])
-            const clusterPointIds = new Set(clusterPoints.map((cell) => cell.id))
-            if (toggleMode) {
-                if (currentIds.intersection(clusterPointIds).size === clusterPointIds.size) {
-                    currentIds = currentIds.difference(clusterPointIds)
-                } else {
-                    currentIds = currentIds.union(clusterPointIds)
-                }
-            } else {
-                currentIds = clusterPointIds
-            }
+            return multiSelectCells(event, clusterPoints.map((cell) => cell.id))
         }
     } else {
-        if (toggleMode) {
-            if (currentIds.has(cellId)) currentIds.delete(cellId)
-            else currentIds.add(cellId);
+        if (add) {
+          currentIds.add(cellId);
+        } else if (subtract) {
+          currentIds.delete(cellId)
         } else {
-            currentIds = new Set([cellId]);
+          currentIds = new Set([cellId]);
         }
     }
     selectedCellIds.value = currentIds
+}
+
+export function multiSelectCells(event: any, cellIds: number[]) {
+  // create local copy without proxy for set operations
+  let currentIds = new Set(selectedCellIds.value)
+  let targetIds = new Set(cellIds)
+  const add = event.shiftKey != undefined ? event.shiftKey : event.sourceEvent.modifiers.shift;
+  const subtract = event.ctrlKey != undefined ? event.ctrlKey : event.sourceEvent.modifiers.ctrl;
+  if (add) {
+    currentIds = currentIds.union(targetIds)
+  } else if (subtract) {
+    currentIds = currentIds.difference(targetIds)
+  } else {
+    currentIds = targetIds
+  }
+  selectedCellIds.value = currentIds
 }
 
 const dblClickLength = 300;
