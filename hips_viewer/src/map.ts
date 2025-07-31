@@ -60,7 +60,7 @@ export function createFeatures(color: string, zoomThreshold: number) {
     })
     cellFeature.value.visible(false)
     cellFeature.value.geoOn(geo.event.feature.mouseclick, (e: any) => {
-        selectCell(e, e.data.id)
+        if (cellFeature.value.visible()) selectCell(e, e.data.id)
     })
 
     pointFeature.value = cellLayer.createFeature('point', {
@@ -70,7 +70,9 @@ export function createFeatures(color: string, zoomThreshold: number) {
         }
     });
     pointFeature.value.clustering({ radius: 10, maxZoom: zoomThreshold })
-    pointFeature.value.geoOn(geo.event.feature.mouseclick, selectCell)
+    pointFeature.value.geoOn(geo.event.feature.mouseclick, (e: any) => {
+        if (pointFeature.value.visible()) selectCell(e, undefined)
+    })
 }
 
 export function addZoomCallback(callback: Function) {
