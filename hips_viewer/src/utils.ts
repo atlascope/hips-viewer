@@ -82,7 +82,7 @@ export function selectCell(event: any, cellId: number | undefined) {
 	const toggleMode = event.ctrlKey != undefined ? event.ctrlKey : event.sourceEvent.modifiers.ctrl;
 	if (!cellId) {
 		if (event.data.id) {
-			selectCell(event, event.data.id)
+			return selectCell(event, event.data.id)
 		} else if (event.data.__cluster) {
 			const clusterPoints = clusterAllPoints(cells.value, event.data, event.index, [])
 			const clusterPointIds = new Set(clusterPoints.map((cell) => cell.id))
