@@ -10,7 +10,6 @@ const vuetify = createVuetify({
   },
 })
 
-
 // Composables
 import { createApp } from 'vue'
 
