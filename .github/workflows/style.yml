@@ -11,4 +11,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-      - run: cd web && npm i && npm run lint
+      - run: cd hips_viewer && npm i && npm run lint
