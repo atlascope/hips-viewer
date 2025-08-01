@@ -5,7 +5,9 @@ import { cellCounts } from '@/map';
 
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
-import { colorBy, distNumBuckets, showHistogram } from './store';
+import { colorBy, histNumBuckets, showHistogram,
+         histSelectedCells, histSelectionType,
+         cells, map, cellFeature } from './store';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -15,14 +17,31 @@ const cellData = ref<null | {key: string | number, color: string, count: number}
 const chartData = ref()
 const chartOptions = { responsive: true }
 
+function countCells() {
+    if (!cells.value || !map.value || !cellFeature.value) {
+        console.warn('Cells, map, or cell feature not initialized')
+        return
+    }
+
+    if (histSelectionType.value === 'all') {
+        histSelectedCells.value = new Set(cells.value.map((c: any) => c.id))
+    } else if (histSelectionType.value === 'viewport') {
+        histSelectedCells.value = new Set(cellFeature.value.polygonSearch(map.value.corners()).found.map((c: any) => c.id))
+    } else if (histSelectionType.value === 'selected') {
+        console.error('TODO: once cell selection is merged')
+    }
+}
+
+
 watchEffect(async () => {
     if (chartData.value) return
 
     await new Promise(r => setTimeout(r, 100)) // wait for DOM update
     cellData.value = cellCounts()
+    countCells()
 })
 
-watch(distNumBuckets, () => {
+watch([histNumBuckets, histSelectedCells], () => {
     cellData.value = cellCounts()
 })
 
@@ -50,7 +69,7 @@ watch([cellData, histogramScale], () => {
     <v-card class="chart-container" variant="outlined">
         <div class="menu-title">Cell Distribution</div>
         <v-card-text>
-            <v-label>{{ colorBy }}</v-label>
+            <v-label>{{ colorBy }} ({{ histSelectedCells.size }} / {{ cells.length }})</v-label>
 
             <template v-if="!chartData">
                 <v-skeleton-loader type="card"/>
@@ -64,7 +83,7 @@ watch([cellData, histogramScale], () => {
 
             <v-slider
                 v-if="showHistogram"
-                v-model="distNumBuckets"
+                v-model="histNumBuckets"
                 :min="20"
                 :max="100"
                 :step="1"
@@ -73,7 +92,7 @@ watch([cellData, histogramScale], () => {
             >
                 <template #append>
                     <v-text-field
-                        v-model="distNumBuckets"
+                        v-model="histNumBuckets"
                         density="compact"
                         style="width: 70px"
                         type="number"
@@ -87,6 +106,14 @@ watch([cellData, histogramScale], () => {
                 <v-btn-toggle v-model="histogramScale" divided>
                     <v-btn value="linear">Linear</v-btn>
                     <v-btn value="log">Logarithmic</v-btn>
+                </v-btn-toggle>
+            </div>
+            <div>
+                <label class="text-subtitle-1 pr-2">Select Cells:</label>
+                <v-btn-toggle v-model="histogramSelection" @click="countCells" divided>
+                    <v-btn value="all">All</v-btn>
+                    <v-btn value="viewport">Viewport</v-btn>
+                    <v-btn value="selected">Selected</v-btn>
                 </v-btn-toggle>
             </div>
         </v-card-text>
