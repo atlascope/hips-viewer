@@ -197,7 +197,7 @@ export function updateColors() {
   }
 }
 
-export function cellCounts() {
+export function cellDistribution() {
     if (!(colormapName.value && cells.value && histSelectedCells.value)) return []
     // TODO: select cells in viewport only (or add toggle)
     const selectedCells = cells.value.filter((cell: any) => histSelectedCells.value.has(cell.id))
