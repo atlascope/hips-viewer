@@ -5,13 +5,12 @@ import {
     cells, map, maxZoom, cellFeature, pointFeature,
     colorBy, colormapName, colorLegend, cellColors,
     selectedCellIds, selectedColor, annotationLayer,
-    annotationMode, annotationBoolean,
-    lastAnnotation,
+    annotationMode, annotationBoolean, lastAnnotation,
 } from '@/store'
 import {
     selectCell,
     clusterFirstPoint, colorInterpolate,
-    getCellAttribute, hexToRgb, multiSelectCells
+    getCellAttribute, hexToRgb,
 } from './utils';
 import type { Cell } from './types';
 
@@ -103,10 +102,17 @@ export function addHoverCallback(callback: Function, feature: any) {
 
 export function lassoSelect(polygon: {x: number, y: number}[]) {
   const foundCells = cellFeature.value.polygonSearch({ outer: polygon }).found
-  multiSelectCells({
-    ctrlKey: annotationBoolean.value === 'difference',
-    shiftKey: annotationBoolean.value === 'union'
-  }, foundCells.map((cell: Cell) => cell.id))
+  // create local copy without proxy for set operations
+  let currentIds: Set<number> = new Set(selectedCellIds.value)
+  let targetIds: Set<number> = new Set(foundCells.map((cell: Cell) => cell.id))
+  if (annotationBoolean.value === 'union') {
+    currentIds = currentIds.union(targetIds)
+  } else if (annotationBoolean.value === 'difference') {
+    currentIds = currentIds.difference(targetIds)
+  } else {
+    currentIds = targetIds
+  }
+  selectedCellIds.value = currentIds
 }
 
 export function updateColors() {
