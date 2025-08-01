@@ -1,24 +1,29 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { fetchImages } from '@/api';
-import ImageView from '@/ImageView.vue';
-
+import { onMounted, ref } from 'vue'
+import { fetchImages } from '@/api'
+import ImageView from '@/ImageView.vue'
 
 const images = ref()
 const currentImage = ref()
 
 onMounted(() => {
   fetchImages().then((data) => {
-    images.value = data;
+    images.value = data
     if (images.value.length) currentImage.value = images.value[0]
   })
 })
 </script>
 
 <template>
-  <v-toolbar color="background" height="40">
-    <v-img src="/logo.png" max-width="120" />
-    <template v-slot:extension>
+  <v-toolbar
+    color="background"
+    height="40"
+  >
+    <v-img
+      src="/logo.png"
+      max-width="120"
+    />
+    <template #extension>
       <v-tabs
         v-model="currentImage"
         height="30"
@@ -41,7 +46,10 @@ onMounted(() => {
       :key="index"
       :value="image"
     >
-      <ImageView :image="image" :id="index"/>
+      <ImageView
+        :id="index"
+        :image="image"
+      />
     </v-tabs-window-item>
   </v-tabs-window>
 </template>

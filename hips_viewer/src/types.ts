@@ -21,3 +21,9 @@ export interface Thumbnail {
   width: number
   height: number
 }
+
+export interface TreeItem {
+  title: string
+  value?: string
+  children?: TreeItem[]
+}
