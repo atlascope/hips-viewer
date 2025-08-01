@@ -4,13 +4,14 @@ import colorbrewer from 'colorbrewer';
 import {
     cells, map, maxZoom, cellFeature, pointFeature,
     colorBy, colormapName, colorLegend, cellColors,
+    histNumBuckets, showHistogram, histSelectedCells,
     selectedCellIds, selectedColor, annotationLayer,
     annotationMode, annotationBoolean, lastAnnotation,
 } from '@/store'
 import {
     selectCell,
     clusterFirstPoint, colorInterpolate,
-    getCellAttribute, hexToRgb,
+    getCellAttribute, hexToRgb, rgbToHex,
 } from './utils';
 import type { Cell } from './types';
 
@@ -192,4 +193,71 @@ export function updateColors() {
         cellFeature.value.style('strokeColor', styleCellFunction).draw()
         pointFeature.value.style('fillColor', styleCellFunction).draw()
     }
+}
+
+export function cellDistribution() {
+    if (!(colormapName.value && cells.value && histSelectedCells.value)) return []
+    // TODO: select cells in viewport only (or add toggle)
+    const selectedCells = cells.value.filter((cell: any) => histSelectedCells.value.has(cell.id))
+
+    const values = [...new Set(cells.value.map(
+        (cell: any) => getCellAttribute(cell, colorBy.value)
+    ).map(
+        (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v)
+    ).filter((v: any) => v !== undefined))
+    ].filter((v: any) => typeof v === 'number' || typeof v === 'string');
+
+    const counts: Record<string | number, number> = {}
+    selectedCells.forEach((cell: any) => {
+        const key = getCellAttribute(cell, colorBy.value);
+        if (key !== undefined) counts[key] = (counts[key] ?? 0) + 1;
+    })
+
+    // @ts-ignore
+    const colormapSets = colorbrewer[colormapName.value]
+
+    const buckets = histNumBuckets.value;
+    showHistogram.value = values.length > buckets;
+
+    if (!showHistogram.value || !values.every((v) => typeof v === 'number')) {
+        let colors = colormapSets[values.length];
+        if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map((v) => parseInt(v)))]
+        return values.map((v, i) => ({key: v, count: counts[v] ?? 0, color: colors[i]}))
+    }
+
+    const vmin = Math.min(...values);
+    const vmax = Math.max(...values);
+    const step = (vmax - vmin) / buckets;
+
+    const bucketedCounts: Record<string, number> = {};
+    const bucketedMin: Record<string, number> = {};
+    values.sort((a, b) => a - b).forEach((value) => {
+        const bucketIndex = Math.floor((value - vmin) / step);
+        const bucketKey = `${bucketIndex * step}`;
+        bucketedCounts[bucketKey] = (bucketedCounts[bucketKey] ?? 0) + (counts[value] ?? 0);
+        bucketedMin[bucketKey] = Math.min(bucketedMin[bucketKey] ?? vmax, value);
+    });
+
+    // from above, TODO: refactor (make a function to return colormapFunction)
+    let colors = colormapSets[Object.keys(bucketedCounts).length];
+    if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map((v) => parseInt(v)))]
+    const rgbColors = colors.map(hexToRgb)
+
+    const colormapFunction = (v: number) => {
+        const valueProportion = (v - vmin) / (vmax - vmin)
+        const maxIndex = colors.length - 1
+        if (valueProportion === 1) return colors[maxIndex]
+        const index = Math.floor(maxIndex * valueProportion)
+        const indexProportion = index / maxIndex
+        const interpolationProportion = (valueProportion - indexProportion) * maxIndex
+        const interpolated = colorInterpolate(rgbColors[index], rgbColors[index+1], interpolationProportion)
+        return rgbToHex(interpolated)
+    }
+    //
+
+    return Object.keys(bucketedCounts).sort((a, b) => (parseFloat(a) - parseFloat(b))).map((v) => ({
+        key: `${bucketedMin[v].toFixed(2)}`,
+        count: bucketedCounts[v],
+        color: colormapFunction(bucketedMin[v])
+    }))
 }

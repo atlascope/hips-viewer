@@ -16,6 +16,7 @@ import {
 import CellDrawer from '@/CellDrawer.vue';
 import ColorOptions from '@/ColorOptions.vue';
 import { getCellAttribute } from './utils';
+import CellDistribution from '@/CellDistribution.vue';
 
 const props = defineProps<{
     id: number;
@@ -134,6 +135,12 @@ watch(cells, drawCells)
                 :color="annotationMode ? 'black' : 'white'"
             >
                 <span class="material-symbols-outlined"> lasso_select </span>
+            </v-btn>
+            <v-btn icon>
+                <span class="material-symbols-outlined">bar_chart_4_bars</span>
+                <v-menu activator="parent" location="end" :close-on-content-click="false">
+                    <CellDistribution />
+                </v-menu>
             </v-btn>
         </div>
         <v-card
