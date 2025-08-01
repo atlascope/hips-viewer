@@ -4,7 +4,7 @@ import colorbrewer from 'colorbrewer'
 import {
   cells, map, maxZoom, cellFeature, pointFeature,
   colorBy, colormapName, colorLegend, cellColors,
-  distNumBuckets, showHistogram,
+  histNumBuckets, showHistogram, histSelectedCells,
   selectedCellIds, selectedColor, annotationLayer,
   annotationMode, annotationBoolean, lastAnnotation,
 } from '@/store'
@@ -198,9 +198,9 @@ export function updateColors() {
 }
 
 export function cellCounts() {
-    if (!(colormapName.value && cells.value)) return []
-
+    if (!(colormapName.value && cells.value && histSelectedCells.value)) return []
     // TODO: select cells in viewport only (or add toggle)
+    const selectedCells = cells.value.filter((cell: any) => histSelectedCells.value.has(cell.id))
 
     const values = [...new Set(cells.value.map(
         (cell: any) => getCellAttribute(cell, colorBy.value)
@@ -210,7 +210,7 @@ export function cellCounts() {
     ].filter((v: any) => typeof v === 'number' || typeof v === 'string');
 
     const counts: Record<string | number, number> = {}
-    cells.value.forEach((cell: any) => {
+    selectedCells.forEach((cell: any) => {
         const key = getCellAttribute(cell, colorBy.value);
         if (key !== undefined) counts[key] = (counts[key] ?? 0) + 1;
     })
@@ -218,13 +218,13 @@ export function cellCounts() {
     // @ts-ignore
     const colormapSets = colorbrewer[colormapName.value]
 
-    const buckets = distNumBuckets.value;
+    const buckets = histNumBuckets.value;
     showHistogram.value = values.length > buckets;
 
     if (!showHistogram.value || !values.every((v) => typeof v === 'number')) {
         let colors = colormapSets[values.length];
         if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map((v) => parseInt(v)))]
-        return values.map((v, i) => ({key: v, count: counts[v], color: colors[i]}))
+        return values.map((v, i) => ({key: v, count: counts[v] ?? 0, color: colors[i]}))
     }
 
     const vmin = Math.min(...values);
@@ -236,7 +236,7 @@ export function cellCounts() {
     values.sort((a, b) => a - b).forEach((value) => {
         const bucketIndex = Math.floor((value - vmin) / step);
         const bucketKey = `${bucketIndex * step}`;
-        bucketedCounts[bucketKey] = (bucketedCounts[bucketKey] ?? 0) + counts[value];
+        bucketedCounts[bucketKey] = (bucketedCounts[bucketKey] ?? 0) + (counts[value] ?? 0);
         bucketedMin[bucketKey] = Math.min(bucketedMin[bucketKey] ?? vmax, value);
     });
 

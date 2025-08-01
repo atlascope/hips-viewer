@@ -28,8 +28,10 @@ export const tooltipPosition = ref()
 
 export const unappliedColorChanges = ref(false)
 
-export const distNumBuckets = ref(50)
 export const showHistogram = ref(false)
+export const histNumBuckets = ref(50)
+export const histSelectedCells = ref<any>(new Set())
+export const histSelectionType = ref<'all' | 'viewport' | 'selected'>('all')
 
 export const colorLegend = ref()
 export const selectedColor = ref('#000')
@@ -63,4 +65,8 @@ watch(selectedCellIds, () => {
     pointFeature.value.style('fillColor', styleCellFunction)
     if (pointFeature.value.visible()) pointFeature.value.draw()
   }
+})
+
+watch(cells, () => {
+    histSelectedCells.value = new Set(cells.value?.map((c: any) => c.id))
 })
