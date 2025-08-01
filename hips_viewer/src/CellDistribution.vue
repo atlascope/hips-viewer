@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watchEffect, watch } from 'vue';
 
-import { cellCounts } from '@/map';
+import { cellDistribution } from '@/map';
 
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
@@ -17,11 +17,8 @@ const cellData = ref<null | {key: string | number, color: string, count: number}
 const chartData = ref()
 const chartOptions = { responsive: true }
 
-function countCells() {
-    if (!cells.value || !map.value || !cellFeature.value) {
-        console.warn('Cells, map, or cell feature not initialized')
-        return
-    }
+function changeHistSelection() {
+    if (!cells.value) return
 
     if (histSelectionType.value === 'all') {
         histSelectedCells.value = new Set(cells.value.map((c: any) => c.id))
@@ -37,12 +34,12 @@ watchEffect(async () => {
     if (chartData.value) return
 
     await new Promise(r => setTimeout(r, 100)) // wait for DOM update
-    cellData.value = cellCounts()
-    countCells()
+    cellData.value = cellDistribution()
+    changeHistSelection()
 })
 
 watch([histNumBuckets, histSelectedCells], () => {
-    cellData.value = cellCounts()
+    cellData.value = cellDistribution()
 })
 
 watch([cellData, histogramScale], () => {
@@ -110,7 +107,7 @@ watch([cellData, histogramScale], () => {
             </div>
             <div>
                 <label class="text-subtitle-1 pr-2">Select Cells:</label>
-                <v-btn-toggle v-model="histSelectionType" @click="countCells" divided>
+                <v-btn-toggle v-model="histSelectionType" @click="changeHistSelection" divided>
                     <v-btn value="all">All</v-btn>
                     <v-btn value="viewport">Viewport</v-btn>
                     <v-btn value="selected">Selected</v-btn>
