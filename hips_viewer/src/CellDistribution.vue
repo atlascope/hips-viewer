@@ -6,7 +6,7 @@ import { cellCounts } from '@/map';
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 import { colorBy, histNumBuckets, showHistogram,
-         histSelectedCells, histSelectionType,
+         histSelectedCells, histSelectionType, selectedCellIds,
          cells, map, cellFeature } from './store';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -28,7 +28,7 @@ function countCells() {
     } else if (histSelectionType.value === 'viewport') {
         histSelectedCells.value = new Set(cellFeature.value.polygonSearch(map.value.corners()).found.map((c: any) => c.id))
     } else if (histSelectionType.value === 'selected') {
-        console.error('TODO: once cell selection is merged')
+        histSelectedCells.value = new Set(selectedCellIds.value)
     }
 }
 
@@ -69,7 +69,7 @@ watch([cellData, histogramScale], () => {
     <v-card class="chart-container" variant="outlined">
         <div class="menu-title">Cell Distribution</div>
         <v-card-text>
-            <v-label>{{ colorBy }} ({{ histSelectedCells.size }} / {{ cells.length }})</v-label>
+            <v-label>{{ colorBy }}</v-label>
 
             <template v-if="!chartData">
                 <v-skeleton-loader type="card"/>
@@ -110,12 +110,13 @@ watch([cellData, histogramScale], () => {
             </div>
             <div>
                 <label class="text-subtitle-1 pr-2">Select Cells:</label>
-                <v-btn-toggle v-model="histogramSelection" @click="countCells" divided>
+                <v-btn-toggle v-model="histSelectionType" @click="countCells" divided>
                     <v-btn value="all">All</v-btn>
                     <v-btn value="viewport">Viewport</v-btn>
                     <v-btn value="selected">Selected</v-btn>
                 </v-btn-toggle>
             </div>
+            <v-label>({{ histSelectedCells.size }} / {{ cells.length }})</v-label>
         </v-card-text>
     </v-card>
 </template>
