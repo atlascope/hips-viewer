@@ -9,7 +9,8 @@ import {
     tooltipEnabled, tooltipContent, tooltipPosition,
     colormapName, map, fetchProgress,
     attributeOptions, cellColumns,
-    colorBy, colorLegend
+    colorBy, colorLegend,
+    annotationLayer, annotationMode,
 } from '@/store';
 
 import CellDrawer from '@/CellDrawer.vue';
@@ -125,6 +126,14 @@ watch(cells, drawCells)
                 <span class="material-symbols-outlined">
                     {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
                 </span>
+            </v-btn>
+            <v-btn
+                icon
+                v-tooltip="'Select Mode'"
+                @click="() => annotationLayer.mode('polygon')"
+                :color="annotationMode ? 'black' : 'white'"
+            >
+                <span class="material-symbols-outlined"> lasso_select </span>
             </v-btn>
         </div>
         <v-card

@@ -3,9 +3,16 @@ import colorbrewer from 'colorbrewer';
 
 import {
     cells, map, maxZoom, cellFeature, pointFeature,
-    colorBy, colormapName, colorLegend,
+    colorBy, colormapName, colorLegend, cellColors,
+    selectedCellIds, selectedColor, annotationLayer,
+    annotationMode, annotationBoolean, lastAnnotation,
 } from '@/store'
-import { clusterFirstPoint, colorInterpolate, getCellAttribute, hexToRgb } from './utils';
+import {
+    selectCell,
+    clusterFirstPoint, colorInterpolate,
+    getCellAttribute, hexToRgb,
+} from './utils';
+import type { Cell } from './types';
 
 
 export async function createMap(mapId: string, tileUrl: string) {
@@ -24,6 +31,30 @@ export async function createMap(mapId: string, tileUrl: string) {
         ticks: 10,
         width: '1000'
     })
+    annotationLayer.value = map.value.createLayer('annotation', {
+        showLabels: false,
+        clickToEdit: false,
+    })
+    annotationLayer.value.geoOn(
+      geo.event.annotation.mode, (e: any) => {
+        const mode = e.mode
+        setTimeout(() => {
+          annotationMode.value = mode
+        }, 0);
+        if (!mode) annotationLayer.value.removeAllAnnotations()
+      }
+    )
+    annotationLayer.value.geoOn(
+      geo.event.annotation.remove, (event: any) => {
+        annotationBoolean.value = annotationLayer.value.currentBooleanOperation()
+        const annotation = event.annotation.coordinates()
+        // ensure that each annotation is only used once; union fires two remove events
+        if (JSON.stringify(lastAnnotation.value) !== JSON.stringify(annotation)) {
+          lassoSelect(annotation)
+          lastAnnotation.value = annotation
+        }
+      }
+    )
     map.value.draw()
 }
 
@@ -45,6 +76,9 @@ export function createFeatures(color: string, zoomThreshold: number) {
         fillOpacity: 0,
     })
     cellFeature.value.visible(false)
+    cellFeature.value.geoOn(geo.event.feature.mouseclick, (e: any) => {
+        if (cellFeature.value.visible()) selectCell(e, e.data.id)
+    })
 
     pointFeature.value = cellLayer.createFeature('point', {
         style: {
@@ -53,6 +87,9 @@ export function createFeatures(color: string, zoomThreshold: number) {
         }
     });
     pointFeature.value.clustering({ radius: 10, maxZoom: zoomThreshold })
+    pointFeature.value.geoOn(geo.event.feature.mouseclick, (e: any) => {
+        if (pointFeature.value.visible()) selectCell(e, undefined)
+    })
 }
 
 export function addZoomCallback(callback: Function) {
@@ -61,6 +98,21 @@ export function addZoomCallback(callback: Function) {
 
 export function addHoverCallback(callback: Function, feature: any) {
     feature.geoOn(geo.event.feature.mouseover, callback)
+}
+
+export function lassoSelect(polygon: {x: number, y: number}[]) {
+  const foundCells = cellFeature.value.polygonSearch({ outer: polygon }).found
+  // create local copy without proxy for set operations
+  let currentIds: Set<number> = new Set(selectedCellIds.value)
+  let targetIds: Set<number> = new Set(foundCells.map((cell: Cell) => cell.id))
+  if (annotationBoolean.value === 'union') {
+    currentIds = currentIds.union(targetIds)
+  } else if (annotationBoolean.value === 'difference') {
+    currentIds = currentIds.difference(targetIds)
+  } else {
+    currentIds = targetIds
+  }
+  selectedCellIds.value = currentIds
 }
 
 export function updateColors() {
@@ -122,14 +174,20 @@ export function updateColors() {
     colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
 
     if (colormapFunction) {
-        const styleCellFunction = (cell: any, i: number) => {
-            // TODO: if selected, return selectedColor
-            if (cell.__cluster) {
-                cell = clusterFirstPoint(cells.value, cell, i)
-            }
+        const getCellColor = (cell: any) => {
             const value = getCellAttribute(cell, colorBy.value)
             if (value === undefined) return { r: 0, g: 0, b: 0 }
             return colormapFunction(value)
+        }
+        cellColors.value = Object.fromEntries(cells.value.map((cell: Cell) => [cell.id, getCellColor(cell)]))
+        const styleCellFunction = (cell: any, i: number) => {
+            if (cell.__cluster) {
+                cell = clusterFirstPoint(cells.value, cell, i)
+            }
+            if (selectedCellIds.value.has(cell.id)) {
+                return selectedColor.value
+            }
+            return cellColors.value[cell.id]
         }
         cellFeature.value.style('strokeColor', styleCellFunction).draw()
         pointFeature.value.style('fillColor', styleCellFunction).draw()

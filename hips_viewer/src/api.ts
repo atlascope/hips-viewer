@@ -31,7 +31,7 @@ export async function fetchImageCells(imageId: number) {
   let total: number | undefined = undefined;
   while (!total || results.length < total) {
     const url = `${baseURL}/images/${imageId}/cells?offset=${results.length}&limit=${limit}`
-    const response: {items: Cell[], count: number} = await cachedFetch(url, 'cell-data-cache')
+    const response: { items: Cell[], count: number } = await cachedFetch(url, 'cell-data-cache')
     if (!total) total = response.count
     results = [...results, ...response.items]
     fetchProgress.value = results.length / total * 100
