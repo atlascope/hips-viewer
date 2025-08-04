@@ -188,7 +188,10 @@ watch(cells, drawCells)
       :style="{top: tooltipPosition.y + 'px', left: tooltipPosition.x + 'px'}"
       class="tooltip"
     >
-      <div v-for="[key, value] in Object.entries(tooltipContent)">
+      <div
+        v-for="[key, value] in Object.entries(tooltipContent)"
+        :key="key"
+      >
         {{ key }}: {{ value }}
       </div>
     </v-card>
