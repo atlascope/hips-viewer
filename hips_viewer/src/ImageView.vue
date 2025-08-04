@@ -138,7 +138,7 @@ watch(cells, drawCells)
         v-if="cells?.length"
         :cells="cells"
         :height="cellDrawerHeight"
-        :tile_url="props.image.tile_url"
+        :tileUrl="props.image.tile_url"
       />
     </v-card>
     <div
