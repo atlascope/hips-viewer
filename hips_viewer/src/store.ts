@@ -68,5 +68,5 @@ watch(selectedCellIds, () => {
 })
 
 watch(cells, () => {
-    histSelectedCells.value = new Set(cells.value?.map((c: any) => c.id))
+  histSelectedCells.value = new Set(cells.value?.map((c: any) => c.id))
 })

@@ -121,55 +121,77 @@ watch(cells, drawCells)
       >
         Fetch Cell Data
       </v-btn>
-      </div>
-      <span
-          class="material-symbols-outlined cell-drawer-resize"
-          :style="{bottom: cellDrawerHeight + 55 + 'px'}"
-          @mousedown="cellDrawerResizing = true"
-          @mouseup="cellDrawerResizing = false"
-      >
-        unfold_more
-      </span>
-      <v-card class="cell-drawer" :style="{height: cellDrawerHeight + 'px'}">
-        <CellDrawer v-if="cells?.length" :cells="cells" :height="cellDrawerHeight" :tile_url="props.image.tile_url"/>
-      </v-card>
-      <div v-if="cells" class="actions">
-        <v-btn icon>
-          <span class="material-symbols-outlined">palette</span>
-          <v-menu activator="parent" location="end" :close-on-content-click="false">
-            <ColorOptions />
-          </v-menu>
-        </v-btn>
-        <v-btn icon v-tooltip="'Toggle Tooltip'" @click="tooltipEnabled = !tooltipEnabled">
-          <span class="material-symbols-outlined">
-            {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
-          </span>
-        </v-btn>
-        <v-btn
-          icon
-          v-tooltip="'Select Mode'"
-          @click="() => annotationLayer.mode('polygon')"
-          :color="annotationMode ? 'black' : 'white'"
-        >
-          <span class="material-symbols-outlined"> lasso_select </span>
-        </v-btn>
-        <v-btn icon>
-          <span class="material-symbols-outlined">bar_chart_4_bars</span>
-          <v-menu activator="parent" location="end" :close-on-content-click="false">
-            <CellDistribution />
-          </v-menu>
-        </v-btn>
-      </div>
-      <v-card
-        v-if="tooltipEnabled && tooltipContent && tooltipPosition"
-        :style="{top: tooltipPosition.y + 'px', left: tooltipPosition.x + 'px'}"
-        class="tooltip"
-      >
-        <div v-for="[key, value] in Object.entries(tooltipContent)">
-          {{ key }}: {{ value }}
-        </div>
-      </v-card>
     </div>
+    <span
+      class="material-symbols-outlined cell-drawer-resize"
+      :style="{bottom: cellDrawerHeight + 55 + 'px'}"
+      @mousedown="cellDrawerResizing = true"
+      @mouseup="cellDrawerResizing = false"
+    >
+      unfold_more
+    </span>
+    <v-card
+      class="cell-drawer"
+      :style="{height: cellDrawerHeight + 'px'}"
+    >
+      <CellDrawer
+        v-if="cells?.length"
+        :cells="cells"
+        :height="cellDrawerHeight"
+        :tile_url="props.image.tile_url"
+      />
+    </v-card>
+    <div
+      v-if="cells"
+      class="actions"
+    >
+      <v-btn icon>
+        <span class="material-symbols-outlined">palette</span>
+        <v-menu
+          activator="parent"
+          location="end"
+          :close-on-content-click="false"
+        >
+          <ColorOptions />
+        </v-menu>
+      </v-btn>
+      <v-btn
+        v-tooltip="'Toggle Tooltip'"
+        icon
+        @click="tooltipEnabled = !tooltipEnabled"
+      >
+        <span class="material-symbols-outlined">
+          {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
+        </span>
+      </v-btn>
+      <v-btn
+        v-tooltip="'Select Mode'"
+        icon
+        :color="annotationMode ? 'black' : 'white'"
+        @click="() => annotationLayer.mode('polygon')"
+      >
+        <span class="material-symbols-outlined"> lasso_select </span>
+      </v-btn>
+      <v-btn icon>
+        <span class="material-symbols-outlined">bar_chart_4_bars</span>
+        <v-menu
+          activator="parent"
+          location="end"
+          :close-on-content-click="false"
+        >
+          <CellDistribution />
+        </v-menu>
+      </v-btn>
+    </div>
+    <v-card
+      v-if="tooltipEnabled && tooltipContent && tooltipPosition"
+      :style="{top: tooltipPosition.y + 'px', left: tooltipPosition.x + 'px'}"
+      class="tooltip"
+    >
+      <div v-for="[key, value] in Object.entries(tooltipContent)">
+        {{ key }}: {{ value }}
+      </div>
+    </v-card>
     <span
       class="material-symbols-outlined cell-drawer-resize"
       :style="{bottom: cellDrawerHeight + 55 + 'px'}"
