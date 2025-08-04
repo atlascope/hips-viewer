@@ -117,6 +117,21 @@ export function lassoSelect(polygon: { x: number, y: number }[]) {
   selectedCellIds.value = currentIds
 }
 
+function numericColormap(valMin: number, valMax: number, rgbColors: { r: number, g: number, b: number }[]) {
+  const colormapFunction = (v: any) => {
+    const valueProportion = (v - valMin) / (valMax - valMin)
+    const maxIndex = rgbColors.length - 1
+    if (valueProportion === 0) return rgbColors[0]
+    if (valueProportion === 1) return rgbColors[maxIndex]
+    const index = Math.floor(maxIndex * valueProportion)
+    const indexProportion = index / maxIndex
+    const interpolationProportion = (valueProportion - indexProportion) * maxIndex
+    const interpolated = colorInterpolate(rgbColors[index], rgbColors[index + 1], interpolationProportion)
+    return interpolated
+  }
+  return colormapFunction
+}
+
 export function updateColors() {
   if (!(colormapName.value && colorBy.value && cells.value && colorLegend.value)) {
     colorLegend.value.categories([])
@@ -144,17 +159,7 @@ export function updateColors() {
       domain: range,
       colors,
     }])
-    colormapFunction = (v: any) => {
-      const valueProportion = (v - range[0]) / (range[1] - range[0])
-      const maxIndex = rgbColors.length - 1
-      if (valueProportion === 0) return rgbColors[0]
-      if (valueProportion === 1) return rgbColors[maxIndex]
-      const index = Math.floor(maxIndex * valueProportion)
-      const indexProportion = index / maxIndex
-      const interpolationProportion = (valueProportion - indexProportion) * maxIndex
-      const interpolated = colorInterpolate(rgbColors[index], rgbColors[index + 1], interpolationProportion)
-      return interpolated
-    }
+    colormapFunction = numericColormap(range[0], range[1], rgbColors)
   }
   else {
     colorLegend.value.categories([{
@@ -199,7 +204,6 @@ export function updateColors() {
 
 export function cellDistribution() {
   if (!(colormapName.value && cells.value && histSelectedCells.value)) return []
-  // TODO: select cells in viewport only (or add toggle)
   const selectedCells = cells.value.filter((cell: any) => histSelectedCells.value.has(cell.id))
 
   const values = [...new Set(cells.value.map(
@@ -240,26 +244,15 @@ export function cellDistribution() {
     bucketedMin[bucketKey] = Math.min(bucketedMin[bucketKey] ?? vmax, value)
   })
 
-  // from above, TODO: refactor (make a function to return colormapFunction)
   let colors = colormapSets[Object.keys(bucketedCounts).length]
   if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
   const rgbColors = colors.map(hexToRgb)
 
-  const colormapFunction = (v: number) => {
-    const valueProportion = (v - vmin) / (vmax - vmin)
-    const maxIndex = colors.length - 1
-    if (valueProportion === 1) return colors[maxIndex]
-    const index = Math.floor(maxIndex * valueProportion)
-    const indexProportion = index / maxIndex
-    const interpolationProportion = (valueProportion - indexProportion) * maxIndex
-    const interpolated = colorInterpolate(rgbColors[index], rgbColors[index + 1], interpolationProportion)
-    return rgbToHex(interpolated)
-  }
-  //
+  const colormapFunction = numericColormap(vmin, vmax, rgbColors)
 
   return Object.keys(bucketedCounts).sort((a, b) => (parseFloat(a) - parseFloat(b))).map(v => ({
     key: `${bucketedMin[v].toFixed(2)}`,
     count: bucketedCounts[v],
-    color: colormapFunction(bucketedMin[v]),
+    color: rgbToHex(colormapFunction(bucketedMin[v])),
   }))
 }
