@@ -109,6 +109,9 @@ watch([cellData, histogramScale], () => {
         <v-btn-toggle
           v-model="histogramScale"
           divided
+          density="compact"
+          variant="outlined"
+          mandatory="force"
         >
           <v-btn value="linear">
             Linear
@@ -122,7 +125,9 @@ watch([cellData, histogramScale], () => {
         <label class="text-subtitle-1 pr-2">Select Cells:</label>
         <v-btn-toggle
           v-model="histSelectionType"
-          divided
+          density="compact"
+          variant="outlined"
+          mandatory="force"
           @click="changeHistSelection"
         >
           <v-btn value="all">
