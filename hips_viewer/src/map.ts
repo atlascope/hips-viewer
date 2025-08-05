@@ -222,10 +222,9 @@ export function cellDistribution() {
   // @ts-ignore
   const colormapSets = colorbrewer[colormapName.value]
 
-  const buckets = histNumBuckets.value
-  showHistogram.value = values.length > buckets
+  showHistogram.value = values.length > histNumBuckets.value
 
-  if (!showHistogram.value || !values.every(v => typeof v === 'number')) {
+  if (values.length < histNumBuckets.value || !values.every(v => typeof v === 'number')) {
     let colors = colormapSets[values.length]
     if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
     return values.map((v, i) => ({ key: v, count: counts[v] ?? 0, color: colors[i] }))
@@ -233,7 +232,7 @@ export function cellDistribution() {
 
   const vmin = Math.min(...values)
   const vmax = Math.max(...values)
-  const step = (vmax - vmin) / buckets
+  const step = (vmax - vmin) / histNumBuckets.value
 
   const bucketedCounts: Record<string, number> = {}
   const bucketedMin: Record<string, number> = {}
