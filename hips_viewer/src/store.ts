@@ -32,6 +32,8 @@ export const showHistogram = ref(false)
 export const histNumBuckets = ref(50)
 export const histCellIds = ref<Set<number>>(new Set<number>())
 export const histSelectionType = ref<'all' | 'viewport' | 'selected'>('all')
+export const histogramScale = ref<'linear' | 'log'>('linear')
+export const chartData = ref()
 
 export const colorLegend = ref()
 export const selectedColor = ref('#000')
@@ -49,6 +51,10 @@ watch([selectedColor, colorBy, colormapName], () => {
   unappliedColorChanges.value = !!(
     selectedColor.value && colorBy.value && colormapName.value
   )
+})
+
+watch(colorBy, () => {
+  chartData.value = null
 })
 
 watch(selectedCellIds, () => {
