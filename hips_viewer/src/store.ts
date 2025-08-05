@@ -33,6 +33,7 @@ export const histNumBuckets = ref(50)
 export const histCellIds = ref<Set<number>>(new Set<number>())
 export const histSelectionType = ref<'all' | 'viewport' | 'selected'>('all')
 export const histogramScale = ref<'linear' | 'log'>('linear')
+export const cellData = ref<null | { key: string | number, color: string, count: number }[]>(null)
 export const chartData = ref()
 
 export const colorLegend = ref()

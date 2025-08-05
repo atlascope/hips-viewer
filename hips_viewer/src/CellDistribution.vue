@@ -4,12 +4,11 @@ import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearSca
 import { Bar } from 'vue-chartjs'
 
 import { cellDistribution } from '@/map'
-import { colorBy, histNumBuckets, chartData, showHistogram, histSelectionType,
+import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histSelectionType,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature } from '@/store'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
-const cellData = ref<null | { key: string | number, color: string, count: number }[]>(null)
 const chartOptions = { responsive: true }
 
 const histNumBucketsSlider = ref(histNumBuckets.value)
@@ -60,7 +59,7 @@ watch([cellData, histogramScale], () => {
   chartData.value = {
     labels,
     datasets: [{
-      label: histogramScale.value === 'log' ? 'Log(Count)' : 'Count',
+      label: histogramScale.value === 'log' ? 'log(Count)' : 'Count',
       data: counts,
       backgroundColor: colors,
     }],
