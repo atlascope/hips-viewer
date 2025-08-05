@@ -138,7 +138,7 @@ watch(cells, drawCells)
         v-if="cells?.length"
         :cells="cells"
         :height="cellDrawerHeight"
-        :tileUrl="props.image.tile_url"
+        :tile-url="props.image.tile_url"
       />
     </v-card>
     <div
@@ -181,69 +181,6 @@ watch(cells, drawCells)
         >
           <CellDistribution />
         </v-menu>
-      </v-btn>
-    </div>
-    <v-card
-      v-if="tooltipEnabled && tooltipContent && tooltipPosition"
-      :style="{top: tooltipPosition.y + 'px', left: tooltipPosition.x + 'px'}"
-      class="tooltip"
-    >
-      <div
-        v-for="[key, value] in Object.entries(tooltipContent)"
-        :key="key"
-      >
-        {{ key }}: {{ value }}
-      </div>
-    </v-card>
-    <span
-      class="material-symbols-outlined cell-drawer-resize"
-      :style="{bottom: cellDrawerHeight + 55 + 'px'}"
-      @mousedown="cellDrawerResizing = true"
-      @mouseup="cellDrawerResizing = false"
-    >
-      unfold_more
-    </span>
-    <v-card
-      class="cell-drawer"
-      :style="{height: cellDrawerHeight + 'px'}"
-    >
-      <CellDrawer
-        v-if="cells?.length"
-        :cells="cells"
-        :height="cellDrawerHeight"
-        :tile-url="props.image.tile_url"
-      />
-    </v-card>
-    <div
-      v-if="cells"
-      class="actions"
-    >
-      <v-btn icon>
-        <span class="material-symbols-outlined">palette</span>
-        <v-menu
-          activator="parent"
-          location="end"
-          :close-on-content-click="false"
-        >
-          <ColorOptions />
-        </v-menu>
-      </v-btn>
-      <v-btn
-        v-tooltip="'Toggle Tooltip'"
-        icon
-        @click="tooltipEnabled = !tooltipEnabled"
-      >
-        <span class="material-symbols-outlined">
-          {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
-        </span>
-      </v-btn>
-      <v-btn
-        v-tooltip="'Select Mode'"
-        icon
-        :color="annotationMode ? 'black' : 'white'"
-        @click="() => annotationLayer.mode('polygon')"
-      >
-        <span class="material-symbols-outlined"> lasso_select </span>
       </v-btn>
     </div>
     <v-card
