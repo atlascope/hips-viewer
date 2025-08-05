@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref, watchEffect, watch } from 'vue'
-
-import { cellDistribution } from '@/map'
-
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
+
+import { cellDistribution } from '@/map'
 import { colorBy, histNumBuckets, showHistogram,
   histCellIds, histSelectionType, selectedCellIds,
-  cells, map, cellFeature } from './store'
+  cells, map, cellFeature } from '@/store'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -16,6 +15,16 @@ const histogramScale = ref<'linear' | 'log'>('linear')
 const cellData = ref<null | { key: string | number, color: string, count: number }[]>(null)
 const chartData = ref()
 const chartOptions = { responsive: true }
+
+const histNumBucketsSlider = ref(histNumBuckets.value)
+
+const debouncedUpdateHistBuckets = (n: number) => {
+  histNumBucketsSlider.value = n
+
+  setTimeout(() => {
+    if (histNumBucketsSlider.value == n) histNumBuckets.value = n
+  }, 300)
+}
 
 function changeHistSelection() {
   if (!cells.value) return
@@ -86,12 +95,13 @@ watch([cellData, histogramScale], () => {
 
       <v-slider
         v-if="showHistogram"
-        v-model="histNumBuckets"
+        :model-value="histNumBucketsSlider"
         :min="20"
         :max="100"
         :step="1"
         label="# Buckets"
         class="mt-3"
+        @update:model-value="debouncedUpdateHistBuckets"
       >
         <template #append>
           <v-text-field
