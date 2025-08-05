@@ -6,7 +6,7 @@ import { cellDistribution } from '@/map'
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 import { colorBy, histNumBuckets, showHistogram,
-  histSelectedCells, histSelectionType, selectedCellIds,
+  histCellIds, histSelectionType, selectedCellIds,
   cells, map, cellFeature } from './store'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -21,13 +21,13 @@ function changeHistSelection() {
   if (!cells.value) return
 
   if (histSelectionType.value === 'all') {
-    histSelectedCells.value = new Set(cells.value.map((c: any) => c.id))
+    histCellIds.value = new Set(cells.value.map((c: any) => c.id))
   }
   else if (histSelectionType.value === 'viewport') {
-    histSelectedCells.value = new Set(cellFeature.value.polygonSearch(map.value.corners()).found.map((c: any) => c.id))
+    histCellIds.value = new Set(cellFeature.value.polygonSearch(map.value.corners()).found.map((c: any) => c.id))
   }
   else if (histSelectionType.value === 'selected') {
-    histSelectedCells.value = new Set(selectedCellIds.value)
+    histCellIds.value = new Set(selectedCellIds.value)
   }
 }
 
@@ -39,7 +39,7 @@ watchEffect(async () => {
   changeHistSelection()
 })
 
-watch([histNumBuckets, histSelectedCells], () => {
+watch([histNumBuckets, histCellIds], () => {
   cellData.value = cellDistribution()
 })
 
@@ -136,7 +136,7 @@ watch([cellData, histogramScale], () => {
           </v-btn>
         </v-btn-toggle>
       </div>
-      <v-label>({{ histSelectedCells.size }} / {{ cells.length }})</v-label>
+      <v-label>({{ histCellIds.size }} / {{ cells.length }})</v-label>
     </v-card-text>
   </v-card>
 </template>

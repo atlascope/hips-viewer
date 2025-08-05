@@ -30,7 +30,7 @@ export const unappliedColorChanges = ref(false)
 
 export const showHistogram = ref(false)
 export const histNumBuckets = ref(50)
-export const histSelectedCells = ref<any>(new Set())
+export const histCellIds = ref<Set<number>>(new Set<number>())
 export const histSelectionType = ref<'all' | 'viewport' | 'selected'>('all')
 
 export const colorLegend = ref()
@@ -68,5 +68,5 @@ watch(selectedCellIds, () => {
 })
 
 watch(cells, () => {
-  histSelectedCells.value = new Set(cells.value?.map((c: any) => c.id))
+  histCellIds.value = new Set(cells.value?.map((c: any) => c.id))
 })

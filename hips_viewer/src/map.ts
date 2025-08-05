@@ -4,7 +4,7 @@ import colorbrewer from 'colorbrewer'
 import {
   cells, map, maxZoom, cellFeature, pointFeature,
   colorBy, colormapName, colorLegend, cellColors,
-  histNumBuckets, showHistogram, histSelectedCells,
+  histNumBuckets, showHistogram, histCellIds,
   selectedCellIds, selectedColor, annotationLayer,
   annotationMode, annotationBoolean, lastAnnotation,
 } from '@/store'
@@ -203,8 +203,8 @@ export function updateColors() {
 }
 
 export function cellDistribution() {
-  if (!(colormapName.value && cells.value && histSelectedCells.value)) return []
-  const selectedCells = cells.value.filter((cell: any) => histSelectedCells.value.has(cell.id))
+  if (!(colormapName.value && cells.value && histCellIds.value)) return []
+  const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
 
   const values = [...new Set(cells.value.map(
     (cell: any) => getCellAttribute(cell, colorBy.value),
@@ -214,7 +214,7 @@ export function cellDistribution() {
   ].filter((v: any) => typeof v === 'number' || typeof v === 'string')
 
   const counts: Record<string | number, number> = {}
-  selectedCells.forEach((cell: any) => {
+  histCells.forEach((cell: any) => {
     const key = getCellAttribute(cell, colorBy.value)
     if (key !== undefined) counts[key] = (counts[key] ?? 0) + 1
   })
