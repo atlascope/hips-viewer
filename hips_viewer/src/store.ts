@@ -27,6 +27,15 @@ export const tooltipContent = ref()
 export const tooltipPosition = ref()
 
 export const unappliedColorChanges = ref(false)
+
+export const showHistogram = ref(false)
+export const histNumBuckets = ref(50)
+export const histCellIds = ref<Set<number>>(new Set<number>())
+export const histSelectionType = ref<'all' | 'viewport' | 'selected'>('all')
+export const histogramScale = ref<'linear' | 'log'>('linear')
+export const cellData = ref<null | { key: string | number, color: string, count: number }[]>(null)
+export const chartData = ref()
+
 export const colorLegend = ref()
 export const selectedColor = ref('#000')
 export const colorBy = ref('classification')
@@ -45,6 +54,10 @@ watch([selectedColor, colorBy, colormapName], () => {
   )
 })
 
+watch(colorBy, () => {
+  chartData.value = null
+})
+
 watch(selectedCellIds, () => {
   if (cellFeature.value && pointFeature.value) {
     const styleCellFunction = (cell: any, i: number) => {
@@ -59,4 +72,8 @@ watch(selectedCellIds, () => {
     pointFeature.value.style('fillColor', styleCellFunction)
     if (pointFeature.value.visible()) pointFeature.value.draw()
   }
+})
+
+watch(cells, () => {
+  histCellIds.value = new Set(cells.value?.map((c: any) => c.id))
 })
