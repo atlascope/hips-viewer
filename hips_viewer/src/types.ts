@@ -11,6 +11,7 @@ export interface Cell {
   width: number
   height: number
   orientation: number
+  classification: string
   vector_text?: string
   [vector_column: string]: string | number | undefined
 }

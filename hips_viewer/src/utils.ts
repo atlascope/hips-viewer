@@ -139,3 +139,43 @@ export function clickCellThumbnail(event: any, cellId: number | undefined) {
     }, dblClickLength)
   }
 }
+
+export function getFilterOptions(cellData: Cell[], columnNames: string[]) {
+  const classifications = new Set()
+  const vectorRanges = {
+    classification: { min: undefined, max: undefined },
+    area: { min: undefined, max: undefined },
+    orientation: { min: undefined, max: undefined },
+    circularity: { min: undefined, max: undefined },
+    eccentricity: { min: undefined, max: undefined },
+    axisRatio: { min: undefined, max: undefined },
+  }
+  const vectorIndices = {
+    area: columnNames.indexOf('Size.Area'),
+    orientation: columnNames.indexOf('Orientation.Orientation'),
+    circularity: columnNames.indexOf('Shape.Circularity'),
+    eccentricity: columnNames.indexOf('Shape.Eccentricity'),
+    axisRatio: columnNames.indexOf('Shape.MinorMajorAxisRatio'),
+  }
+  cellData.forEach((cell: Cell) => {
+    classifications.add(cell.classification)
+    if (cell.vector_text) {
+      const vector = cell.vector_text.split(',')
+      Object.entries(vectorIndices).forEach(([key, index]) => {
+        const value = vector[index]
+        // @ts-ignore
+        const range = vectorRanges[key]
+        if (!range.min || range.min > value) range.min = value
+        if (!range.max || range.max < value) range.max = value
+      })
+    }
+  })
+  return [
+    { label: 'Classification', options: [...classifications] },
+    { label: 'Area', range: vectorRanges.area },
+    { label: 'Orientation', range: vectorRanges.orientation },
+    { label: 'Circularity', range: vectorRanges.circularity },
+    { label: 'Eccentricity', range: vectorRanges.eccentricity },
+    { label: 'Axis Ratio', range: vectorRanges.axisRatio },
+  ]
+}

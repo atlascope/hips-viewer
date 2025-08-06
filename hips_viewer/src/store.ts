@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue'
-import { clusterFirstPoint } from './utils'
+import { clusterFirstPoint, getFilterOptions } from './utils'
 
 // Store variables
 export const map = ref()
@@ -40,10 +40,12 @@ export const colorLegend = ref()
 export const selectedColor = ref('#000')
 export const colorBy = ref('classification')
 export const colormapType = ref<
-    'qualitative' | 'sequential' | 'diverging'
+  'qualitative' | 'sequential' | 'diverging'
 >('qualitative')
 export const colormapName = ref<string | undefined>('Paired')
 export const attributeOptions = ref()
+
+export const filterOptions = ref()
 
 // Store watchers
 watch(colormapType, () => colormapName.value = undefined)
@@ -76,4 +78,10 @@ watch(selectedCellIds, () => {
 
 watch(cells, () => {
   histCellIds.value = new Set(cells.value?.map((c: any) => c.id))
+})
+
+watch([cells, attributeOptions], () => {
+  if (cells.value && attributeOptions.value) {
+    filterOptions.value = getFilterOptions(cells.value, attributeOptions.value)
+  }
 })
