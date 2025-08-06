@@ -5,12 +5,16 @@ import { Bar } from 'vue-chartjs'
 
 import { cellDistribution } from '@/map'
 import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histSelectionType,
-  histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature } from '@/store'
+  histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor } from '@/store'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
-const chartOptions = { responsive: true }
+const chartOptions = {
+  responsive: true,
+  onClick: selectBar,
+}
 
+const selectedBars = ref<Set<number>>(new Set<number>())
 const viewportCalculated = ref(false)
 const histNumBucketsSlider = ref(histNumBuckets.value)
 
@@ -20,6 +24,42 @@ const debouncedUpdateHistBuckets = (n: number) => {
   setTimeout(() => {
     if (histNumBucketsSlider.value == n) histNumBuckets.value = n
   }, 300)
+}
+
+function selectBar(event: any, elements: any) {
+  const clickedBar = elements[0]
+  if (clickedBar === undefined) return
+
+  const barIndex = clickedBar.index
+  const toggle = event.native.shiftKey || event.native.ctrlKey
+
+  if (toggle) {
+    if (selectedBars.value.has(barIndex)) {
+      selectedBars.value.delete(barIndex)
+    }
+    else {
+      selectedBars.value.add(barIndex)
+    }
+  }
+  else {
+    if (selectedBars.value.has(barIndex) && selectedBars.value.size === 1) {
+      selectedBars.value.clear()
+    }
+    else {
+      selectedBars.value.clear()
+      selectedBars.value.add(barIndex)
+    }
+  }
+  selectedBars.value = new Set(selectedBars.value) // trigger watcher
+
+  let cellIds = new Set<number>()
+  selectedBars.value.forEach((i) => {
+    const bucket = cellData.value?.[i]
+    if (!bucket) return
+
+    cellIds = cellIds.union(bucket.cellIds)
+  })
+  selectedCellIds.value = cellIds
 }
 
 function changeHistSelection() {
@@ -46,14 +86,17 @@ watchEffect(async () => {
 })
 
 watch([histNumBuckets, histCellIds], () => {
+  selectedBars.value.clear()
   cellData.value = cellDistribution()
 })
 
-watch([cellData, histogramScale], () => {
+watch([cellData, histogramScale, selectedBars], () => {
   if (!cellData.value) return
 
   const labels = cellData.value.map(c => c.key)
-  const colors = cellData.value.map(c => c.color)
+  const colors = cellData.value.map((c, index) => {
+    return selectedBars.value.has(index) ? selectedColor.value : c.color
+  })
   const counts = cellData.value.map(c =>
     histogramScale.value === 'log' ? Math.log(c.count) : c.count,
   )

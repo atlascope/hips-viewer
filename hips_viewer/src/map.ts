@@ -213,10 +213,16 @@ export function cellDistribution() {
   ).filter((v: any) => v !== undefined)),
   ].filter((v: any) => typeof v === 'number' || typeof v === 'string')
 
+  const cellIds: Record<string | number, Set<number>> = {}
   const counts: Record<string | number, number> = {}
   histCells.forEach((cell: any) => {
     const key = getCellAttribute(cell, colorBy.value)
-    if (key !== undefined) counts[key] = (counts[key] ?? 0) + 1
+    if (key !== undefined) {
+      counts[key] = (counts[key] ?? 0) + 1
+
+      if (!cellIds[key]) cellIds[key] = new Set<number>()
+      cellIds[key].add(cell.id)
+    }
   })
 
   // @ts-ignore
@@ -227,13 +233,14 @@ export function cellDistribution() {
   if (values.length < histNumBuckets.value || !values.every(v => typeof v === 'number')) {
     let colors = colormapSets[values.length]
     if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-    return values.map((v, i) => ({ key: v, count: counts[v] ?? 0, color: colors[i] }))
+    return values.map((v, i) => ({ key: `${v}`, count: counts[v] ?? 0, cellIds: cellIds[v], color: colors[i] }))
   }
 
   const vmin = Math.min(...values)
   const vmax = Math.max(...values)
   const step = (vmax - vmin) / histNumBuckets.value
 
+  const bucketedCellIds: Record<string | number, Set<number>> = {}
   const bucketedCounts: Record<string, number> = {}
   const bucketedMin: Record<string, number> = {}
   values.sort((a, b) => a - b).forEach((value) => {
@@ -241,6 +248,9 @@ export function cellDistribution() {
     const bucketKey = `${bucketIndex * step}`
     bucketedCounts[bucketKey] = (bucketedCounts[bucketKey] ?? 0) + (counts[value] ?? 0)
     bucketedMin[bucketKey] = Math.min(bucketedMin[bucketKey] ?? vmax, value)
+
+    if (!bucketedCellIds[bucketKey]) bucketedCellIds[bucketKey] = new Set<number>()
+    cellIds[value]?.forEach(id => bucketedCellIds[bucketKey].add(id))
   })
 
   let colors = colormapSets[Object.keys(bucketedCounts).length]
@@ -252,6 +262,7 @@ export function cellDistribution() {
   return Object.keys(bucketedCounts).sort((a, b) => (parseFloat(a) - parseFloat(b))).map(v => ({
     key: `${bucketedMin[v].toFixed(2)}`,
     count: bucketedCounts[v],
+    cellIds: bucketedCellIds[v],
     color: rgbToHex(colormapFunction(bucketedMin[v])),
   }))
 }
