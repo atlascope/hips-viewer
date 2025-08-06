@@ -11,6 +11,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 const chartOptions = { responsive: true }
 
+const viewportCalculated = ref(false)
 const histNumBucketsSlider = ref(histNumBuckets.value)
 
 const debouncedUpdateHistBuckets = (n: number) => {
@@ -29,6 +30,7 @@ function changeHistSelection() {
   }
   else if (histSelectionType.value === 'viewport') {
     histCellIds.value = new Set(cellFeature.value.polygonSearch(map.value.corners()).found.map((c: any) => c.id))
+    viewportCalculated.value = true
   }
   else if (histSelectionType.value === 'selected') {
     histCellIds.value = new Set(selectedCellIds.value)
@@ -36,10 +38,10 @@ function changeHistSelection() {
 }
 
 watchEffect(async () => {
-  if (chartData.value) return
+  const notCalculated = histSelectionType.value === 'viewport' && !viewportCalculated.value
+  if (chartData.value && !notCalculated) return
 
   await new Promise(r => setTimeout(r, 100)) // wait for DOM update
-  cellData.value = cellDistribution()
   changeHistSelection()
 })
 
