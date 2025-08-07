@@ -157,6 +157,7 @@ export function resetFilterVectorIndices() {
     orientation: cellColumns.value.indexOf('Orientation.Orientation'),
     circularity: cellColumns.value.indexOf('Shape.Circularity'),
     eccentricity: cellColumns.value.indexOf('Shape.Eccentricity'),
+    axis_ratio: cellColumns.value.indexOf('Shape.MinorMajorAxisRatio'),
   }
 }
 
@@ -167,6 +168,7 @@ export function resetFilterOptions() {
     orientation: { min: undefined, max: undefined },
     circularity: { min: undefined, max: undefined },
     eccentricity: { min: undefined, max: undefined },
+    axis_ratio: { min: undefined, max: undefined },
   }
   cells.value.forEach((cell: Cell) => {
     classifications.add(cell.classification)
@@ -188,6 +190,7 @@ export function resetFilterOptions() {
     { label: 'orientation', range: vectorRanges.orientation },
     { label: 'circularity', range: vectorRanges.circularity },
     { label: 'eccentricity', range: vectorRanges.eccentricity },
+    { label: 'axis_ratio', range: vectorRanges.axis_ratio },
   ]
 }
 
