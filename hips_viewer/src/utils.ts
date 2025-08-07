@@ -157,19 +157,16 @@ export function resetFilterVectorIndices() {
     orientation: attributeOptions.value.indexOf('Orientation.Orientation'),
     circularity: attributeOptions.value.indexOf('Shape.Circularity'),
     eccentricity: attributeOptions.value.indexOf('Shape.Eccentricity'),
-    axisRatio: attributeOptions.value.indexOf('Shape.MinorMajorAxisRatio'),
   }
 }
 
 export function resetFilterOptions() {
   const classifications: Set<string> = new Set()
   const vectorRanges = {
-    classification: { min: undefined, max: undefined },
     area: { min: undefined, max: undefined },
     orientation: { min: undefined, max: undefined },
     circularity: { min: undefined, max: undefined },
     eccentricity: { min: undefined, max: undefined },
-    axisRatio: { min: undefined, max: undefined },
   }
   cells.value.forEach((cell: Cell) => {
     classifications.add(cell.classification)
@@ -191,7 +188,6 @@ export function resetFilterOptions() {
     { label: 'orientation', range: vectorRanges.orientation },
     { label: 'circularity', range: vectorRanges.circularity },
     { label: 'eccentricity', range: vectorRanges.eccentricity },
-    { label: 'axis_ratio', range: vectorRanges.axisRatio },
   ]
 }
 
