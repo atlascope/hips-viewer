@@ -3,54 +3,55 @@ import { ref, watch } from 'vue'
 import {
   filterOptions,
   currentFilters,
-  cells,
-  filterVectorIndices,
   selectedCellIds,
   filterMatchCellIds,
 } from './store'
-import type { Cell } from './types'
-import { resetCurrentFilters } from './utils'
+import { addFilterOption, getFilterMatchIds, resetCurrentFilters } from './utils'
+import AttributeSelect from './AttributeSelect.vue'
 
-const numMatched = ref<number | undefined>()
-
-function getMatchedCellIds() {
-  if (!cells.value) return []
-  return cells.value.filter((cell: Cell) => {
-    if (
-      currentFilters.value.classification.length
-      && !currentFilters.value.classification.includes(cell.classification)
-    ) {
-      return false
-    }
-    if (cell.vector_text && filterVectorIndices.value) {
-      const vector = cell.vector_text.split(',')
-      const vectorExclusions = Object.keys(currentFilters.value)
-        .filter(key => key !== 'classification')
-        .map((key) => {
-          let cellValue = parseFloat(vector[filterVectorIndices.value[key]])
-          if (!cellValue || isNaN(cellValue)) return false
-          cellValue = parseFloat(cellValue.toPrecision(2))
-          const range = currentFilters.value[key] as [number, number]
-          return cellValue < range[0] || cellValue > range[1]
-        })
-      if (vectorExclusions.some((v: boolean) => v)) return false
-    }
-    return true
-  }).map((cell: Cell) => cell.id)
-}
+const addMode = ref<boolean>(false)
+const addAttribute = ref<string | undefined>()
+const msg = ref<string | undefined>()
 
 function selectCells() {
-  selectedCellIds.value = new Set(getMatchedCellIds())
-  numMatched.value = selectedCellIds.value.size
+  msg.value = 'Searching...'
+  setTimeout(() => {
+    selectedCellIds.value = new Set(getFilterMatchIds())
+    msg.value = selectedCellIds.value.size + ' matched cells'
+  }, 1)
 }
 
 function filterCells() {
-  filterMatchCellIds.value = new Set(getMatchedCellIds())
-  numMatched.value = filterMatchCellIds.value.size
+  msg.value = 'Searching...'
+  setTimeout(() => {
+    filterMatchCellIds.value = new Set(getFilterMatchIds())
+    msg.value = filterMatchCellIds.value.size + ' matched cells'
+  }, 1)
 }
 
-watch(currentFilters.value, () => {
-  numMatched.value = undefined
+function addAttributeCancel() {
+  addMode.value = false
+  addAttribute.value = undefined
+  msg.value = undefined
+}
+
+function addAttributeSubmit() {
+  msg.value = 'Computing values...'
+  setTimeout(() => {
+    if (addAttribute.value) {
+      if (Object.keys(currentFilters.value).includes(addAttribute.value)) {
+        msg.value = 'Attribute filter already exists.'
+      }
+      else {
+        addFilterOption(addAttribute.value)
+        addAttributeCancel()
+      }
+    }
+  }, 1)
+}
+
+watch([currentFilters, addAttribute], () => {
+  msg.value = undefined
 })
 </script>
 
@@ -124,31 +125,59 @@ watch(currentFilters.value, () => {
           </td>
         </tr>
       </table>
+      <v-btn
+        v-if="!addMode"
+        block
+        class="my-2"
+        @click="addMode=true; msg=undefined"
+      >
+        + Add Attribute Filter
+      </v-btn>
+      <div
+        v-else
+        class="centered-row"
+      >
+        <AttributeSelect
+          :model="addAttribute"
+          label="Filter by attribute"
+          @select="(v: string) => addAttribute = v"
+        />
+        <v-btn
+          color="black"
+          :disabled="!addAttribute"
+          @click="addAttributeSubmit"
+        >
+          Submit
+        </v-btn>
+        <v-btn @click="addAttributeCancel">
+          Cancel
+        </v-btn>
+      </div>
+      <div class="centered-row">
+        <v-label v-if="msg">
+          {{ msg }}
+        </v-label>
+      </div>
+      <div class="centered-row">
+        <v-btn
+          @click="resetCurrentFilters"
+        >
+          Reset Filters
+        </v-btn>
+        <v-btn
+          color="black"
+          @click="selectCells"
+        >
+          Select cells
+        </v-btn>
+        <v-btn
+          color="black"
+          @click="filterCells"
+        >
+          Filter cells
+        </v-btn>
+      </div>
     </v-card-text>
-    <div class="centered-row">
-      <v-btn
-        @click="resetCurrentFilters"
-      >
-        Reset Filters
-      </v-btn>
-      <v-btn
-        color="black"
-        @click="selectCells"
-      >
-        Select cells
-      </v-btn>
-      <v-btn
-        color="black"
-        @click="filterCells"
-      >
-        Filter cells
-      </v-btn>
-    </div>
-    <div class="centered-row">
-      <span v-if="numMatched !== undefined">
-        {{ numMatched }} matched cells
-      </span>
-    </div>
   </v-card>
 </template>
 

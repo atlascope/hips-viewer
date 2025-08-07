@@ -194,6 +194,57 @@ export function resetFilterOptions() {
   ]
 }
 
+export function addFilterOption(attr: string) {
+  const vectorIndex = cellColumns.value.indexOf(attr)
+  const allValues = cells.value.map((cell: Cell) => {
+    let cellValue = cell[attr]?.toString()
+    if (cellValue === undefined && cell.vector_text) {
+      const vector = cell.vector_text.split(',')
+      cellValue = vector[vectorIndex]
+    }
+    if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
+      return parseFloat(parseFloat(cellValue).toPrecision(2))
+    }
+    return cellValue
+  })
+  if (allValues.some((v: string | number) => typeof v === 'string')) {
+    const valueSet = [...new Set(allValues)] as string[]
+    filterOptions.value?.push({ label: attr, options: valueSet })
+    currentFilters.value[attr] = []
+  }
+  else {
+    const range = {
+      min: parseFloat(Math.min(...allValues).toPrecision(2)),
+      max: parseFloat(Math.max(...allValues).toPrecision(2)),
+    }
+    filterOptions.value?.push({ label: attr, range })
+    currentFilters.value[attr] = [range.min, range.max]
+  }
+}
+
+export function getFilterMatchIds() {
+  return cells.value.filter((cell: Cell) => {
+    const matches = Object.entries(currentFilters.value).map(([key, filterValue]) => {
+      let vectorIndex = cellColumns.value.indexOf(key)
+      if (vectorIndex < 0) vectorIndex = filterVectorIndices.value[key]
+      let cellValue = cell[key]?.toString()
+      if (cellValue === undefined && vectorIndex >= 0 && cell.vector_text) {
+        const vector = cell.vector_text.split(',')
+        cellValue = vector[vectorIndex]
+      }
+      if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
+        const numericValue = parseFloat(parseFloat(cellValue).toPrecision(2))
+        if (filterValue.length === 2) {
+          const range = filterValue as [number, number]
+          return numericValue >= range[0] && numericValue <= range[1]
+        }
+      }
+      return !filterValue.length || !cellValue || filterValue.includes(cellValue)
+    })
+    return matches.every((v: boolean) => v)
+  }).map((cell: Cell) => cell.id)
+}
+
 export function resetCurrentFilters() {
   currentFilters.value = {}
   filterMatchCellIds.value = new Set()
