@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import {
   filterOptions,
   currentFilters,
@@ -9,6 +10,8 @@ import {
 } from './store'
 import type { Cell } from './types'
 import { resetCurrentFilters } from './utils'
+
+const numMatched = ref<number | undefined>()
 
 function getMatchedCellIds() {
   if (!cells.value) return []
@@ -38,11 +41,17 @@ function getMatchedCellIds() {
 
 function selectCells() {
   selectedCellIds.value = new Set(getMatchedCellIds())
+  numMatched.value = selectedCellIds.value.size
 }
 
 function filterCells() {
   filterMatchCellIds.value = new Set(getMatchedCellIds())
+  numMatched.value = filterMatchCellIds.value.size
 }
+
+watch(currentFilters.value, () => {
+  numMatched.value = undefined
+})
 </script>
 
 <template>
@@ -116,7 +125,7 @@ function filterCells() {
         </tr>
       </table>
     </v-card-text>
-    <div class="action-buttons">
+    <div class="centered-row">
       <v-btn
         @click="resetCurrentFilters"
       >
@@ -135,15 +144,20 @@ function filterCells() {
         Filter cells
       </v-btn>
     </div>
+    <div class="centered-row">
+      <span v-if="numMatched !== undefined">
+        {{ numMatched }} matched cells
+      </span>
+    </div>
   </v-card>
 </template>
 
 <style>
-.action-buttons {
+.centered-row {
   display: flex;
   justify-content: center;
   column-gap: 15px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 .filter-range-slider .v-field__input {
   padding: 0px 0px 0px 5px;
