@@ -1,5 +1,11 @@
 import { ref, watch } from 'vue'
-import { clusterFirstPoint, getFilterOptions } from './utils'
+import {
+  clusterFirstPoint,
+  resetCurrentFilters,
+  resetFilterOptions,
+  resetFilterVectorIndices,
+} from './utils'
+import type { FilterOption } from './types'
 
 // Store variables
 export const map = ref()
@@ -45,7 +51,9 @@ export const colormapType = ref<
 export const colormapName = ref<string | undefined>('Paired')
 export const attributeOptions = ref()
 
-export const filterOptions = ref()
+export const filterOptions = ref<FilterOption[]>()
+export const filterVectorIndices = ref<Record<string, number>>({})
+export const currentFilters = ref<Record<string, (string | number)[]>>({})
 
 // Store watchers
 watch(colormapType, () => colormapName.value = undefined)
@@ -81,7 +89,9 @@ watch(cells, () => {
 })
 
 watch([cells, attributeOptions], () => {
-  if (cells.value && attributeOptions.value) {
-    filterOptions.value = getFilterOptions(cells.value, attributeOptions.value)
+  if (cells.value && attributeOptions.value && !filterOptions.value) {
+    resetFilterVectorIndices()
+    resetFilterOptions()
+    resetCurrentFilters()
   }
 })

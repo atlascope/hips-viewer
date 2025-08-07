@@ -1,5 +1,16 @@
-import { cellColumns, cells, selectedCellIds, map, maxZoom, annotationMode } from './store'
-import type { Cell } from './types'
+import {
+  cellColumns,
+  cells,
+  selectedCellIds,
+  map,
+  maxZoom,
+  annotationMode,
+  filterVectorIndices,
+  filterOptions,
+  currentFilters,
+  attributeOptions,
+} from './store'
+import type { Cell, FilterOption } from './types'
 
 export interface RGB { r: number, g: number, b: number }
 
@@ -140,8 +151,18 @@ export function clickCellThumbnail(event: any, cellId: number | undefined) {
   }
 }
 
-export function getFilterOptions(cellData: Cell[], columnNames: string[]) {
-  const classifications = new Set()
+export function resetFilterVectorIndices() {
+  filterVectorIndices.value = {
+    area: attributeOptions.value.indexOf('Size.Area'),
+    orientation: attributeOptions.value.indexOf('Orientation.Orientation'),
+    circularity: attributeOptions.value.indexOf('Shape.Circularity'),
+    eccentricity: attributeOptions.value.indexOf('Shape.Eccentricity'),
+    axisRatio: attributeOptions.value.indexOf('Shape.MinorMajorAxisRatio'),
+  }
+}
+
+export function resetFilterOptions() {
+  const classifications: Set<string> = new Set()
   const vectorRanges = {
     classification: { min: undefined, max: undefined },
     area: { min: undefined, max: undefined },
@@ -150,19 +171,13 @@ export function getFilterOptions(cellData: Cell[], columnNames: string[]) {
     eccentricity: { min: undefined, max: undefined },
     axisRatio: { min: undefined, max: undefined },
   }
-  const vectorIndices = {
-    area: columnNames.indexOf('Size.Area'),
-    orientation: columnNames.indexOf('Orientation.Orientation'),
-    circularity: columnNames.indexOf('Shape.Circularity'),
-    eccentricity: columnNames.indexOf('Shape.Eccentricity'),
-    axisRatio: columnNames.indexOf('Shape.MinorMajorAxisRatio'),
-  }
-  cellData.forEach((cell: Cell) => {
+  cells.value.forEach((cell: Cell) => {
     classifications.add(cell.classification)
     if (cell.vector_text) {
       const vector = cell.vector_text.split(',')
-      Object.entries(vectorIndices).forEach(([key, index]) => {
-        const value = vector[index]
+      Object.entries(filterVectorIndices.value).forEach(([key, index]) => {
+        let value: number = parseFloat(vector[index])
+        value = parseFloat(value.toPrecision(2))
         // @ts-ignore
         const range = vectorRanges[key]
         if (!range.min || range.min > value) range.min = value
@@ -170,12 +185,26 @@ export function getFilterOptions(cellData: Cell[], columnNames: string[]) {
       })
     }
   })
-  return [
-    { label: 'Classification', options: [...classifications] },
-    { label: 'Area', range: vectorRanges.area },
-    { label: 'Orientation', range: vectorRanges.orientation },
-    { label: 'Circularity', range: vectorRanges.circularity },
-    { label: 'Eccentricity', range: vectorRanges.eccentricity },
-    { label: 'Axis Ratio', range: vectorRanges.axisRatio },
+  filterOptions.value = [
+    { label: 'classification', options: [...classifications] },
+    { label: 'area', range: vectorRanges.area },
+    { label: 'orientation', range: vectorRanges.orientation },
+    { label: 'circularity', range: vectorRanges.circularity },
+    { label: 'eccentricity', range: vectorRanges.eccentricity },
+    { label: 'axis_ratio', range: vectorRanges.axisRatio },
   ]
+}
+
+export function resetCurrentFilters() {
+  currentFilters.value = {}
+  if (filterOptions.value) {
+    filterOptions.value.forEach((filter: FilterOption) => {
+      if (filter.range?.min && filter.range?.max) {
+        currentFilters.value[filter.label] = [filter.range.min, filter.range.max]
+      }
+      else if (filter.options) {
+        currentFilters.value[filter.label] = []
+      }
+    })
+  }
 }

@@ -28,3 +28,12 @@ export interface TreeItem {
   value?: string
   children?: TreeItem[]
 }
+
+export interface FilterOption {
+  label: string
+  options?: string[]
+  range?: {
+    min: number | undefined
+    max: number | undefined
+  }
+}
