@@ -18,7 +18,7 @@ function selectCells() {
   setTimeout(() => {
     selectedCellIds.value = new Set(getFilterMatchIds())
     msg.value = selectedCellIds.value.size + ' matched cells'
-  }, 1)
+  }, 100)
 }
 
 function filterCells() {
@@ -26,7 +26,7 @@ function filterCells() {
   setTimeout(() => {
     filterMatchCellIds.value = new Set(getFilterMatchIds())
     msg.value = filterMatchCellIds.value.size + ' matched cells'
-  }, 1)
+  }, 100)
 }
 
 function addAttributeCancel() {
@@ -47,7 +47,7 @@ function addAttributeSubmit() {
         addAttributeCancel()
       }
     }
-  }, 1)
+  }, 100)
 }
 
 watch([currentFilters, addAttribute], () => {
