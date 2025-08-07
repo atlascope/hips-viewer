@@ -67,9 +67,9 @@ watch([currentFilters, addAttribute], () => {
           :key="filter.label"
         >
           <td style="width: 1%; padding-right: 20px">
-            <v-label style="text-transform: capitalize">
+            <span style="text-transform: capitalize; max-width: 150px; display: block">
               {{ filter.label.replaceAll('_', ' ') }}
-            </v-label>
+            </span>
           </td>
           <td v-if="currentFilters[filter.label]">
             <v-select
