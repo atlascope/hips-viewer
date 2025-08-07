@@ -1,5 +1,48 @@
 <script setup lang="ts">
-import { filterOptions } from './store'
+import {
+  filterOptions,
+  currentFilters,
+  cells,
+  filterVectorIndices,
+  selectedCellIds,
+  filterMatchCellIds,
+} from './store'
+import type { Cell } from './types'
+import { resetCurrentFilters } from './utils'
+
+function getMatchedCellIds() {
+  if (!cells.value) return []
+  return cells.value.filter((cell: Cell) => {
+    if (
+      currentFilters.value.classification.length
+      && !currentFilters.value.classification.includes(cell.classification)
+    ) {
+      return false
+    }
+    if (cell.vector_text && filterVectorIndices.value) {
+      const vector = cell.vector_text.split(',')
+      const vectorExclusions = Object.keys(currentFilters.value)
+        .filter(key => key !== 'classification')
+        .map((key) => {
+          let cellValue = parseFloat(vector[filterVectorIndices.value[key]])
+          if (!cellValue || isNaN(cellValue)) return false
+          cellValue = parseFloat(cellValue.toPrecision(2))
+          const range = currentFilters.value[key] as [number, number]
+          return cellValue < range[0] || cellValue > range[1]
+        })
+      if (vectorExclusions.some((v: boolean) => v)) return false
+    }
+    return true
+  }).map((cell: Cell) => cell.id)
+}
+
+function selectCells() {
+  selectedCellIds.value = new Set(getMatchedCellIds())
+}
+
+function filterCells() {
+  filterMatchCellIds.value = new Set(getMatchedCellIds())
+}
 </script>
 
 <template>
@@ -8,31 +51,106 @@ import { filterOptions } from './store'
       Filter Options
     </div>
     <v-card-text>
-      <table width="375">
+      <table width="500">
         <tr
           v-for="filter in filterOptions"
           :key="filter.label"
         >
           <td style="width: 1%; padding-right: 20px">
-            <v-label>{{ filter.label }}</v-label>
+            <v-label style="text-transform: capitalize">
+              {{ filter.label.replaceAll('_', ' ') }}
+            </v-label>
           </td>
-          <td>
+          <td v-if="currentFilters[filter.label]">
             <v-select
               v-if="filter.options"
+              v-model="(currentFilters[filter.label] as string[])"
               :items="filter.options"
               density="compact"
+              class="filter-option-select"
               hide-details
+              multiple
+              closable-chips
+              chips
             />
             <v-range-slider
               v-if="filter.range"
+              v-model="currentFilters[filter.label]"
               :min="filter.range.min"
               :max="filter.range.max"
+              :step="0.01"
               density="compact"
               hide-details
-            />
+              class="filter-range-slider mx-0"
+            >
+              <template #prepend>
+                <v-text-field
+                  v-model="currentFilters[filter.label][0]"
+                  density="compact"
+                  style="width: 90px"
+                  type="number"
+                  :min="filter.range.min"
+                  :max="filter.range.max"
+                  :step="0.01"
+                  variant="outlined"
+                  hide-details
+                  single-line
+                />
+              </template>
+              <template #append>
+                <v-text-field
+                  v-model="currentFilters[filter.label][1]"
+                  density="compact"
+                  style="width: 90px"
+                  type="number"
+                  :min="filter.range.min"
+                  :max="filter.range.max"
+                  :step="0.01"
+                  variant="outlined"
+                  hide-details
+                  single-line
+                />
+              </template>
+            </v-range-slider>
           </td>
         </tr>
       </table>
     </v-card-text>
+    <div class="action-buttons">
+      <v-btn
+        @click="resetCurrentFilters"
+      >
+        Reset Filters
+      </v-btn>
+      <v-btn
+        color="black"
+        @click="selectCells"
+      >
+        Select cells
+      </v-btn>
+      <v-btn
+        color="black"
+        @click="filterCells"
+      >
+        Filter cells
+      </v-btn>
+    </div>
   </v-card>
 </template>
+
+<style>
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  column-gap: 15px;
+  margin-bottom: 15px;
+}
+.filter-range-slider .v-field__input {
+  padding: 0px 0px 0px 5px;
+  min-height: 30px;
+}
+input[type=number]:hover::-webkit-inner-spin-button {
+    width: 14px;
+    height: 30px;
+}
+</style>

@@ -54,6 +54,7 @@ export const attributeOptions = ref()
 export const filterOptions = ref<FilterOption[]>()
 export const filterVectorIndices = ref<Record<string, number>>({})
 export const currentFilters = ref<Record<string, (string | number)[]>>({})
+export const filterMatchCellIds = ref<Set<number>>(new Set<number>())
 
 // Store watchers
 watch(colormapType, () => colormapName.value = undefined)
