@@ -177,8 +177,8 @@ export function resetFilterOptions() {
         value = parseFloat(value.toPrecision(2))
         // @ts-ignore
         const range = vectorRanges[key]
-        if (!range.min || range.min > value) range.min = value
-        if (!range.max || range.max < value) range.max = value
+        if (range.min === undefined || range.min > value) range.min = value
+        if (range.max === undefined || range.max < value) range.max = value
       })
     }
   })
@@ -195,7 +195,7 @@ export function resetCurrentFilters() {
   currentFilters.value = {}
   if (filterOptions.value) {
     filterOptions.value.forEach((filter: FilterOption) => {
-      if (filter.range?.min && filter.range?.max) {
+      if (filter.range?.min !== undefined && filter.range?.max !== undefined) {
         currentFilters.value[filter.label] = [filter.range.min, filter.range.max]
       }
       else if (filter.options) {
