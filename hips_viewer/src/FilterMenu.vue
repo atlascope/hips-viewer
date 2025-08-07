@@ -149,8 +149,4 @@ function filterCells() {
   padding: 0px 0px 0px 5px;
   min-height: 30px;
 }
-input[type=number]:hover::-webkit-inner-spin-button {
-    width: 14px;
-    height: 30px;
-}
 </style>
