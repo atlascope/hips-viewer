@@ -7,6 +7,7 @@ import {
   histNumBuckets, showHistogram, histCellIds,
   selectedCellIds, selectedColor, annotationLayer,
   annotationMode, annotationBoolean, lastAnnotation,
+  filterMatchCellIds,
 } from '@/store'
 import {
   selectCell,
@@ -197,8 +198,36 @@ export function updateColors() {
       }
       return cellColors.value[cell.id]
     }
-    cellFeature.value.style('strokeColor', styleCellFunction).draw()
-    pointFeature.value.style('fillColor', styleCellFunction).draw()
+    cellFeature.value.style('strokeColor', styleCellFunction)
+    pointFeature.value.style('fillColor', styleCellFunction)
+    if (cellFeature.value.visible()) {
+      cellFeature.value.draw()
+    }
+    if (pointFeature.value.visible()) {
+      pointFeature.value.draw()
+    }
+  }
+}
+
+export function updateOpacities() {
+  if (pointFeature.value && cellFeature.value) {
+    const opacityFunction = (cell: any, i: number) => {
+      if (cell.__cluster) {
+        cell = clusterFirstPoint(cells.value, cell, i)
+      }
+      if (filterMatchCellIds.value.size && !filterMatchCellIds.value.has(cell.id)) {
+        return 0
+      }
+      return 1
+    }
+    cellFeature.value.style('strokeOpacity', opacityFunction)
+    pointFeature.value.style('fillOpacity', opacityFunction)
+    if (cellFeature.value.visible()) {
+      cellFeature.value.draw()
+    }
+    if (pointFeature.value.visible()) {
+      pointFeature.value.draw()
+    }
   }
 }
 

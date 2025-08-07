@@ -6,6 +6,7 @@ import {
   resetFilterVectorIndices,
 } from './utils'
 import type { FilterOption } from './types'
+import { updateOpacities } from './map'
 
 // Store variables
 export const map = ref()
@@ -96,3 +97,5 @@ watch([cells, attributeOptions], () => {
     resetCurrentFilters()
   }
 })
+
+watch(filterMatchCellIds, updateOpacities)

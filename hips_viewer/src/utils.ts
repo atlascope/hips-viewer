@@ -9,6 +9,7 @@ import {
   filterOptions,
   currentFilters,
   attributeOptions,
+  filterMatchCellIds,
 } from './store'
 import type { Cell, FilterOption } from './types'
 
@@ -193,6 +194,7 @@ export function resetFilterOptions() {
 
 export function resetCurrentFilters() {
   currentFilters.value = {}
+  filterMatchCellIds.value = new Set()
   if (filterOptions.value) {
     filterOptions.value.forEach((filter: FilterOption) => {
       if (filter.range?.min !== undefined && filter.range?.max !== undefined) {
