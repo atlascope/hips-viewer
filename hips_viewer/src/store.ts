@@ -90,8 +90,8 @@ watch(cells, () => {
   histCellIds.value = new Set(cells.value?.map((c: any) => c.id))
 })
 
-watch([cells, attributeOptions], () => {
-  if (cells.value && attributeOptions.value && !filterOptions.value) {
+watch([cells, cellColumns], () => {
+  if (cells.value && cellColumns.value && !filterOptions.value) {
     resetFilterVectorIndices()
     resetFilterOptions()
     resetCurrentFilters()

@@ -8,7 +8,6 @@ import {
   filterVectorIndices,
   filterOptions,
   currentFilters,
-  attributeOptions,
   filterMatchCellIds,
 } from './store'
 import type { Cell, FilterOption } from './types'
@@ -154,10 +153,10 @@ export function clickCellThumbnail(event: any, cellId: number | undefined) {
 
 export function resetFilterVectorIndices() {
   filterVectorIndices.value = {
-    area: attributeOptions.value.indexOf('Size.Area'),
-    orientation: attributeOptions.value.indexOf('Orientation.Orientation'),
-    circularity: attributeOptions.value.indexOf('Shape.Circularity'),
-    eccentricity: attributeOptions.value.indexOf('Shape.Eccentricity'),
+    area: cellColumns.value.indexOf('Size.Area'),
+    orientation: cellColumns.value.indexOf('Orientation.Orientation'),
+    circularity: cellColumns.value.indexOf('Shape.Circularity'),
+    eccentricity: cellColumns.value.indexOf('Shape.Eccentricity'),
   }
 }
 
