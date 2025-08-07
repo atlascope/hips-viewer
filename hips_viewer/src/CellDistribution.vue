@@ -14,7 +14,7 @@ const chartOptions = {
   onClick: selectBar,
 }
 
-const viewportCalculated = ref(false)
+const histCellsCalculated = ref(false)
 const histNumBucketsSlider = ref(histNumBuckets.value)
 
 const debouncedUpdateHistBuckets = (n: number) => {
@@ -69,16 +69,16 @@ function changeHistSelection() {
   }
   else if (histSelectionType.value === 'viewport') {
     histCellIds.value = new Set(cellFeature.value.polygonSearch(map.value.corners()).found.map((c: any) => c.id))
-    viewportCalculated.value = true
   }
   else if (histSelectionType.value === 'selected') {
     histCellIds.value = new Set(selectedCellIds.value)
   }
+  histCellsCalculated.value = true
 }
 
 watchEffect(async () => {
-  const notCalculated = histSelectionType.value === 'viewport' && !viewportCalculated.value
-  if (chartData.value && !notCalculated) return
+  const cellsCalculated = histSelectionType.value === 'all' || histCellsCalculated.value
+  if (chartData.value && cellsCalculated) return
 
   await new Promise(r => setTimeout(r, 100)) // wait for DOM update
   changeHistSelection()
