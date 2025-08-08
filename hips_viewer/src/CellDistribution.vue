@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, watchEffect, watch, onMounted } from 'vue'
+import { ref, watchEffect, watch, onMounted, computed } from 'vue'
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 
 import { cellDistribution } from '@/map'
 import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
   histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
-  histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor } from '@/store'
+  histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor,
+  filterMatchCellIds } from '@/store'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -16,6 +17,13 @@ const chartOptions = {
 }
 
 const histNumBucketsSlider = ref(histNumBuckets.value)
+const filterInclusionMode = ref('exclude')
+const histIncludedCellIds = computed(() => {
+  if (filterInclusionMode.value === 'exclude' && filterMatchCellIds.value.size) {
+    return new Set([...histCellIds.value].filter(id => filterMatchCellIds.value.has(id)))
+  }
+  return histCellIds.value
+})
 
 const debouncedUpdateHistBuckets = (n: number) => {
   histNumBucketsSlider.value = n
@@ -115,16 +123,23 @@ watch([histNumBuckets, histCellIds], () => {
   cellData.value = cellDistribution()
 })
 
-watch([cellData, histogramScale, histSelectedBars], () => {
+watch([
+  cellData, histogramScale, histSelectedBars,
+  filterInclusionMode, filterMatchCellIds,
+], () => {
   if (!cellData.value) return
 
   const labels = cellData.value.map(c => c.key)
   const colors = cellData.value.map((c, index) => {
     return histSelectedBars.value.has(index) ? selectedColor.value : c.color
   })
-  const counts = cellData.value.map(c =>
-    histogramScale.value === 'log' ? Math.log(c.count) : c.count,
-  )
+  const counts = cellData.value.map((c) => {
+    let cellIds = [...c.cellIds]
+    if (filterInclusionMode.value === 'exclude' && filterMatchCellIds.value.size) {
+      cellIds = cellIds.filter(id => filterMatchCellIds.value.has(id))
+    }
+    return histogramScale.value === 'log' ? Math.log(cellIds.length) : cellIds.length
+  })
 
   chartData.value = {
     labels,
@@ -216,7 +231,23 @@ watch([cellData, histogramScale, histSelectedBars], () => {
           </v-btn>
         </v-btn-toggle>
       </div>
-      <v-label>({{ histCellIds.size }} / {{ cells.length }})</v-label>
+      <div v-if="filterMatchCellIds.size">
+        <label class="text-subtitle-1 pr-2">Filtered Cells:</label>
+        <v-btn-toggle
+          v-model="filterInclusionMode"
+          density="compact"
+          variant="outlined"
+          mandatory="force"
+        >
+          <v-btn value="include">
+            Include
+          </v-btn>
+          <v-btn value="exclude">
+            Exclude
+          </v-btn>
+        </v-btn-toggle>
+      </div>
+      <v-label>({{ histIncludedCellIds.size }} / {{ cells.length }})</v-label>
     </v-card-text>
   </v-card>
 </template>
