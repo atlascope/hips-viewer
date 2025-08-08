@@ -83,7 +83,8 @@ onMounted(() => {
   if (histSelectionType.value === 'selected') {
     if (histPrevSelectedCellIds.value.size !== selectedCellIds.value.size) {
       histCellIdsDirty.value = true
-    } else {
+    }
+    else {
       // copy because we can't compare proxies
       const prevSelection = new Set(histPrevSelectedCellIds.value)
       const selection = new Set(selectedCellIds.value)
