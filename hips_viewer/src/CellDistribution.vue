@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watchEffect, watch } from 'vue'
+import { ref, watchEffect, watch, onMounted } from 'vue'
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 
 import { cellDistribution } from '@/map'
-import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histSelectionType, histSelectedBars,
+import { colorBy, histNumBuckets, cellData, chartData, showHistogram,
+  histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor } from '@/store'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
@@ -14,7 +15,6 @@ const chartOptions = {
   onClick: selectBar,
 }
 
-const histCellsCalculated = ref(false)
 const histNumBucketsSlider = ref(histNumBuckets.value)
 
 const debouncedUpdateHistBuckets = (n: number) => {
@@ -68,24 +68,34 @@ function changeHistSelection() {
     histCellIds.value = new Set(cells.value.map((c: any) => c.id))
   }
   else if (histSelectionType.value === 'viewport') {
+    histPrevViewport.value = map.value.corners()
     histCellIds.value = new Set(cellFeature.value.polygonSearch(map.value.corners()).found.map((c: any) => c.id))
   }
   else if (histSelectionType.value === 'selected') {
     histCellIds.value = new Set(selectedCellIds.value)
   }
-  histCellsCalculated.value = true
+  histCellIdsDirty.value = false
 }
 
+onMounted(() => {
+  histSelectedBars.value = new Set<number>()
+
+  if (histSelectionType.value === 'viewport') {
+    const viewport = map.value.corners()
+    const unchanged = JSON.stringify(viewport) == JSON.stringify(histPrevViewport.value)
+    histCellIdsDirty.value = !unchanged
+  }
+})
+
 watchEffect(async () => {
-  const cellsCalculated = histSelectionType.value === 'all' || histCellsCalculated.value
-  if (chartData.value && cellsCalculated) return
+  if (chartData.value && !histCellIdsDirty.value) return
 
   await new Promise(r => setTimeout(r, 100)) // wait for DOM update
   changeHistSelection()
 })
 
 watch([histNumBuckets, histCellIds], () => {
-  histSelectedBars.value.clear()
+  histSelectedBars.value = new Set<number>()
   cellData.value = cellDistribution()
 })
 
