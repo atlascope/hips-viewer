@@ -4,7 +4,7 @@ import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearSca
 import { Bar } from 'vue-chartjs'
 
 import { cellDistribution } from '@/map'
-import { colorBy, histNumBuckets, cellData, chartData, showHistogram,
+import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
   histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor } from '@/store'
 
@@ -54,7 +54,7 @@ function selectBar(event: any, elements: any) {
   let cellIds = new Set<number>()
   histSelectedBars.value.forEach((i) => {
     const bucket = cellData.value?.[i]
-    if (!bucket) return
+    if (!bucket || !bucket.cellIds) return
 
     cellIds = cellIds.union(bucket.cellIds)
   })
@@ -79,6 +79,21 @@ function changeHistSelection() {
 
 onMounted(() => {
   histSelectedBars.value = new Set<number>()
+
+  if (histSelectionType.value === 'selected') {
+    if (histPrevSelectedCellIds.value.size !== selectedCellIds.value.size) {
+      histCellIdsDirty.value = true
+    } else {
+      // copy because we can't compare proxies
+      const prevSelection = new Set(histPrevSelectedCellIds.value)
+      const selection = new Set(selectedCellIds.value)
+
+      if (prevSelection.difference(selection).size !== 0) {
+        histCellIdsDirty.value = true
+      }
+    }
+  }
+  histPrevSelectedCellIds.value = selectedCellIds.value
 
   if (histSelectionType.value === 'viewport') {
     const viewport = map.value.corners()
