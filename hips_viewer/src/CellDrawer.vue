@@ -24,8 +24,12 @@ const hexCellColors = computed(() => Object.fromEntries(
 function loadThumbnails({ done }: any) {
   if (props.cells.length === thumbnails.value.length) done('empty')
   else {
-    thumbnails.value.push(...props.cells.slice(
-      thumbnails.value.length, thumbnails.value.length + pageLength,
+    const filteredCells = props.cells.filter(
+      cell => !filterMatchCellIds.value.size || filterMatchCellIds.value.has(cell.id),
+    )
+    if (filteredCells.length === filteredThumbnails.value.length) done('empty')
+    thumbnails.value.push(...filteredCells.slice(
+      filteredThumbnails.value.length, filteredThumbnails.value.length + pageLength,
     ).map((cell) => {
       const region = new URLSearchParams({
         left: (cell.x - cell.width / 2).toString(),
