@@ -39,8 +39,16 @@ export const showHistogram = ref(false)
 export const histNumBuckets = ref(50)
 export const histCellIds = ref<Set<number>>(new Set<number>())
 export const histSelectionType = ref<'all' | 'viewport' | 'selected'>('all')
+export const histCellIdsDirty = ref(false)
+export const histPrevViewport = ref()
+export const histPrevSelectedCellIds = ref(new Set<number>())
 export const histogramScale = ref<'linear' | 'log'>('linear')
-export const cellData = ref<null | { key: string | number, color: string, count: number }[]>(null)
+export const histSelectedBars = ref<Set<number>>(new Set<number>())
+export const cellData = ref<null | {
+  key: string
+  color: string
+  cellIds: Set<number>
+  count: number }[]>(null)
 export const chartData = ref()
 
 export const colorLegend = ref()

@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { ref, watchEffect, watch } from 'vue'
+import { ref, watchEffect, watch, onMounted } from 'vue'
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 
 import { cellDistribution } from '@/map'
-import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histSelectionType,
-  histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature } from '@/store'
+import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
+  histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
+  histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor } from '@/store'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
-const chartOptions = { responsive: true }
+const chartOptions = {
+  responsive: true,
+  onClick: selectBar,
+}
 
 const histNumBucketsSlider = ref(histNumBuckets.value)
 
@@ -21,6 +25,42 @@ const debouncedUpdateHistBuckets = (n: number) => {
   }, 300)
 }
 
+function selectBar(event: any, elements: any) {
+  const clickedBar = elements[0]
+  if (clickedBar === undefined) return
+
+  const barIndex = clickedBar.index
+  const toggle = event.native.shiftKey || event.native.ctrlKey
+
+  if (toggle) {
+    if (histSelectedBars.value.has(barIndex)) {
+      histSelectedBars.value.delete(barIndex)
+    }
+    else {
+      histSelectedBars.value.add(barIndex)
+    }
+  }
+  else {
+    if (histSelectedBars.value.has(barIndex) && histSelectedBars.value.size === 1) {
+      histSelectedBars.value.clear()
+    }
+    else {
+      histSelectedBars.value.clear()
+      histSelectedBars.value.add(barIndex)
+    }
+  }
+  histSelectedBars.value = new Set(histSelectedBars.value) // trigger watcher
+
+  let cellIds = new Set<number>()
+  histSelectedBars.value.forEach((i) => {
+    const bucket = cellData.value?.[i]
+    if (!bucket || !bucket.cellIds) return
+
+    cellIds = cellIds.union(bucket.cellIds)
+  })
+  selectedCellIds.value = cellIds
+}
+
 function changeHistSelection() {
   if (!cells.value) return
 
@@ -28,30 +68,60 @@ function changeHistSelection() {
     histCellIds.value = new Set(cells.value.map((c: any) => c.id))
   }
   else if (histSelectionType.value === 'viewport') {
+    histPrevViewport.value = map.value.corners()
     histCellIds.value = new Set(cellFeature.value.polygonSearch(map.value.corners()).found.map((c: any) => c.id))
   }
   else if (histSelectionType.value === 'selected') {
     histCellIds.value = new Set(selectedCellIds.value)
   }
+  histCellIdsDirty.value = false
 }
 
+onMounted(() => {
+  histSelectedBars.value = new Set<number>()
+
+  if (histSelectionType.value === 'selected') {
+    if (histPrevSelectedCellIds.value.size !== selectedCellIds.value.size) {
+      histCellIdsDirty.value = true
+    }
+    else {
+      // copy because we can't compare proxies
+      const prevSelection = new Set(histPrevSelectedCellIds.value)
+      const selection = new Set(selectedCellIds.value)
+
+      if (prevSelection.difference(selection).size !== 0) {
+        histCellIdsDirty.value = true
+      }
+    }
+  }
+  histPrevSelectedCellIds.value = selectedCellIds.value
+
+  if (histSelectionType.value === 'viewport') {
+    const viewport = map.value.corners()
+    const unchanged = JSON.stringify(viewport) == JSON.stringify(histPrevViewport.value)
+    histCellIdsDirty.value = !unchanged
+  }
+})
+
 watchEffect(async () => {
-  if (chartData.value) return
+  if (chartData.value && !histCellIdsDirty.value) return
 
   await new Promise(r => setTimeout(r, 100)) // wait for DOM update
-  cellData.value = cellDistribution()
   changeHistSelection()
 })
 
 watch([histNumBuckets, histCellIds], () => {
+  histSelectedBars.value = new Set<number>()
   cellData.value = cellDistribution()
 })
 
-watch([cellData, histogramScale], () => {
+watch([cellData, histogramScale, histSelectedBars], () => {
   if (!cellData.value) return
 
   const labels = cellData.value.map(c => c.key)
-  const colors = cellData.value.map(c => c.color)
+  const colors = cellData.value.map((c, index) => {
+    return histSelectedBars.value.has(index) ? selectedColor.value : c.color
+  })
   const counts = cellData.value.map(c =>
     histogramScale.value === 'log' ? Math.log(c.count) : c.count,
   )
