@@ -238,7 +238,10 @@ export function addFilterOption(attr: string) {
 
 export function getFilterMatchIds() {
   return cells.value.filter((cell: Cell) => {
-    const matches = Object.entries(currentFilters.value).map(([key, filterValue]) => {
+    const filterKeys = Object.keys(currentFilters.value)
+    for (let i = 0; i < filterKeys.length; i++) {
+      const key = filterKeys[i]
+      const filterValue = currentFilters.value[key]
       let vectorIndex = cellColumns.value.indexOf(key)
       if (vectorIndex < 0) vectorIndex = filterVectorIndices.value[key]
       let cellValue = cell[key]?.toString()
@@ -250,12 +253,16 @@ export function getFilterMatchIds() {
         const numericValue = parseFloat(parseFloat(cellValue).toPrecision(2))
         if (filterValue.length === 2) {
           const range = filterValue as [number, number]
-          return numericValue >= range[0] && numericValue <= range[1]
+          if (numericValue < range[0] || numericValue > range[1]) {
+            return false
+          }
         }
       }
-      return !filterValue.length || !cellValue || filterValue.includes(cellValue)
-    })
-    return matches.every((v: boolean) => v)
+      else if (cellValue && filterValue.length && !filterValue.includes(cellValue)) {
+        return false
+      }
+    }
+    return true
   }).map((cell: Cell) => cell.id)
 }
 
