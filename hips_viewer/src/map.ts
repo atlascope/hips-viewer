@@ -102,7 +102,10 @@ export function addHoverCallback(callback: Function, feature: any) {
 }
 
 export function lassoSelect(polygon: { x: number, y: number }[]) {
-  const foundCells = cellFeature.value.polygonSearch({ outer: polygon }).found
+  let foundCells = cellFeature.value.polygonSearch({ outer: polygon }).found
+  if (filterMatchCellIds.value.size) {
+    foundCells = foundCells.filter((cell: Cell) => filterMatchCellIds.value.has(cell.id))
+  }
   // create local copy without proxy for set operations
   let currentIds: Set<number> = new Set(selectedCellIds.value)
   const targetIds: Set<number> = new Set(foundCells.map((cell: Cell) => cell.id))
