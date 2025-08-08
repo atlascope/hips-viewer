@@ -51,6 +51,16 @@ export function clusterFirstPoint(data: any, current: any, i: number) {
   }
   if (current._points === undefined) return current
   if (current._points.length) {
+    const indexes = current._points.map((p: { index: number }) => p.index)
+    const points = indexes.map((i: number) => data[i])
+    // if filters applied, only return a cell that matches the filters
+    if (filterMatchCellIds.value.size) {
+      const match = points.find((p: any) => filterMatchCellIds.value.has(p.id))
+      if (match) return match
+    }
+    else {
+      return points[0]
+    }
     return data[current._points[0].index]
   }
   return clusterFirstPoint(data, current._clusters[0], i)
@@ -63,7 +73,11 @@ export function clusterAllPoints(data: any, current: any, i: number, allPoints: 
   if (current._points === undefined) return [...allPoints, current]
   if (current._points.length) {
     const indexes = current._points.map((p: { index: number }) => p.index)
-    const points = indexes.map((i: number) => data[i])
+    let points = indexes.map((i: number) => data[i])
+    // if filters applied, only return cells that match the filters
+    if (filterMatchCellIds.value.size) {
+      points = points.filter((p: any) => filterMatchCellIds.value.has(p.id))
+    }
     allPoints = [...allPoints, ...points]
   }
   current._clusters.forEach((cluster: any) => {
