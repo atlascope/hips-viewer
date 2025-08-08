@@ -189,32 +189,34 @@ export function updateColors() {
       return colormapFunction(value)
     }
     cellColors.value = Object.fromEntries(cells.value.map((cell: Cell) => [cell.id, getCellColor(cell)]))
+    updateColorFunctions()
+  }
+}
+
+export function updateColorFunctions() {
+  if (cellFeature.value && pointFeature.value) {
     const styleCellFunction = (cell: any, i: number) => {
       if (cell.__cluster) {
         cell = clusterFirstPoint(cells.value, cell, i)
       }
-      if (selectedCellIds.value.has(cell.id)) {
-        return selectedColor.value
-      }
+      if (!cell) return 'transparent'
+      if (selectedCellIds.value.has(cell.id)) return selectedColor.value
       return cellColors.value[cell.id]
     }
     cellFeature.value.style('strokeColor', styleCellFunction)
     pointFeature.value.style('fillColor', styleCellFunction)
-    if (cellFeature.value.visible()) {
-      cellFeature.value.draw()
-    }
-    if (pointFeature.value.visible()) {
-      pointFeature.value.draw()
-    }
+    if (cellFeature.value.visible()) cellFeature.value.draw()
+    if (pointFeature.value.visible()) pointFeature.value.draw()
   }
 }
 
-export function updateOpacities() {
-  if (pointFeature.value && cellFeature.value) {
+export function updateOpacityFunctions() {
+  if (cellFeature.value && pointFeature.value) {
     const opacityFunction = (cell: any, i: number) => {
       if (cell.__cluster) {
         cell = clusterFirstPoint(cells.value, cell, i)
       }
+      if (!cell) return 0
       if (filterMatchCellIds.value.size && !filterMatchCellIds.value.has(cell.id)) {
         return 0
       }
@@ -222,12 +224,8 @@ export function updateOpacities() {
     }
     cellFeature.value.style('strokeOpacity', opacityFunction)
     pointFeature.value.style('fillOpacity', opacityFunction)
-    if (cellFeature.value.visible()) {
-      cellFeature.value.draw()
-    }
-    if (pointFeature.value.visible()) {
-      pointFeature.value.draw()
-    }
+    if (cellFeature.value.visible()) cellFeature.value.draw()
+    if (pointFeature.value.visible()) pointFeature.value.draw()
   }
 }
 

@@ -1,12 +1,11 @@
 import { ref, watch } from 'vue'
 import {
-  clusterFirstPoint,
   resetCurrentFilters,
   resetFilterOptions,
   resetFilterVectorIndices,
 } from './utils'
 import type { FilterOption } from './types'
-import { updateOpacities } from './map'
+import { updateColorFunctions, updateOpacityFunctions } from './map'
 
 // Store variables
 export const map = ref()
@@ -48,7 +47,8 @@ export const cellData = ref<null | {
   key: string
   color: string
   cellIds: Set<number>
-  count: number }[]>(null)
+  count: number
+}[]>(null)
 export const chartData = ref()
 
 export const colorLegend = ref()
@@ -78,21 +78,7 @@ watch(colorBy, () => {
   chartData.value = null
 })
 
-watch(selectedCellIds, () => {
-  if (cellFeature.value && pointFeature.value) {
-    const styleCellFunction = (cell: any, i: number) => {
-      if (cell.__cluster) {
-        cell = clusterFirstPoint(cells.value, cell, i)
-      }
-      if (selectedCellIds.value.has(cell.id)) return selectedColor.value
-      return cellColors.value[cell.id]
-    }
-    cellFeature.value.style('strokeColor', styleCellFunction)
-    if (cellFeature.value.visible()) cellFeature.value.draw()
-    pointFeature.value.style('fillColor', styleCellFunction)
-    if (pointFeature.value.visible()) pointFeature.value.draw()
-  }
-})
+watch(selectedCellIds, updateColorFunctions)
 
 watch(cells, () => {
   histCellIds.value = new Set(cells.value?.map((c: any) => c.id))
@@ -106,4 +92,4 @@ watch([cells, cellColumns], () => {
   }
 })
 
-watch(filterMatchCellIds, updateOpacities)
+watch(filterMatchCellIds, updateOpacityFunctions)

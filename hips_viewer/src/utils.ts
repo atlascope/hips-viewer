@@ -45,27 +45,6 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
   }
 }
 
-export function clusterFirstPoint(data: any, current: any, i: number) {
-  if (current.__cluster) {
-    current = current.obj
-  }
-  if (current._points === undefined) return current
-  if (current._points.length) {
-    const indexes = current._points.map((p: { index: number }) => p.index)
-    const points = indexes.map((i: number) => data[i])
-    // if filters applied, only return a cell that matches the filters
-    if (filterMatchCellIds.value.size) {
-      const match = points.find((p: any) => filterMatchCellIds.value.has(p.id))
-      if (match) return match
-    }
-    else {
-      return points[0]
-    }
-    return data[current._points[0].index]
-  }
-  return clusterFirstPoint(data, current._clusters[0], i)
-}
-
 export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[]) {
   if (current.__cluster) {
     current = current.obj
@@ -84,6 +63,16 @@ export function clusterAllPoints(data: any, current: any, i: number, allPoints: 
     allPoints = clusterAllPoints(data, cluster, i, allPoints)
   })
   return allPoints
+}
+
+export function clusterFirstPoint(data: any, current: any, i: number) {
+  // get all points in cluster, excluding any cells that don't match filters
+  const clusterPoints = clusterAllPoints(data, current, i, [])
+  // prioritize returning a selected cell
+  let cell = clusterPoints.find(cell => selectedCellIds.value.has(cell.id))
+  // if no cells selected, return any cell
+  if (!cell && clusterPoints.length) cell = clusterPoints[0]
+  return cell
 }
 
 export function getCellAttribute(cell: Cell, attrName: string) {
