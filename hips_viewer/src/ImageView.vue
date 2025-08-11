@@ -146,26 +146,60 @@ watch(cells, drawCells)
       v-if="cells"
       class="actions"
     >
-      <v-btn icon>
-        <span class="material-symbols-outlined">palette</span>
-        <v-menu
-          activator="parent"
-          location="end"
-          :close-on-content-click="false"
-        >
-          <ColorOptions />
-        </v-menu>
-      </v-btn>
-      <v-btn icon>
-        <span class="material-symbols-outlined">filter_alt</span>
-        <v-menu
-          activator="parent"
-          location="end"
-          :close-on-content-click="false"
-        >
-          <FilterMenu />
-        </v-menu>
-      </v-btn>
+      <v-tooltip>
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            icon
+            v-bind="tooltipProps"
+          >
+            <span class="material-symbols-outlined">palette</span>
+            <v-menu
+              activator="parent"
+              location="end"
+              :close-on-content-click="false"
+            >
+              <ColorOptions />
+            </v-menu>
+          </v-btn>
+        </template>
+        <span>Color Options</span>
+      </v-tooltip>
+      <v-tooltip>
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            icon
+            v-bind="tooltipProps"
+          >
+            <span class="material-symbols-outlined">filter_alt</span>
+            <v-menu
+              activator="parent"
+              location="end"
+              :close-on-content-click="false"
+            >
+              <FilterMenu />
+            </v-menu>
+          </v-btn>
+        </template>
+        <span>Filter/Select by Attribute</span>
+      </v-tooltip>
+      <v-tooltip>
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            icon
+            v-bind="tooltipProps"
+          >
+            <span class="material-symbols-outlined">bar_chart_4_bars</span>
+            <v-menu
+              activator="parent"
+              location="end"
+              :close-on-content-click="false"
+            >
+              <CellDistribution />
+            </v-menu>
+          </v-btn>
+        </template>
+        <span>Cell Distribution</span>
+      </v-tooltip>
       <v-btn
         v-tooltip="'Toggle Tooltip'"
         icon
@@ -182,16 +216,6 @@ watch(cells, drawCells)
         @click="() => annotationLayer.mode('polygon')"
       >
         <span class="material-symbols-outlined"> lasso_select </span>
-      </v-btn>
-      <v-btn icon>
-        <span class="material-symbols-outlined">bar_chart_4_bars</span>
-        <v-menu
-          activator="parent"
-          location="end"
-          :close-on-content-click="false"
-        >
-          <CellDistribution />
-        </v-menu>
       </v-btn>
     </div>
     <v-card
