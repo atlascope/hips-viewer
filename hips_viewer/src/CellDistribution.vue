@@ -17,9 +17,9 @@ const chartOptions = {
 }
 
 const histNumBucketsSlider = ref(histNumBuckets.value)
-const filterInclusionMode = ref('exclude')
+const filterMode = ref('filtered')
 const histIncludedCellIds = computed(() => {
-  if (filterInclusionMode.value === 'exclude' && filterMatchCellIds.value.size) {
+  if (filterMode.value === 'filtered' && filterMatchCellIds.value.size) {
     return new Set([...histCellIds.value].filter(id => filterMatchCellIds.value.has(id)))
   }
   return histCellIds.value
@@ -125,7 +125,7 @@ watch([histNumBuckets, histCellIds], () => {
 
 watch([
   cellData, histogramScale, histSelectedBars,
-  filterInclusionMode, filterMatchCellIds,
+  filterMode, filterMatchCellIds,
 ], () => {
   if (!cellData.value) return
 
@@ -135,7 +135,7 @@ watch([
   })
   const counts = cellData.value.map((c) => {
     let cellIds = [...c.cellIds]
-    if (filterInclusionMode.value === 'exclude' && filterMatchCellIds.value.size) {
+    if (filterMode.value === 'filtered' && filterMatchCellIds.value.size) {
       cellIds = cellIds.filter(id => filterMatchCellIds.value.has(id))
     }
     return histogramScale.value === 'log' ? Math.log(cellIds.length) : cellIds.length
@@ -232,18 +232,18 @@ watch([
         </v-btn-toggle>
       </div>
       <div v-if="filterMatchCellIds.size">
-        <label class="text-subtitle-1 pr-2">Filtered Cells:</label>
+        <label class="text-subtitle-1 pr-2">Apply Cell Filters:</label>
         <v-btn-toggle
-          v-model="filterInclusionMode"
+          v-model="filterMode"
           density="compact"
           variant="outlined"
           mandatory="force"
         >
-          <v-btn value="include">
-            Include
+          <v-btn value="filtered">
+            Filtered
           </v-btn>
-          <v-btn value="exclude">
-            Exclude
+          <v-btn value="all">
+            All Cells
           </v-btn>
         </v-btn-toggle>
       </div>
