@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   filterOptions,
   currentFilters,
@@ -11,7 +11,12 @@ import AttributeSelect from './AttributeSelect.vue'
 
 const addMode = ref<boolean>(false)
 const addAttribute = ref<string | undefined>()
+const hiddenAttributes = ref<Set<string>>(new Set())
 const msg = ref<string | undefined>()
+
+const shownFilterOptions = computed(
+  () => filterOptions.value?.filter(f => !hiddenAttributes.value.has(f.label)),
+)
 
 function selectCells() {
   msg.value = 'Searching...'
@@ -39,7 +44,11 @@ function addAttributeSubmit() {
   msg.value = 'Computing values...'
   setTimeout(() => {
     if (addAttribute.value) {
-      if (Object.keys(currentFilters.value).includes(addAttribute.value)) {
+      if (hiddenAttributes.value.has(addAttribute.value)) {
+        hiddenAttributes.value.delete(addAttribute.value)
+        addAttributeCancel()
+      }
+      else if (Object.keys(currentFilters.value).includes(addAttribute.value)) {
         msg.value = 'Attribute filter already exists.'
       }
       else {
@@ -48,6 +57,27 @@ function addAttributeSubmit() {
       }
     }
   }, 100)
+}
+
+function hideFilterOption(attrName: string) {
+  hiddenAttributes.value.add(attrName)
+  const filter = filterOptions.value?.find(f => f.label === attrName)
+  if (!filter) return
+  let refilter = false
+  if (
+    filter.range?.min !== undefined
+    && filter.range?.max !== undefined
+    && (currentFilters.value[filter.label][0] !== filter.range.min
+      || currentFilters.value[filter.label][1] !== filter.range.max)
+  ) {
+    currentFilters.value[filter.label] = [filter.range.min, filter.range.max]
+    refilter = true
+  }
+  else if (filter.options && currentFilters.value[filter.label].length) {
+    currentFilters.value[filter.label] = []
+    refilter = true
+  }
+  if (refilter) filterCells()
 }
 
 watch([currentFilters, addAttribute], () => {
@@ -63,7 +93,7 @@ watch([currentFilters, addAttribute], () => {
     <v-card-text>
       <table width="500">
         <tr
-          v-for="filter in filterOptions"
+          v-for="filter in shownFilterOptions"
           :key="filter.label"
         >
           <td style="width: 1%; padding-right: 20px">
@@ -122,6 +152,14 @@ watch([currentFilters, addAttribute], () => {
                 />
               </template>
             </v-range-slider>
+          </td>
+          <td>
+            <span
+              class="material-symbols-outlined"
+              @click="hideFilterOption(filter.label)"
+            >
+              close
+            </span>
           </td>
         </tr>
       </table>
