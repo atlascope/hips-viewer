@@ -43,7 +43,7 @@ function update() {
         flat
       />
       <v-label>All Other Cells</v-label>
-      <attribute-select
+      <AttributeSelect
         :model="colorBy"
         label="Color By Attribute"
         @select="(v) => colorBy = v"
