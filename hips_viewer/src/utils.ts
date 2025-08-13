@@ -227,9 +227,7 @@ export function addFilterOption(attr: string) {
 
 export function getFilterMatchIds() {
   return cells.value.filter((cell: Cell) => {
-    const filterKeys = Object.keys(currentFilters.value)
-    for (let i = 0; i < filterKeys.length; i++) {
-      const key = filterKeys[i]
+    for (const key in currentFilters.value) {
       const filterValue = currentFilters.value[key]
       let vectorIndex = cellColumns.value.indexOf(key)
       if (vectorIndex < 0) vectorIndex = filterVectorIndices.value[key]
