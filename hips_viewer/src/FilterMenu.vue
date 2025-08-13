@@ -156,6 +156,7 @@ watch([currentFilters, addAttribute], () => {
           <td>
             <span
               class="material-symbols-outlined"
+              style="cursor: pointer"
               @click="hideFilterOption(filter.label)"
             >
               close
