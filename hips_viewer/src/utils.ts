@@ -1,3 +1,5 @@
+import colorbrewer from 'colorbrewer'
+
 import {
   cellColumns,
   cells,
