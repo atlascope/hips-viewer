@@ -5,17 +5,17 @@ import {
   currentFilters,
   selectedCellIds,
   filterMatchCellIds,
+  hiddenFilters,
 } from './store'
 import { addFilterOption, getFilterMatchIds, resetCurrentFilters } from './utils'
 import AttributeSelect from './AttributeSelect.vue'
 
 const addMode = ref<boolean>(false)
 const addAttribute = ref<string | undefined>()
-const hiddenAttributes = ref<Set<string>>(new Set())
 const msg = ref<string | undefined>()
 
 const shownFilterOptions = computed(
-  () => filterOptions.value?.filter(f => !hiddenAttributes.value.has(f.label)),
+  () => filterOptions.value?.filter(f => !hiddenFilters.value.has(f.label)),
 )
 
 function selectCells() {
@@ -44,8 +44,8 @@ function addAttributeSubmit() {
   msg.value = 'Computing values...'
   setTimeout(() => {
     if (addAttribute.value) {
-      if (hiddenAttributes.value.has(addAttribute.value)) {
-        hiddenAttributes.value.delete(addAttribute.value)
+      if (hiddenFilters.value.has(addAttribute.value)) {
+        hiddenFilters.value.delete(addAttribute.value)
         addAttributeCancel()
       }
       else if (Object.keys(currentFilters.value).includes(addAttribute.value)) {
@@ -60,7 +60,7 @@ function addAttributeSubmit() {
 }
 
 function hideFilterOption(attrName: string) {
-  hiddenAttributes.value.add(attrName)
+  hiddenFilters.value.add(attrName)
   const filter = filterOptions.value?.find(f => f.label === attrName)
   if (!filter) return
   let refilter = false
