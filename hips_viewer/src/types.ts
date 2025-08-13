@@ -11,6 +11,7 @@ export interface Cell {
   width: number
   height: number
   orientation: number
+  classification: string
   vector_text?: string
   [vector_column: string]: string | number | undefined
 }
@@ -26,4 +27,13 @@ export interface TreeItem {
   title: string
   value?: string
   children?: TreeItem[]
+}
+
+export interface FilterOption {
+  label: string
+  options?: string[]
+  range?: {
+    min: number | undefined
+    max: number | undefined
+  }
 }

@@ -7,6 +7,7 @@ import {
   histNumBuckets, showHistogram, histCellIds,
   selectedCellIds, selectedColor, annotationLayer,
   annotationMode, annotationBoolean, lastAnnotation,
+  filterMatchCellIds,
 } from '@/store'
 import {
   selectCell,
@@ -101,7 +102,10 @@ export function addHoverCallback(callback: Function, feature: any) {
 }
 
 export function lassoSelect(polygon: { x: number, y: number }[]) {
-  const foundCells = cellFeature.value.polygonSearch({ outer: polygon }).found
+  let foundCells = cellFeature.value.polygonSearch({ outer: polygon }).found
+  if (filterMatchCellIds.value.size) {
+    foundCells = foundCells.filter((cell: Cell) => filterMatchCellIds.value.has(cell.id))
+  }
   // create local copy without proxy for set operations
   let currentIds: Set<number> = new Set(selectedCellIds.value)
   const targetIds: Set<number> = new Set(foundCells.map((cell: Cell) => cell.id))
@@ -188,17 +192,43 @@ export function updateColors() {
       return colormapFunction(value)
     }
     cellColors.value = Object.fromEntries(cells.value.map((cell: Cell) => [cell.id, getCellColor(cell)]))
+    updateColorFunctions()
+  }
+}
+
+export function updateColorFunctions() {
+  if (cellFeature.value && pointFeature.value) {
     const styleCellFunction = (cell: any, i: number) => {
       if (cell.__cluster) {
         cell = clusterFirstPoint(cells.value, cell, i)
       }
-      if (selectedCellIds.value.has(cell.id)) {
-        return selectedColor.value
-      }
+      if (!cell) return 'transparent'
+      if (selectedCellIds.value.has(cell.id)) return selectedColor.value
       return cellColors.value[cell.id]
     }
-    cellFeature.value.style('strokeColor', styleCellFunction).draw()
-    pointFeature.value.style('fillColor', styleCellFunction).draw()
+    cellFeature.value.style('strokeColor', styleCellFunction)
+    pointFeature.value.style('fillColor', styleCellFunction)
+    if (cellFeature.value.visible()) cellFeature.value.draw()
+    if (pointFeature.value.visible()) pointFeature.value.draw()
+  }
+}
+
+export function updateOpacityFunctions() {
+  if (cellFeature.value && pointFeature.value) {
+    const opacityFunction = (cell: any, i: number) => {
+      if (cell.__cluster) {
+        cell = clusterFirstPoint(cells.value, cell, i)
+      }
+      if (!cell) return 0
+      if (filterMatchCellIds.value.size && !filterMatchCellIds.value.has(cell.id)) {
+        return 0
+      }
+      return 1
+    }
+    cellFeature.value.style('strokeOpacity', opacityFunction)
+    pointFeature.value.style('fillOpacity', opacityFunction)
+    if (cellFeature.value.visible()) cellFeature.value.draw()
+    if (pointFeature.value.visible()) pointFeature.value.draw()
   }
 }
 

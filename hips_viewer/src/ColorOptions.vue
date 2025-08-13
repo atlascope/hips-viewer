@@ -1,42 +1,15 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import colorbrewer from 'colorbrewer'
 import {
-  selectedColor, colorBy, attributeOptions,
+  selectedColor, colorBy,
   colormapName, colormapType, status,
   unappliedColorChanges,
 } from '@/store'
 import { updateColors } from '@/map'
-import type { TreeItem } from '@/types'
+import AttributeSelect from './AttributeSelect.vue'
 
 const showPicker = ref(false)
-const attrSelection = ref()
-const nestedAttributeOptions = computed(() => {
-  const nested: TreeItem[] = []
-  attributeOptions.value.forEach((attrName: string) => {
-    if (attrName.includes('.')) {
-      // only nest one level
-      const components = attrName.split('.')
-      let parent = nested.find(item => item.title === components[0])
-      if (!parent) {
-        parent = { title: components[0], children: [] }
-        nested.push(parent)
-      }
-      parent.children?.push({ title: attrName, value: attrName })
-    }
-    else {
-      nested.push({ title: attrName, value: attrName })
-    }
-  })
-  return nested
-})
-
-function select(selected: any) {
-  if (selected.length) {
-    if (attrSelection.value) attrSelection.value.blur()
-    colorBy.value = selected[0]
-  }
-}
 
 function update() {
   unappliedColorChanges.value = false
@@ -70,25 +43,11 @@ function update() {
         flat
       />
       <v-label>All Other Cells</v-label>
-      <v-select
-        ref="attrSelection"
-        :model-value="colorBy"
+      <AttributeSelect
+        :model="colorBy"
         label="Color By Attribute"
-        density="compact"
-        hide-details
-      >
-        <template #no-data>
-          <v-treeview
-            :model-value:selected="[colorBy]"
-            :items="nestedAttributeOptions"
-            select-strategy="single-leaf"
-            density="compact"
-            open-on-click
-            fluid
-            @update:selected="select"
-          />
-        </template>
-      </v-select>
+        @select="(v) => colorBy = v"
+      />
       <v-tabs
         v-model="colormapType"
         density="compact"

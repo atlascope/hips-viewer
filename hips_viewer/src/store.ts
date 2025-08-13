@@ -1,5 +1,11 @@
 import { ref, watch } from 'vue'
-import { clusterFirstPoint } from './utils'
+import {
+  resetCurrentFilters,
+  resetFilterOptions,
+  resetFilterVectorIndices,
+} from './utils'
+import type { FilterOption } from './types'
+import { updateColorFunctions, updateOpacityFunctions } from './map'
 
 // Store variables
 export const map = ref()
@@ -41,17 +47,24 @@ export const cellData = ref<null | {
   key: string
   color: string
   cellIds: Set<number>
-  count: number }[]>(null)
+  count: number
+}[]>(null)
 export const chartData = ref()
 
 export const colorLegend = ref()
 export const selectedColor = ref('#000')
 export const colorBy = ref('classification')
 export const colormapType = ref<
-    'qualitative' | 'sequential' | 'diverging'
+  'qualitative' | 'sequential' | 'diverging'
 >('qualitative')
 export const colormapName = ref<string | undefined>('Paired')
 export const attributeOptions = ref()
+
+export const filterOptions = ref<FilterOption[]>()
+export const filterVectorIndices = ref<Record<string, number>>({})
+export const currentFilters = ref<Record<string, (string | number)[]>>({})
+export const hiddenFilters = ref<Set<string>>(new Set())
+export const filterMatchCellIds = ref<Set<number>>(new Set<number>())
 
 // Store watchers
 watch(colormapType, () => colormapName.value = undefined)
@@ -66,22 +79,18 @@ watch(colorBy, () => {
   chartData.value = null
 })
 
-watch(selectedCellIds, () => {
-  if (cellFeature.value && pointFeature.value) {
-    const styleCellFunction = (cell: any, i: number) => {
-      if (cell.__cluster) {
-        cell = clusterFirstPoint(cells.value, cell, i)
-      }
-      if (selectedCellIds.value.has(cell.id)) return selectedColor.value
-      return cellColors.value[cell.id]
-    }
-    cellFeature.value.style('strokeColor', styleCellFunction)
-    if (cellFeature.value.visible()) cellFeature.value.draw()
-    pointFeature.value.style('fillColor', styleCellFunction)
-    if (pointFeature.value.visible()) pointFeature.value.draw()
-  }
-})
+watch(selectedCellIds, updateColorFunctions)
 
 watch(cells, () => {
   histCellIds.value = new Set(cells.value?.map((c: any) => c.id))
 })
+
+watch([cells, cellColumns], () => {
+  if (cells.value && cellColumns.value && !filterOptions.value) {
+    resetFilterVectorIndices()
+    resetFilterOptions()
+    resetCurrentFilters()
+  }
+})
+
+watch(filterMatchCellIds, updateOpacityFunctions)

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import type { Cell, Thumbnail } from '@/types'
-import { cellColors, selectedCellIds, selectedColor } from './store'
+import { cellColors, filterMatchCellIds, selectedCellIds, selectedColor } from './store'
 import { clickCellThumbnail, rgbToHex, type RGB } from './utils'
 
 const props = defineProps<{
@@ -12,6 +12,11 @@ const props = defineProps<{
 
 const pageLength = 10
 const thumbnails = ref<Thumbnail[]>([])
+const filteredThumbnails = computed(() => {
+  return thumbnails.value.filter((t: Thumbnail) => {
+    return !filterMatchCellIds.value.size || filterMatchCellIds.value.has(t.id)
+  })
+})
 const hexCellColors = computed(() => Object.fromEntries(
   Object.entries(cellColors.value).map(([cellId, rgbColor]) => [cellId, rgbToHex(rgbColor as RGB)]),
 ))
@@ -19,8 +24,12 @@ const hexCellColors = computed(() => Object.fromEntries(
 function loadThumbnails({ done }: any) {
   if (props.cells.length === thumbnails.value.length) done('empty')
   else {
-    thumbnails.value.push(...props.cells.slice(
-      thumbnails.value.length, thumbnails.value.length + pageLength,
+    const filteredCells = props.cells.filter(
+      cell => !filterMatchCellIds.value.size || filterMatchCellIds.value.has(cell.id),
+    )
+    if (filteredCells.length === filteredThumbnails.value.length) done('empty')
+    thumbnails.value.push(...filteredCells.slice(
+      filteredThumbnails.value.length, filteredThumbnails.value.length + pageLength,
     ).map((cell) => {
       const region = new URLSearchParams({
         left: (cell.x - cell.width / 2).toString(),
@@ -50,7 +59,7 @@ function loadThumbnails({ done }: any) {
   >
     <div class="cell-thumbnail-container">
       <img
-        v-for="(thumbnail, index) in thumbnails"
+        v-for="(thumbnail, index) in filteredThumbnails"
         :key="index"
         :src="thumbnail.src"
         :width="thumbnail.width + 4"

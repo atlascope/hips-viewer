@@ -1,5 +1,16 @@
-import { cellColumns, cells, selectedCellIds, map, maxZoom, annotationMode } from './store'
-import type { Cell } from './types'
+import {
+  cellColumns,
+  cells,
+  selectedCellIds,
+  map,
+  maxZoom,
+  annotationMode,
+  filterVectorIndices,
+  filterOptions,
+  currentFilters,
+  filterMatchCellIds,
+} from './store'
+import type { Cell, FilterOption } from './types'
 
 export interface RGB { r: number, g: number, b: number }
 
@@ -34,17 +45,6 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
   }
 }
 
-export function clusterFirstPoint(data: any, current: any, i: number) {
-  if (current.__cluster) {
-    current = current.obj
-  }
-  if (current._points === undefined) return current
-  if (current._points.length) {
-    return data[current._points[0].index]
-  }
-  return clusterFirstPoint(data, current._clusters[0], i)
-}
-
 export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[]) {
   if (current.__cluster) {
     current = current.obj
@@ -52,13 +52,27 @@ export function clusterAllPoints(data: any, current: any, i: number, allPoints: 
   if (current._points === undefined) return [...allPoints, current]
   if (current._points.length) {
     const indexes = current._points.map((p: { index: number }) => p.index)
-    const points = indexes.map((i: number) => data[i])
+    let points = indexes.map((i: number) => data[i])
+    // if filters applied, only return cells that match the filters
+    if (filterMatchCellIds.value.size) {
+      points = points.filter((p: any) => filterMatchCellIds.value.has(p.id))
+    }
     allPoints = [...allPoints, ...points]
   }
   current._clusters.forEach((cluster: any) => {
     allPoints = clusterAllPoints(data, cluster, i, allPoints)
   })
   return allPoints
+}
+
+export function clusterFirstPoint(data: any, current: any, i: number) {
+  // get all points in cluster, excluding any cells that don't match filters
+  const clusterPoints = clusterAllPoints(data, current, i, [])
+  // prioritize returning a selected cell
+  let cell = clusterPoints.find(cell => selectedCellIds.value.has(cell.id))
+  // if no cells selected, return any cell
+  if (!cell && clusterPoints.length) cell = clusterPoints[0]
+  return cell
 }
 
 export function getCellAttribute(cell: Cell, attrName: string) {
@@ -137,5 +151,119 @@ export function clickCellThumbnail(event: any, cellId: number | undefined) {
     clickTimer = setTimeout(() => {
       clickCount = 0
     }, dblClickLength)
+  }
+}
+
+export function resetFilterVectorIndices() {
+  filterVectorIndices.value = {
+    area: cellColumns.value.indexOf('Size.Area'),
+    orientation: cellColumns.value.indexOf('Orientation.Orientation'),
+    circularity: cellColumns.value.indexOf('Shape.Circularity'),
+    eccentricity: cellColumns.value.indexOf('Shape.Eccentricity'),
+    axis_ratio: cellColumns.value.indexOf('Shape.MinorMajorAxisRatio'),
+  }
+}
+
+export function resetFilterOptions() {
+  const classifications: Set<string> = new Set()
+  const vectorRanges = {
+    area: { min: undefined, max: undefined },
+    orientation: { min: undefined, max: undefined },
+    circularity: { min: undefined, max: undefined },
+    eccentricity: { min: undefined, max: undefined },
+    axis_ratio: { min: undefined, max: undefined },
+  }
+  cells.value.forEach((cell: Cell) => {
+    classifications.add(cell.classification)
+    if (cell.vector_text) {
+      const vector = cell.vector_text.split(',')
+      Object.entries(filterVectorIndices.value).forEach(([key, index]) => {
+        let value: number = parseFloat(vector[index])
+        value = parseFloat(value.toPrecision(2))
+        // @ts-ignore
+        const range = vectorRanges[key]
+        if (range.min === undefined || range.min > value) range.min = value
+        if (range.max === undefined || range.max < value) range.max = value
+      })
+    }
+  })
+  filterOptions.value = [
+    { label: 'classification', options: [...classifications] },
+    { label: 'area', range: vectorRanges.area },
+    { label: 'orientation', range: vectorRanges.orientation },
+    { label: 'circularity', range: vectorRanges.circularity },
+    { label: 'eccentricity', range: vectorRanges.eccentricity },
+    { label: 'axis_ratio', range: vectorRanges.axis_ratio },
+  ]
+}
+
+export function addFilterOption(attr: string) {
+  const vectorIndex = cellColumns.value.indexOf(attr)
+  const allValues = cells.value.map((cell: Cell) => {
+    let cellValue = cell[attr]?.toString()
+    if (cellValue === undefined && cell.vector_text) {
+      const vector = cell.vector_text.split(',')
+      cellValue = vector[vectorIndex]
+    }
+    if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
+      return parseFloat(parseFloat(cellValue).toPrecision(2))
+    }
+    return cellValue
+  })
+  if (allValues.some((v: string | number) => typeof v === 'string')) {
+    const valueSet = [...new Set(allValues)] as string[]
+    filterOptions.value?.push({ label: attr, options: valueSet })
+    currentFilters.value[attr] = []
+  }
+  else {
+    const range = {
+      min: parseFloat(Math.min(...allValues).toPrecision(2)),
+      max: parseFloat(Math.max(...allValues).toPrecision(2)),
+    }
+    filterOptions.value?.push({ label: attr, range })
+    currentFilters.value[attr] = [range.min, range.max]
+  }
+}
+
+export function getFilterMatchIds() {
+  return cells.value.filter((cell: Cell) => {
+    for (const key in currentFilters.value) {
+      const filterValue = currentFilters.value[key]
+      let vectorIndex = cellColumns.value.indexOf(key)
+      if (vectorIndex < 0) vectorIndex = filterVectorIndices.value[key]
+      let cellValue = cell[key]?.toString()
+      if (cellValue === undefined && vectorIndex >= 0 && cell.vector_text) {
+        const vector = cell.vector_text.split(',')
+        cellValue = vector[vectorIndex]
+      }
+      if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
+        const numericValue = parseFloat(parseFloat(cellValue).toPrecision(2))
+        if (filterValue.length === 2) {
+          const range = filterValue as [number, number]
+          if (numericValue < range[0] || numericValue > range[1]) {
+            return false
+          }
+        }
+      }
+      else if (cellValue && filterValue.length && !filterValue.includes(cellValue)) {
+        return false
+      }
+    }
+    return true
+  }).map((cell: Cell) => cell.id)
+}
+
+export function resetCurrentFilters() {
+  currentFilters.value = {}
+  filterMatchCellIds.value = new Set()
+  if (filterOptions.value) {
+    filterOptions.value.forEach((filter: FilterOption) => {
+      if (filter.range?.min !== undefined && filter.range?.max !== undefined) {
+        currentFilters.value[filter.label] = [filter.range.min, filter.range.max]
+      }
+      else if (filter.options) {
+        currentFilters.value[filter.label] = []
+      }
+    })
   }
 }
