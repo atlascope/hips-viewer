@@ -3,7 +3,7 @@ import { ref, watchEffect, watch, onMounted, computed } from 'vue'
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 
-import { cellDistribution } from '@/map'
+import { cellDistribution } from '@/utils'
 import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
   histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor,
