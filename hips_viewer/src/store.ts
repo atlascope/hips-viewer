@@ -35,6 +35,7 @@ export const tooltipPosition = ref()
 
 export const unappliedColorChanges = ref(false)
 
+export const histAttribute = ref('classification')
 export const showHistogram = ref(false)
 export const histNumBuckets = ref(50)
 export const histCellIds = ref<Set<number>>(new Set<number>())
@@ -77,7 +78,7 @@ watch([selectedColor, colorBy, colormapName], () => {
   )
 })
 
-watch(colorBy, () => {
+watch(histAttribute, () => {
   chartData.value = null
 })
 

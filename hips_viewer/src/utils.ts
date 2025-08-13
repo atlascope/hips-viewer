@@ -13,10 +13,10 @@ import {
   filterMatchCellIds,
   clusterIds,
   histNumBuckets,
+  histAttribute,
   showHistogram,
   histCellIds,
   colormapName,
-  colorBy,
 } from './store'
 import type { Cell, FilterOption } from './types'
 
@@ -299,7 +299,7 @@ export function cellDistribution() {
   const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
 
   const values = [...new Set(cells.value.map(
-    (cell: any) => getCellAttribute(cell, colorBy.value),
+    (cell: any) => getCellAttribute(cell, histAttribute.value),
   ).map(
     (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v),
   ).filter((v: any) => v !== undefined)),
@@ -308,7 +308,7 @@ export function cellDistribution() {
   const cellIds: Record<string | number, Set<number>> = {}
   const counts: Record<string | number, number> = {}
   histCells.forEach((cell: any) => {
-    const key = getCellAttribute(cell, colorBy.value)
+    const key = getCellAttribute(cell, histAttribute.value)
     if (key !== undefined) {
       counts[key] = (counts[key] ?? 0) + 1
 

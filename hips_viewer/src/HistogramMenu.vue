@@ -4,10 +4,12 @@ import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearSca
 import { Bar } from 'vue-chartjs'
 
 import { cellDistribution } from '@/utils'
-import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
+import { histAttribute, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
   histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor,
   filterMatchCellIds } from '@/store'
+
+import AttributeSelect from './AttributeSelect.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -161,7 +163,11 @@ watch([
       Cell Histogram
     </div>
     <v-card-text>
-      <v-label>{{ colorBy }}</v-label>
+      <AttributeSelect
+        :model="histAttribute"
+        label="Histogram Attribute"
+        @select="(v) => histAttribute = v"
+      />
 
       <template v-if="!chartData">
         <v-skeleton-loader type="card" />
