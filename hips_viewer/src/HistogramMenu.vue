@@ -158,7 +158,7 @@ watch([
     variant="outlined"
   >
     <div class="menu-title">
-      Cell Distribution
+      Cell Histogram
     </div>
     <v-card-text>
       <v-label>{{ colorBy }}</v-label>

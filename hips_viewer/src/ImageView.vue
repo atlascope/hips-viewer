@@ -16,7 +16,7 @@ import {
 import CellDrawer from '@/CellDrawer.vue'
 import ColorOptions from '@/ColorOptions.vue'
 import { getCellAttribute } from './utils'
-import CellDistribution from '@/CellDistribution.vue'
+import HistogramMenu from '@/HistogramMenu.vue'
 import FilterMenu from './FilterMenu.vue'
 
 const props = defineProps<{
@@ -194,11 +194,11 @@ watch(cells, drawCells)
               location="end"
               :close-on-content-click="false"
             >
-              <CellDistribution />
+              <HistogramMenu />
             </v-menu>
           </v-btn>
         </template>
-        <span>Cell Distribution</span>
+        <span>Cell Histogram</span>
       </v-tooltip>
       <v-btn
         v-tooltip="'Toggle Tooltip'"
