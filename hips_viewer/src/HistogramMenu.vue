@@ -165,6 +165,7 @@ watch([
     <v-card-text>
       <AttributeSelect
         :model="histAttribute"
+        :exclude="['roiname']"
         label="Histogram Attribute"
         @select="(v) => histAttribute = v"
       />

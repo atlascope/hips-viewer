@@ -6,6 +6,7 @@ import type { TreeItem } from './types'
 const props = defineProps<{
   label: string
   model: any
+  exclude?: string[]
 }>()
 const emit = defineEmits(['select'])
 
@@ -14,6 +15,7 @@ const attrSelection = ref()
 const nestedAttributeOptions = computed(() => {
   const nested: TreeItem[] = []
   attributeOptions.value.forEach((attrName: string) => {
+    if (props.exclude?.includes(attrName)) return
     if (attrName.includes('.')) {
       // only nest one level
       const components = attrName.split('.')
