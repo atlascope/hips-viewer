@@ -46,7 +46,7 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
   }
 }
 
-export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[]) {
+export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[], filteredIds: number[]) {
   if (clusterIds.value[i]) return clusterIds.value[i]
   if (current.__cluster) {
     current = current.obj
@@ -56,13 +56,13 @@ export function clusterAllPoints(data: any, current: any, i: number, allPoints: 
     const indexes = current._points.map((p: { index: number }) => p.index)
     let points = indexes.map((i: number) => data[i])
     // if filters applied, only return cells that match the filters
-    if (filterMatchCellIds.value.size) {
-      points = points.filter((p: any) => filterMatchCellIds.value.has(p.id))
+    if (filteredIds.length) {
+      points = points.filter((p: any) => filteredIds.includes(p.id))
     }
     allPoints = [...allPoints, ...points]
   }
   current._clusters.forEach((cluster: any) => {
-    allPoints = clusterAllPoints(data, cluster, i, allPoints)
+    allPoints = clusterAllPoints(data, cluster, i, allPoints, filteredIds)
   })
   clusterIds.value[i] = allPoints
   return allPoints
@@ -70,7 +70,7 @@ export function clusterAllPoints(data: any, current: any, i: number, allPoints: 
 
 export function clusterFirstPoint(data: any, current: any, i: number) {
   // get all points in cluster, excluding any cells that don't match filters
-  const clusterPoints = clusterAllPoints(data, current, i, [])
+  const clusterPoints = clusterAllPoints(data, current, i, [], [...filterMatchCellIds.value])
   // prioritize returning a selected cell
   let cell = clusterPoints.find(cell => selectedCellIds.value.has(cell.id))
   // if no cells selected, return any cell
@@ -104,7 +104,7 @@ export function selectCell(event: any, cellId: number | undefined) {
       return selectCell(event, event.data.id)
     }
     else if (event.data.__cluster) {
-      const clusterPoints = clusterAllPoints(cells.value, event.data, event.index, [])
+      const clusterPoints = clusterAllPoints(cells.value, event.data, event.index, [], [...filterMatchCellIds.value])
       const clusterPointIds = new Set(clusterPoints.map(cell => cell.id))
       if (toggleMode) {
         if (currentIds.intersection(clusterPointIds).size === clusterPointIds.size) {
