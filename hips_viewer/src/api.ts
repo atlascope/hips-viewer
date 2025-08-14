@@ -27,14 +27,17 @@ export async function fetchImages() {
 export async function fetchImageCells(imageId: number) {
   fetchProgress.value = 0
   const limit = 100000
-  let results: Cell[] = []
+  const results: Cell[][] = []
   let total: number | undefined = undefined
-  while (!total || results.length < total) {
-    const url = `${baseURL}/images/${imageId}/cells?offset=${results.length}&limit=${limit}`
+  let nResults: number = 0
+  while (!total || nResults < total) {
+    const url = `${baseURL}/images/${imageId}/cells?offset=${nResults}&limit=${limit}`
     const response: { items: Cell[], count: number } = await cachedFetch(url, 'cell-data-cache')
     if (!total) total = response.count
-    results = [...results, ...response.items]
-    fetchProgress.value = results.length / total * 100
+    const items = response.items
+    nResults += items.length
+    results.push(items)
+    fetchProgress.value = nResults / total * 100
   }
   fetchProgress.value = 100
   // wait for progress bar to render updates
@@ -42,7 +45,7 @@ export async function fetchImageCells(imageId: number) {
   fetchProgress.value = 0
   status.value = 'Drawing cells...'
   await new Promise(r => setTimeout(r, 150))
-  return results
+  return results.flat()
 }
 
 export async function fetchCellColumns() {
