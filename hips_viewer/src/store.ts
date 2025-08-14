@@ -47,11 +47,13 @@ export const histogramScale = ref<'linear' | 'log'>('linear')
 export const histSelectedBars = ref<Set<number>>(new Set<number>())
 export const cellData = ref<null | {
   key: string
-  color: string
+  color: Function
   cellIds: Set<number>
   count: number
 }[]>(null)
 export const chartData = ref()
+export const histColormapType = ref<'qualitative' | 'sequential' | 'diverging'>('qualitative')
+export const histColormapName = ref<string | undefined>('Paired')
 
 export const colorLegend = ref()
 export const selectedColor = ref('#000')

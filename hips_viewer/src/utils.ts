@@ -16,7 +16,7 @@ import {
   histAttribute,
   showHistogram,
   histCellIds,
-  colormapName,
+  histColormapName,
 } from './store'
 import type { Cell, FilterOption } from './types'
 
@@ -295,7 +295,7 @@ export function numericColormap(valMin: number, valMax: number, rgbColors: { r: 
 }
 
 export function cellDistribution() {
-  if (!(colormapName.value && cells.value && histCellIds.value)) return []
+  if (!(cells.value && histCellIds.value)) return []
   const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
 
   const values = [...new Set(cells.value.map(
@@ -317,15 +317,22 @@ export function cellDistribution() {
     }
   })
 
-  // @ts-ignore
-  const colormapSets = colorbrewer[colormapName.value]
-
   showHistogram.value = values.length > histNumBuckets.value
 
   if (values.length < histNumBuckets.value || !values.every(v => typeof v === 'number')) {
-    let colors = colormapSets[values.length]
-    if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-    return values.map((v, i) => ({ key: `${v}`, count: counts[v] ?? 0, cellIds: cellIds[v], color: colors[i] }))
+    return values.map((v, i) => ({
+      key: `${v}`,
+      count: counts[v] ?? 0,
+      cellIds: cellIds[v],
+      color: () => {
+        // @ts-ignore
+        const colormapSets = colorbrewer[histColormapName.value]
+        let colors = colormapSets[values.length]
+        if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
+
+        return colors[i]
+      },
+    }))
   }
 
   const vmin = Math.min(...values)
@@ -345,16 +352,19 @@ export function cellDistribution() {
     cellIds[value]?.forEach(id => bucketedCellIds[bucketKey].add(id))
   })
 
-  let colors = colormapSets[Object.keys(bucketedCounts).length]
-  if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-  const rgbColors = colors.map(hexToRgb)
-
-  const colormapFunction = numericColormap(vmin, vmax, rgbColors)
-
   return Object.keys(bucketedCounts).sort((a, b) => (parseFloat(a) - parseFloat(b))).map(v => ({
     key: `${bucketedMin[v].toFixed(2)}`,
     count: bucketedCounts[v],
     cellIds: bucketedCellIds[v],
-    color: rgbToHex(colormapFunction(bucketedMin[v])),
+    color: () => {
+      // @ts-ignore
+      const colormapSets = colorbrewer[histColormapName.value]
+      let colors = colormapSets[Object.keys(bucketedCounts).length]
+      if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
+      const rgbColors = colors.map(hexToRgb)
+
+      const colormapFunction = numericColormap(vmin, vmax, rgbColors)
+      return rgbToHex(colormapFunction(bucketedMin[v]))
+    },
   }))
 }
