@@ -9,6 +9,7 @@ import {
   filterOptions,
   currentFilters,
   filterMatchCellIds,
+  clusterIds,
 } from './store'
 import type { Cell, FilterOption } from './types'
 
@@ -46,6 +47,7 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
 }
 
 export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[]) {
+  if (clusterIds.value[i]) return clusterIds.value[i]
   if (current.__cluster) {
     current = current.obj
   }
@@ -62,6 +64,7 @@ export function clusterAllPoints(data: any, current: any, i: number, allPoints: 
   current._clusters.forEach((cluster: any) => {
     allPoints = clusterAllPoints(data, cluster, i, allPoints)
   })
+  clusterIds.value[i] = allPoints
   return allPoints
 }
 
