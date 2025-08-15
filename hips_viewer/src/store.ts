@@ -65,6 +65,7 @@ export const filterOptions = ref<FilterOption[]>()
 export const filterVectorIndices = ref<Record<string, number>>({})
 export const currentFilters = ref<Record<string, (string | number)[]>>({})
 export const hiddenFilters = ref<Set<string>>(new Set())
+export const filterPopulation = ref<'all' | 'selected'>('all')
 export const filterMatchCellIds = ref<Set<number>>(new Set<number>())
 
 // Store watchers

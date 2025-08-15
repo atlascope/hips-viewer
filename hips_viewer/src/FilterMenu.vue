@@ -6,6 +6,7 @@ import {
   selectedCellIds,
   filterMatchCellIds,
   hiddenFilters,
+  filterPopulation,
 } from './store'
 import { addFilterOption, getFilterMatchIds, resetCurrentFilters } from './utils'
 import AttributeSelect from './AttributeSelect.vue'
@@ -19,17 +20,17 @@ const shownFilterOptions = computed(
 )
 
 function selectCells() {
-  msg.value = 'Searching...'
+  msg.value = `Searching among ${filterPopulation.value} cells...`
   setTimeout(() => {
-    selectedCellIds.value = new Set(getFilterMatchIds())
+    selectedCellIds.value = new Set(getFilterMatchIds(filterPopulation.value === 'selected'))
     msg.value = selectedCellIds.value.size + ' matched cells'
   }, 100)
 }
 
 function filterCells() {
-  msg.value = 'Searching...'
+  msg.value = `Searching among ${filterPopulation.value} cells...`
   setTimeout(() => {
-    filterMatchCellIds.value = new Set(getFilterMatchIds())
+    filterMatchCellIds.value = new Set(getFilterMatchIds(filterPopulation.value === 'selected'))
     msg.value = filterMatchCellIds.value.size + ' matched cells'
   }, 100)
 }
@@ -92,6 +93,24 @@ watch([currentFilters, addAttribute], () => {
     </div>
     <v-card-text>
       <table width="500">
+        <tr>
+          <td>filterPopulation</td>
+          <td>
+            <v-btn-toggle
+              v-model="filterPopulation"
+              variant="outlined"
+              class="short-btn-toggle"
+              mandatory
+            >
+              <v-btn value="all">
+                All Cells
+              </v-btn>
+              <v-btn value="selected">
+                Selected Only
+              </v-btn>
+            </v-btn-toggle>
+          </td>
+        </tr>
         <tr
           v-for="filter in shownFilterOptions"
           :key="filter.label"
@@ -192,11 +211,7 @@ watch([currentFilters, addAttribute], () => {
           Cancel
         </v-btn>
       </div>
-      <div class="centered-row">
-        <v-label v-if="msg">
-          {{ msg }}
-        </v-label>
-      </div>
+      <v-divider thickness="2" />
       <div class="centered-row">
         <v-btn
           @click="resetCurrentFilters"
@@ -216,6 +231,11 @@ watch([currentFilters, addAttribute], () => {
           Filter cells
         </v-btn>
       </div>
+      <div class="centered-row">
+        <v-label v-if="msg">
+          {{ msg }}
+        </v-label>
+      </div>
     </v-card-text>
   </v-card>
 </template>
@@ -225,10 +245,18 @@ watch([currentFilters, addAttribute], () => {
   display: flex;
   justify-content: center;
   column-gap: 15px;
-  margin-bottom: 10px;
+  padding: 4px;
 }
 .filter-range-slider .v-field__input {
   padding: 0px 0px 0px 5px;
   min-height: 30px;
+}
+.short-btn-toggle {
+  width: 100%;
+  height: 30px !important;
+}
+.short-btn-toggle .v-btn {
+  height: 30px !important;
+  width: 50%
 }
 </style>
