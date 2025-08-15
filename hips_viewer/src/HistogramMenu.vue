@@ -143,6 +143,7 @@ watch([
     return histSelectedBars.value.has(index) ? selectedColor.value : c.color()
   })
   const counts = cellData.value.map((c) => {
+    if (!c.cellIds) return 0
     let cellIds = [...c.cellIds]
     if (filterMode.value === 'filtered' && filterMatchCellIds.value.size) {
       cellIds = cellIds.filter(id => filterMatchCellIds.value.has(id))
