@@ -1,17 +1,28 @@
 <script setup lang="ts">
+import colorbrewer from 'colorbrewer'
+
 import { ref, watchEffect, watch, onMounted, computed } from 'vue'
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
 import { Bar } from 'vue-chartjs'
 
-import { cellDistribution } from '@/map'
-import { colorBy, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
+import { cellDistribution } from '@/utils'
+import { histAttribute, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
   histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor,
-  filterMatchCellIds } from '@/store'
+  filterMatchCellIds, histColormapName, histColormapType, colormapType, colormapName } from '@/store'
+
+import AttributeSelect from './AttributeSelect.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 const chartOptions = {
+  elements: {
+    bar: {
+      borderWidth: 1,
+      inflateAmount: 1,
+      borderColor: '#666',
+    },
+  },
   responsive: true,
   onClick: selectBar,
 }
@@ -31,6 +42,11 @@ const debouncedUpdateHistBuckets = (n: number) => {
   setTimeout(() => {
     if (histNumBucketsSlider.value == n) histNumBuckets.value = n
   }, 300)
+}
+
+function syncWithMapColors() {
+  histColormapType.value = colormapType.value
+  histColormapName.value = colormapName.value
 }
 
 function selectBar(event: any, elements: any) {
@@ -125,15 +141,16 @@ watch([histNumBuckets, histCellIds], () => {
 
 watch([
   cellData, histogramScale, histSelectedBars,
-  filterMode, filterMatchCellIds,
+  filterMode, filterMatchCellIds, histColormapName,
 ], () => {
   if (!cellData.value) return
 
   const labels = cellData.value.map(c => c.key)
   const colors = cellData.value.map((c, index) => {
-    return histSelectedBars.value.has(index) ? selectedColor.value : c.color
+    return histSelectedBars.value.has(index) ? selectedColor.value : c.color()
   })
   const counts = cellData.value.map((c) => {
+    if (!c.cellIds) return 0
     let cellIds = [...c.cellIds]
     if (filterMode.value === 'filtered' && filterMatchCellIds.value.size) {
       cellIds = cellIds.filter(id => filterMatchCellIds.value.has(id))
@@ -158,10 +175,15 @@ watch([
     variant="outlined"
   >
     <div class="menu-title">
-      Cell Distribution
+      Cell Histogram
     </div>
     <v-card-text>
-      <v-label>{{ colorBy }}</v-label>
+      <AttributeSelect
+        :model="histAttribute"
+        :exclude="['roiname']"
+        label="Histogram Attribute"
+        @select="(v) => histAttribute = v"
+      />
 
       <template v-if="!chartData">
         <v-skeleton-loader type="card" />
@@ -248,6 +270,40 @@ watch([
         </v-btn-toggle>
       </div>
       <v-label>({{ histIncludedCellIds.size }} / {{ cells.length }})</v-label>
+
+      <v-expansion-panels class="pt-2">
+        <v-expansion-panel>
+          <v-expansion-panel-title>Color Options</v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <v-tabs
+              v-model="histColormapType"
+              density="compact"
+            >
+              <v-tab value="qualitative">
+                Qualitative
+              </v-tab>
+              <v-tab value="sequential">
+                Sequential
+              </v-tab>
+              <v-tab value="diverging">
+                Diverging
+              </v-tab>
+            </v-tabs>
+            <v-select
+              v-model="histColormapName"
+              label="Colormap"
+              :items="colorbrewer.schemeGroups[histColormapType]"
+            />
+
+            <v-btn
+              block
+              @click="syncWithMapColors"
+            >
+              Sync with Map Colors
+            </v-btn>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </v-card-text>
   </v-card>
 </template>
