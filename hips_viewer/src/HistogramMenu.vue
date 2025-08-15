@@ -16,6 +16,12 @@ import AttributeSelect from './AttributeSelect.vue'
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 const chartOptions = {
+  elements: {
+    bar: {
+      borderWidth: 1,
+      borderColor: '#666',
+    },
+  },
   responsive: true,
   onClick: selectBar,
 }
