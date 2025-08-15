@@ -6,13 +6,13 @@ import {
   selectedCellIds,
   filterMatchCellIds,
   hiddenFilters,
+  filterPopulation,
 } from './store'
 import { addFilterOption, getFilterMatchIds, resetCurrentFilters } from './utils'
 import AttributeSelect from './AttributeSelect.vue'
 
 const addMode = ref<boolean>(false)
 const addAttribute = ref<string | undefined>()
-const population = ref<'all' | 'selected'>('all')
 const msg = ref<string | undefined>()
 
 const shownFilterOptions = computed(
@@ -20,17 +20,17 @@ const shownFilterOptions = computed(
 )
 
 function selectCells() {
-  msg.value = `Searching among ${population.value} cells...`
+  msg.value = `Searching among ${filterPopulation.value} cells...`
   setTimeout(() => {
-    selectedCellIds.value = new Set(getFilterMatchIds(population.value === 'selected'))
+    selectedCellIds.value = new Set(getFilterMatchIds(filterPopulation.value === 'selected'))
     msg.value = selectedCellIds.value.size + ' matched cells'
   }, 100)
 }
 
 function filterCells() {
-  msg.value = `Searching among ${population.value} cells...`
+  msg.value = `Searching among ${filterPopulation.value} cells...`
   setTimeout(() => {
-    filterMatchCellIds.value = new Set(getFilterMatchIds(population.value === 'selected'))
+    filterMatchCellIds.value = new Set(getFilterMatchIds(filterPopulation.value === 'selected'))
     msg.value = filterMatchCellIds.value.size + ' matched cells'
   }, 100)
 }
@@ -94,10 +94,10 @@ watch([currentFilters, addAttribute], () => {
     <v-card-text>
       <table width="500">
         <tr>
-          <td>Population</td>
+          <td>filterPopulation</td>
           <td>
             <v-btn-toggle
-              v-model="population"
+              v-model="filterPopulation"
               variant="outlined"
               class="short-btn-toggle"
               mandatory
