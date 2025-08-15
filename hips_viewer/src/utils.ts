@@ -225,8 +225,9 @@ export function addFilterOption(attr: string) {
   }
 }
 
-export function getFilterMatchIds() {
+export function getFilterMatchIds(selectedOnly: boolean) {
   return cells.value.filter((cell: Cell) => {
+    if (selectedOnly && !selectedCellIds.value.has(cell.id)) return false
     for (const key in currentFilters.value) {
       const filterValue = currentFilters.value[key]
       let vectorIndex = cellColumns.value.indexOf(key)
