@@ -19,6 +19,7 @@ const chartOptions = {
   elements: {
     bar: {
       borderWidth: 1,
+      inflateAmount: 1,
       borderColor: '#666',
     },
   },
