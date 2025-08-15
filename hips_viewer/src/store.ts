@@ -52,15 +52,11 @@ export const cellData = ref<null | {
   count: number
 }[]>(null)
 export const chartData = ref()
-export const histColormapType = ref<'qualitative' | 'sequential' | 'diverging'>('qualitative')
 export const histColormapName = ref<string | undefined>('Paired')
 
 export const colorLegend = ref()
 export const selectedColor = ref('#000')
 export const colorBy = ref('classification')
-export const colormapType = ref<
-  'qualitative' | 'sequential' | 'diverging'
->('qualitative')
 export const colormapName = ref<string | undefined>('Paired')
 export const attributeOptions = ref()
 
@@ -72,8 +68,6 @@ export const filterPopulation = ref<'all' | 'selected'>('all')
 export const filterMatchCellIds = ref<Set<number>>(new Set<number>())
 
 // Store watchers
-watch(colormapType, () => colormapName.value = undefined)
-
 watch([selectedColor, colorBy, colormapName], () => {
   unappliedColorChanges.value = !!(
     selectedColor.value && colorBy.value && colormapName.value

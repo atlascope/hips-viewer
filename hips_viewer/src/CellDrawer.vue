@@ -17,9 +17,16 @@ const filteredThumbnails = computed(() => {
     return !filterMatchCellIds.value.size || filterMatchCellIds.value.has(t.id)
   })
 })
-const hexCellColors = computed(() => Object.fromEntries(
-  Object.entries(cellColors.value).map(([cellId, rgbColor]) => [cellId, rgbToHex(rgbColor as RGB)]),
-))
+const hexCellColors = computed(() => {
+  if (!cellColors.value) {
+    return Object.fromEntries(
+      thumbnails.value.map((t: Thumbnail) => [t.id, '#000']),
+    )
+  }
+  return Object.fromEntries(
+    Object.entries(cellColors.value).map(([cellId, rgbColor]) => [cellId, rgbToHex(rgbColor as RGB)]),
+  )
+})
 
 function loadThumbnails({ done }: any) {
   if (props.cells.length === thumbnails.value.length) done('empty')
@@ -67,9 +74,9 @@ function loadThumbnails({ done }: any) {
         :style="`border-color:${
           selectedCellIds.has(thumbnail.id) ? selectedColor: hexCellColors[thumbnail.id]
         };border-width:${
-          cellColors[thumbnail.id] ? 4 : 0
+          hexCellColors[thumbnail.id] ? 4 : 0
         }px;padding:${
-          cellColors[thumbnail.id] ? 0 : 4
+          hexCellColors[thumbnail.id] ? 0 : 4
         }px`"
         class="cell-thumbnail"
         @click="(e) => clickCellThumbnail(e, thumbnail.id)"

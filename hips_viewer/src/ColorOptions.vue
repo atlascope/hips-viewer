@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import colorbrewer from 'colorbrewer'
 import {
   selectedColor, colorBy,
-  colormapName, colormapType, status,
+  colormapName, status,
   unappliedColorChanges,
 } from '@/store'
 import { updateColors } from '@/map'
 import AttributeSelect from './AttributeSelect.vue'
+import ColormapSelect from './ColormapSelect.vue'
 
 const showPicker = ref(false)
 
@@ -48,24 +48,10 @@ function update() {
         label="Color By Attribute"
         @select="(v) => colorBy = v"
       />
-      <v-tabs
-        v-model="colormapType"
-        density="compact"
-      >
-        <v-tab value="qualitative">
-          Qualitative
-        </v-tab>
-        <v-tab value="sequential">
-          Sequential
-        </v-tab>
-        <v-tab value="diverging">
-          Diverging
-        </v-tab>
-      </v-tabs>
-      <v-select
-        v-model="colormapName"
+      <ColormapSelect
+        :model="colormapName"
         label="Colormap"
-        :items="colorbrewer.schemeGroups[colormapType]"
+        @select="(v: string) => colormapName = v"
       />
       <v-btn
         v-if="unappliedColorChanges"

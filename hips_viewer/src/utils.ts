@@ -1,5 +1,3 @@
-import colorbrewer from 'colorbrewer'
-
 import {
   cellColumns,
   cells,
@@ -18,6 +16,7 @@ import {
   histCellIds,
   histColormapName,
 } from './store'
+import { colormaps } from './colors'
 import type { Cell, FilterOption } from './types'
 
 export interface RGB { r: number, g: number, b: number }
@@ -279,23 +278,9 @@ export function resetCurrentFilters() {
   }
 }
 
-export function numericColormap(valMin: number, valMax: number, rgbColors: { r: number, g: number, b: number }[]) {
-  const colormapFunction = (v: any) => {
-    const valueProportion = (v - valMin) / (valMax - valMin)
-    const maxIndex = rgbColors.length - 1
-    if (valueProportion === 0) return rgbColors[0]
-    if (valueProportion === 1) return rgbColors[maxIndex]
-    const index = Math.floor(maxIndex * valueProportion)
-    const indexProportion = index / maxIndex
-    const interpolationProportion = (valueProportion - indexProportion) * maxIndex
-    const interpolated = colorInterpolate(rgbColors[index], rgbColors[index + 1], interpolationProportion)
-    return interpolated
-  }
-  return colormapFunction
-}
-
 export function cellDistribution() {
-  if (!(cells.value && histCellIds.value)) return []
+  const colormap = colormaps.find(cmap => cmap.name === histColormapName.value)
+  if (!(cells.value && histCellIds.value && colormap)) return []
   const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
 
   const values = [...new Set(cells.value.map(
@@ -320,18 +305,12 @@ export function cellDistribution() {
   showHistogram.value = values.length > histNumBuckets.value
 
   if (values.length < histNumBuckets.value || !values.every(v => typeof v === 'number')) {
-    return values.map((v, i) => ({
+    const colorFunction = colormap.getStringColorFunction(values as string[])
+    return values.map(v => ({
       key: `${v}`,
       count: counts[v] ?? 0,
       cellIds: cellIds[v],
-      color: () => {
-        // @ts-ignore
-        const colormapSets = colorbrewer[histColormapName.value]
-        let colors = colormapSets[values.length]
-        if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-
-        return colors[i]
-      },
+      color: () => colorFunction(v as string),
     }))
   }
 
@@ -352,19 +331,11 @@ export function cellDistribution() {
     cellIds[value]?.forEach(id => bucketedCellIds[bucketKey].add(id))
   })
 
+  const colorFunction = colormap.getNumericColorFunction([vmin, vmax])
   return Object.keys(bucketedCounts).sort((a, b) => (parseFloat(a) - parseFloat(b))).map(v => ({
     key: `${bucketedMin[v].toFixed(2)}`,
     count: bucketedCounts[v],
     cellIds: bucketedCellIds[v],
-    color: () => {
-      // @ts-ignore
-      const colormapSets = colorbrewer[histColormapName.value]
-      let colors = colormapSets[Object.keys(bucketedCounts).length]
-      if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-      const rgbColors = colors.map(hexToRgb)
-
-      const colormapFunction = numericColormap(vmin, vmax, rgbColors)
-      return rgbToHex(colormapFunction(bucketedMin[v]))
-    },
+    color: () => colorFunction(bucketedMin[v]),
   }))
 }

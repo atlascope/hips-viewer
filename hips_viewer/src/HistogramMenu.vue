@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import colorbrewer from 'colorbrewer'
 
 import { ref, watchEffect, watch, onMounted, computed } from 'vue'
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
@@ -9,9 +8,10 @@ import { cellDistribution } from '@/utils'
 import { histAttribute, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
   histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor,
-  filterMatchCellIds, histColormapName, histColormapType, colormapType, colormapName } from '@/store'
+  filterMatchCellIds, histColormapName, colormapName } from '@/store'
 
 import AttributeSelect from './AttributeSelect.vue'
+import ColormapSelect from './ColormapSelect.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -45,7 +45,6 @@ const debouncedUpdateHistBuckets = (n: number) => {
 }
 
 function syncWithMapColors() {
-  histColormapType.value = colormapType.value
   histColormapName.value = colormapName.value
 }
 
@@ -275,24 +274,10 @@ watch([
         <v-expansion-panel>
           <v-expansion-panel-title>Color Options</v-expansion-panel-title>
           <v-expansion-panel-text>
-            <v-tabs
-              v-model="histColormapType"
-              density="compact"
-            >
-              <v-tab value="qualitative">
-                Qualitative
-              </v-tab>
-              <v-tab value="sequential">
-                Sequential
-              </v-tab>
-              <v-tab value="diverging">
-                Diverging
-              </v-tab>
-            </v-tabs>
-            <v-select
-              v-model="histColormapName"
+            <ColormapSelect
+              :model="histColormapName"
               label="Colormap"
-              :items="colorbrewer.schemeGroups[histColormapType]"
+              @select="(v:string) => histColormapName = v"
             />
 
             <v-btn
