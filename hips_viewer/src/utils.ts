@@ -43,15 +43,6 @@ export function rgbToHex(color: RGB) {
   return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)
 }
 
-// from https://stackoverflow.com/questions/66123016/interpolate-between-two-colours-based-on-a-percentage-value
-export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
-  return {
-    r: rgbA.r * (1 - proportion) + rgbB.r * proportion,
-    g: rgbA.g * (1 - proportion) + rgbB.g * proportion,
-    b: rgbA.b * (1 - proportion) + rgbB.b * proportion,
-  }
-}
-
 export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[], filteredIds: number[]) {
   if (clusterIds.value[i]) return clusterIds.value[i]
   if (current.__cluster) {
