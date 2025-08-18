@@ -32,8 +32,7 @@ function createCategoricalColormap(name: string, scheme: readonly string[]): Col
       return (value: string) => {
         const index = domain.indexOf(value)
         if (index >= 0) {
-          const proportion = index / domain.length
-          return scheme[Math.round(scheme.length * proportion)]
+          return scheme[index % scheme.length]
         }
         return 'transparent'
       }
