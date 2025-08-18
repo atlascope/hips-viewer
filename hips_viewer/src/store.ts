@@ -52,12 +52,12 @@ export const cellData = ref<null | {
   count: number
 }[]>(null)
 export const chartData = ref()
-export const histColormapName = ref<string | undefined>('Paired')
+export const histColormapName = ref<string | undefined>('Set1')
 
 export const colorLegend = ref()
 export const selectedColor = ref('#000')
 export const colorBy = ref('classification')
-export const colormapName = ref<string | undefined>('Paired')
+export const colormapName = ref<string | undefined>('Set1')
 export const attributeOptions = ref()
 
 export const filterOptions = ref<FilterOption[]>()
