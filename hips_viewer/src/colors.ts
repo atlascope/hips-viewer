@@ -19,9 +19,21 @@ import {
   interpolateWarm,
   interpolateCool,
 } from 'd3-scale-chromatic'
-import type { Colormap } from './types'
+import type { Colormap, RGB } from './types'
+import { hexToRgb } from './utils'
 
 const N_SAMPLES = 10
+
+function stringToRGB(colorString: string): RGB {
+  if (colorString.includes('#')) {
+    return hexToRgb(colorString)
+  }
+  else if (colorString.includes('rgb')) {
+    const rgb = colorString.replace('rgb(', '').split(',').map((v: string) => parseInt(v) / 255)
+    return { r: rgb[0], g: rgb[1], b: rgb[2] }
+  }
+  return { r: 0, g: 0, b: 0 }
+}
 
 function createCategoricalColormap(name: string, scheme: readonly string[]): Colormap {
   return {
@@ -32,15 +44,16 @@ function createCategoricalColormap(name: string, scheme: readonly string[]): Col
       return (value: string) => {
         const index = domain.indexOf(value)
         if (index >= 0) {
-          return scheme[index % scheme.length]
+          return hexToRgb(scheme[index % scheme.length])
         }
-        return 'transparent'
+        return { r: 0, g: 0, b: 0 }
       }
     },
     getNumericColorFunction: (domain: [number, number]) => {
       return (value: number) => {
         const proportion = (value - domain[0]) / (domain[1] - domain[0])
-        return scheme[Math.round(scheme.length * proportion)]
+        const index = Math.round((scheme.length - 1) * proportion)
+        return hexToRgb(scheme[index])
       }
     },
   }
@@ -56,15 +69,15 @@ function createSequentialColormap(name: string, interpolate: (v: number) => stri
         const index = domain.indexOf(value)
         if (index >= 0) {
           const proportion = index / domain.length
-          return interpolate(proportion)
+          return stringToRGB(interpolate(proportion))
         }
-        return 'transparent'
+        return { r: 0, g: 0, b: 0 }
       }
     },
     getNumericColorFunction: (domain: [number, number]) => {
       return (value: number) => {
         const proportion = (value - domain[0]) / (domain[1] - domain[0])
-        return interpolate(proportion)
+        return stringToRGB(interpolate(proportion))
       }
     },
   }

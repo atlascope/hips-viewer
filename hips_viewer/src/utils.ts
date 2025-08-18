@@ -17,12 +17,10 @@ import {
   histColormapName,
 } from './store'
 import { colormaps } from './colors'
-import type { Cell, FilterOption } from './types'
-
-export interface RGB { r: number, g: number, b: number }
+import type { Cell, FilterOption, RGB } from './types'
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-export function hexToRgb(hex: string) {
+export function hexToRgb(hex: string): RGB {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (result) {
     return {
@@ -31,7 +29,7 @@ export function hexToRgb(hex: string) {
       b: parseInt(result[3], 16) / 255,
     }
   }
-  return null
+  return { r: 0, g: 0, b: 0 }
 }
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
@@ -301,7 +299,7 @@ export function cellDistribution() {
       key: `${v}`,
       count: counts[v] ?? 0,
       cellIds: cellIds[v],
-      color: () => colorFunction(v as string),
+      color: () => rgbToHex(colorFunction(v as string)),
     }))
   }
 
@@ -327,6 +325,6 @@ export function cellDistribution() {
     key: `${bucketedMin[v].toFixed(2)}`,
     count: bucketedCounts[v],
     cellIds: bucketedCellIds[v],
-    color: () => colorFunction(bucketedMin[v]),
+    color: () => rgbToHex(colorFunction(bucketedMin[v])),
   }))
 }

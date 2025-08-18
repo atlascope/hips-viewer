@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Cell, Thumbnail } from '@/types'
+import type { Cell, RGB, Thumbnail } from '@/types'
 import { cellColors, filterMatchCellIds, selectedCellIds, selectedColor } from './store'
-import { clickCellThumbnail, rgbToHex, type RGB } from './utils'
+import { clickCellThumbnail, rgbToHex } from './utils'
 
 const props = defineProps<{
   cells: Cell[]
@@ -24,7 +24,10 @@ const hexCellColors = computed(() => {
     )
   }
   return Object.fromEntries(
-    Object.entries(cellColors.value).map(([cellId, rgbColor]) => [cellId, rgbToHex(rgbColor as RGB)]),
+    Object.entries(cellColors.value).map(([cellId, rgbColor]) => {
+      if (rgbColor) return [cellId, rgbToHex(rgbColor as RGB)]
+      return [cellId, 'transparent']
+    }),
   )
 })
 

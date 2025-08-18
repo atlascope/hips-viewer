@@ -8,8 +8,7 @@ import {
   filterMatchCellIds,
 } from '@/store'
 import {
-  selectCell, clusterFirstPoint,
-  getCellAttribute, hexToRgb,
+  selectCell, clusterFirstPoint, getCellAttribute,
 } from './utils'
 import type { Cell } from './types'
 import { colormaps } from './colors'
@@ -140,7 +139,7 @@ export function updateColors() {
     getCellColor = (cell: any) => {
       const value = getCellAttribute(cell, colorBy.value)
       if (value === undefined) return { r: 0, g: 0, b: 0 }
-      return hexToRgb(colorFunction(value as number))
+      return colorFunction(value as number)
     }
     colorLegend.value.categories([{
       name: colorBy.value,
@@ -155,7 +154,7 @@ export function updateColors() {
     getCellColor = (cell: any) => {
       const value = getCellAttribute(cell, colorBy.value)
       if (value === undefined) return { r: 0, g: 0, b: 0 }
-      return hexToRgb(colorFunction(value as string))
+      return colorFunction(value as string)
     }
     colorLegend.value.categories([{
       name: colorBy.value,
