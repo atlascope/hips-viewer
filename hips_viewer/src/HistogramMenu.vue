@@ -133,7 +133,7 @@ watchEffect(async () => {
   changeHistSelection()
 })
 
-watch([histNumBuckets, histCellIds], () => {
+watch([histNumBuckets, histCellIds, histColormapName], () => {
   histSelectedBars.value = new Set<number>()
   cellData.value = cellDistribution()
 })
@@ -270,7 +270,7 @@ watch([
       </div>
       <v-label>({{ histIncludedCellIds.size }} / {{ cells.length }})</v-label>
 
-      <v-expansion-panels class="pt-2">
+      <v-expansion-panels class="pt-2 color-options">
         <v-expansion-panel>
           <v-expansion-panel-title>Color Options</v-expansion-panel-title>
           <v-expansion-panel-text>
@@ -295,6 +295,13 @@ watch([
 
 <style>
 .chart-container {
-    min-width: 500px;
+  min-width: 500px;
+}
+.color-options .v-expansion-panel-title {
+  padding: 0px 4px;
+  min-height: 40px !important;
+}
+.color-options .v-expansion-panel-text__wrapper {
+  padding: 0px!important
 }
 </style>

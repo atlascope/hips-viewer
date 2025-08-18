@@ -22,7 +22,10 @@ function update() {
 </script>
 
 <template>
-  <v-card variant="outlined">
+  <v-card
+    variant="outlined"
+    width="350"
+  >
     <div class="menu-title">
       Color Options
     </div>
@@ -38,7 +41,7 @@ function update() {
         v-model="selectedColor"
         class="mb-3"
         mode="rgb"
-        width="375px"
+        width="315px"
         hide-inputs
         flat
       />
@@ -75,7 +78,7 @@ function update() {
     display: none
 }
 .v-color-picker-preview__track {
-    width: 350px !important;
+    width: 300px !important;
     padding-left: 20px;
 }
  .v-treeview-node__content {
