@@ -54,27 +54,28 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
 }
 
 export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[], filteredIds: number[]) {
+  if (current.__cluster) {
+    current = current.obj
+  }
   const currentId = current._leaflet_id
-  if (clusterIds.value[currentId]) {
-    const pointIds = clusterIds.value[i].filter((id: number) => {
+  if (currentId && clusterIds.value[currentId]) {
+    const pointIds = clusterIds.value[currentId].filter((id: number) => {
       if (filteredIds.length) return filteredIds.includes(id)
       return true
     })
     return data.filter((cell: Cell) => pointIds.includes(cell.id))
   }
-  if (current.__cluster) {
-    current = current.obj
-  }
+  let currentPoints: any[] = []
   if (current._points === undefined) return [...allPoints, current]
   if (current._points.length) {
     const indexes = current._points.map((p: { index: number }) => p.index)
-    const points = indexes.map((i: number) => data[i])
-    allPoints = [...allPoints, ...points]
+    currentPoints = indexes.map((index: number) => data[index])
   }
   current._clusters.forEach((cluster: any) => {
-    allPoints = clusterAllPoints(data, cluster, i, allPoints, filteredIds)
+    currentPoints = clusterAllPoints(data, cluster, i, currentPoints, filteredIds)
   })
-  clusterIds.value[currentId] = allPoints.map((p: any) => p.id)
+  if (currentId) clusterIds.value[currentId] = currentPoints.map((p: any) => p.id)
+  allPoints = [...allPoints, ...currentPoints]
   return allPoints.filter((p: any) => {
     if (filteredIds.length) return filteredIds.includes(p.id)
     return true
