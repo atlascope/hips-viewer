@@ -93,95 +93,97 @@ watch([currentFilters, addAttribute], () => {
     </div>
     <v-card-text>
       <table width="500">
-        <tr>
-          <td>filterPopulation</td>
-          <td>
-            <v-btn-toggle
-              v-model="filterPopulation"
-              variant="outlined"
-              class="short-btn-toggle"
-              mandatory
-            >
-              <v-btn value="all">
-                All Cells
-              </v-btn>
-              <v-btn value="selected">
-                Selected Only
-              </v-btn>
-            </v-btn-toggle>
-          </td>
-        </tr>
-        <tr
-          v-for="filter in shownFilterOptions"
-          :key="filter.label"
-        >
-          <td style="width: 1%; padding-right: 20px">
-            <span style="text-transform: capitalize; max-width: 150px; display: block">
-              {{ filter.label.replaceAll('_', ' ') }}
-            </span>
-          </td>
-          <td v-if="currentFilters[filter.label]">
-            <v-select
-              v-if="filter.options"
-              v-model="(currentFilters[filter.label] as string[])"
-              :items="filter.options"
-              density="compact"
-              class="filter-option-select"
-              hide-details
-              multiple
-              closable-chips
-              chips
-            />
-            <v-range-slider
-              v-if="filter.range"
-              v-model="currentFilters[filter.label]"
-              :min="filter.range.min"
-              :max="filter.range.max"
-              :step="0.01"
-              density="compact"
-              hide-details
-              class="filter-range-slider mx-0"
-            >
-              <template #prepend>
-                <v-text-field
-                  v-model="currentFilters[filter.label][0]"
-                  density="compact"
-                  style="width: 90px"
-                  type="number"
-                  :min="filter.range.min"
-                  :max="filter.range.max"
-                  :step="0.01"
-                  variant="outlined"
-                  hide-details
-                  single-line
-                />
-              </template>
-              <template #append>
-                <v-text-field
-                  v-model="currentFilters[filter.label][1]"
-                  density="compact"
-                  style="width: 90px"
-                  type="number"
-                  :min="filter.range.min"
-                  :max="filter.range.max"
-                  :step="0.01"
-                  variant="outlined"
-                  hide-details
-                  single-line
-                />
-              </template>
-            </v-range-slider>
-          </td>
-          <td>
-            <span
-              class="material-symbols-outlined"
-              style="cursor: pointer"
-              @click="hideFilterOption(filter.label)"
-            >
-              close
-            </span>
-          </td>
-        </tr>
+        <tbody>
+          <tr>
+            <td>filterPopulation</td>
+            <td>
+              <v-btn-toggle
+                v-model="filterPopulation"
+                variant="outlined"
+                class="short-btn-toggle"
+                mandatory
+              >
+                <v-btn value="all">
+                  All Cells
+                </v-btn>
+                <v-btn value="selected">
+                  Selected Only
+                </v-btn>
+              </v-btn-toggle>
+            </td>
+          </tr>
+          <tr
+            v-for="filter in shownFilterOptions"
+            :key="filter.label"
+          >
+            <td style="width: 1%; padding-right: 20px">
+              <span style="text-transform: capitalize; max-width: 150px; display: block">
+                {{ filter.label.replaceAll('_', ' ') }}
+              </span>
+            </td>
+            <td v-if="currentFilters[filter.label]">
+              <v-select
+                v-if="filter.options"
+                v-model="(currentFilters[filter.label] as string[])"
+                :items="filter.options"
+                density="compact"
+                class="filter-option-select"
+                hide-details
+                multiple
+                closable-chips
+                chips
+              />
+              <v-range-slider
+                v-if="filter.range"
+                v-model="currentFilters[filter.label]"
+                :min="filter.range.min"
+                :max="filter.range.max"
+                :step="0.01"
+                density="compact"
+                hide-details
+                class="filter-range-slider mx-0"
+              >
+                <template #prepend>
+                  <v-text-field
+                    v-model="currentFilters[filter.label][0]"
+                    density="compact"
+                    style="width: 90px"
+                    type="number"
+                    :min="filter.range.min"
+                    :max="filter.range.max"
+                    :step="0.01"
+                    variant="outlined"
+                    hide-details
+                    single-line
+                  />
+                </template>
+                <template #append>
+                  <v-text-field
+                    v-model="currentFilters[filter.label][1]"
+                    density="compact"
+                    style="width: 90px"
+                    type="number"
+                    :min="filter.range.min"
+                    :max="filter.range.max"
+                    :step="0.01"
+                    variant="outlined"
+                    hide-details
+                    single-line
+                  />
+                </template>
+              </v-range-slider>
+            </td>
+            <td>
+              <span
+                class="material-symbols-outlined"
+                style="cursor: pointer"
+                @click="hideFilterOption(filter.label)"
+              >
+                close
+              </span>
+            </td>
+          </tr>
+        </tbody>
       </table>
       <v-btn
         v-if="!addMode"

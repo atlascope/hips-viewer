@@ -9,6 +9,7 @@ import {
 } from '@/store'
 import {
   selectCell, clusterFirstPoint, getCellAttribute,
+  numericColormap, getCellAttribute, hexToRgb,
 } from './utils'
 import type { Cell } from './types'
 import { colormaps } from './colors'
@@ -175,12 +176,13 @@ export function updateColors() {
 export function updateColorFunctions() {
   if (cellFeature.value && pointFeature.value) {
     const styleCellFunction = (cell: any, i: number) => {
+      let cellId = cell.id
       if (cell.__cluster) {
-        cell = clusterFirstPoint(cells.value, cell, i)
+        cellId = clusterFirstPointId(cells.value, cell, i)
       }
-      if (!cell) return 'transparent'
-      if (selectedCellIds.value.has(cell.id)) return selectedColor.value
-      return cellColors.value[cell.id]
+      if (!cellId) return 'transparent'
+      if (selectedCellIds.value.has(cellId)) return selectedColor.value
+      return cellColors.value[cellId]
     }
     cellFeature.value.style('strokeColor', styleCellFunction)
     pointFeature.value.style('fillColor', styleCellFunction)
@@ -192,11 +194,12 @@ export function updateColorFunctions() {
 export function updateOpacityFunctions() {
   if (cellFeature.value && pointFeature.value) {
     const opacityFunction = (cell: any, i: number) => {
+      let cellId = cell.id
       if (cell.__cluster) {
-        cell = clusterFirstPoint(cells.value, cell, i)
+        cellId = clusterFirstPointId(cells.value, cell, i)
       }
-      if (!cell) return 0
-      if (filterMatchCellIds.value.size && !filterMatchCellIds.value.has(cell.id)) {
+      if (!cellId) return 0
+      if (filterMatchCellIds.value.size && !filterMatchCellIds.value.has(cellId)) {
         return 0
       }
       return 1
