@@ -53,7 +53,7 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
   }
 }
 
-export function clusterAllPointIds(data: any, current: any, i: number, allPoints: any[]) {
+export function clusterAllPointIds(data: any, current: any, i: number, allPoints: number[]) {
   if (current.__cluster) {
     current = current.obj
   }
@@ -61,7 +61,7 @@ export function clusterAllPointIds(data: any, current: any, i: number, allPoints
   if (currentId && clusterIds.value[currentId]) {
     return clusterIds.value[currentId]
   }
-  let currentPoints: any[] = []
+  let currentPoints: number[] = []
   if (current._points === undefined) return [...allPoints, current.id]
   if (current._points.length) {
     const indexes = current._points.map((p: { index: number }) => p.index)
