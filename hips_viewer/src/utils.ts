@@ -59,10 +59,13 @@ export function clusterAllPoints(data: any, current: any, i: number, allPoints: 
   }
   const currentId = current._leaflet_id
   if (currentId && clusterIds.value[currentId]) {
-    const pointIds = clusterIds.value[currentId].filter((id: number) => {
-      if (filteredIds.length) return filteredIds.includes(id)
-      return true
-    })
+    let pointIds = clusterIds.value[currentId]
+    if (filteredIds.length) {
+      pointIds = pointIds.filter((id: number) => {
+        if (filteredIds.length) return filteredIds.includes(id)
+        return true
+      })
+    }
     return data.filter((cell: Cell) => pointIds.includes(cell.id))
   }
   let currentPoints: any[] = []
