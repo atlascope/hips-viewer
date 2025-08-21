@@ -8,8 +8,7 @@ import {
   filterMatchCellIds,
 } from '@/store'
 import {
-  selectCell, clusterFirstPoint, getCellAttribute,
-  numericColormap, getCellAttribute, hexToRgb,
+  selectCell, getCellAttribute, clusterFirstPointId,
 } from './utils'
 import type { Cell } from './types'
 import { colormaps } from './colors'
