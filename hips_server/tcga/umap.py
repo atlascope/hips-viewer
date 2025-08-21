@@ -9,19 +9,15 @@ from pathlib import Path
 from sklearn.preprocessing import normalize
 
 from django.core.files.base import ContentFile
-from tcga.models import Image, Cell, UMAPTransform
+from tcga.models import Image, Cell, UMAPTransform, UMAPResult
 from tcga.constants import VECTOR_COLUMNS, DEFAULT_UMAP_KWARGS
 
 
-def fit_and_create_transform(**kwargs):
-    start = datetime.now()
-
-    name = kwargs.get('name')
+def get_image_and_cell_sets(**kwargs):
     cases = kwargs.get('cases')
-    column_patterns = kwargs.get('column_patterns')
     classes = kwargs.get('classes')
     sample_size = kwargs.get('sample_size')
-    umap_kwargs = kwargs.get('umap_kwargs')
+
     if cases is not None and len(cases):
         images = Image.objects.filter(name__in=cases)
         if not len(images):
@@ -31,15 +27,6 @@ def fit_and_create_transform(**kwargs):
             print(f'Found {[im.name for im in images]}. Proceeding with found data.')
     else:
         images = Image.objects.all()
-    if column_patterns is not None and len(column_patterns):
-        columns = [
-            c for c in VECTOR_COLUMNS
-            if any(re.match(pattern, c) for pattern in column_patterns)
-        ]
-        if not len(columns):
-            raise Exception('No columns found matching column patterns list.')
-    else:
-        columns = VECTOR_COLUMNS
     cells = Cell.objects.filter(image__in=images)
     cell_classes = cells.values_list('classification', flat=True).distinct()
     if classes is not None and len(classes):
@@ -49,22 +36,10 @@ def fit_and_create_transform(**kwargs):
     cells = cells.filter(classification__in=cell_classes).all()
     if sample_size:
         cells = cells[:sample_size]
-    umap_kwarg_set = DEFAULT_UMAP_KWARGS
-    if umap_kwargs:
-        for key in umap_kwargs:
-            if key not in umap_kwarg_set:
-                raise Exception(f'Unrecognized UMAP kwarg "{key}".')
-        umap_kwarg_set.update(umap_kwargs)
-    if not name:
-        name = (
-            'Transform of ' +
-            ', '.join(cell_classes) +
-            ' in ' +
-            ', '.join([im.name for im in images]) +
-            f' ({len(columns)} columns)'
-        )
+    return (images, cells)
 
-    print('Generating data structure to fit UMAP Transform.')
+
+def get_umap_input_matrix(cells, columns):
     column_indexes = {k: VECTOR_COLUMNS.index(k) for k in columns}
     data = []
     for cell in cells:
@@ -81,8 +56,43 @@ def fit_and_create_transform(**kwargs):
     shape = df.shape
     print(f'Generated DataFrame with {shape[0]} rows and {shape[1]} columns.')
 
-    print('Fitting UMAP Transform.')
     input_data = normalize(df, axis=1, norm='l1')
+    return input_data
+
+
+def fit_and_create_transform(**kwargs):
+    start = datetime.now()
+
+    name = kwargs.get('name')
+    column_patterns = kwargs.get('column_patterns')
+    umap_kwargs = kwargs.get('umap_kwargs')
+    images, cells = get_image_and_cell_sets(**kwargs)
+    if column_patterns is not None and len(column_patterns):
+        columns = [
+            c for c in VECTOR_COLUMNS
+            if any(re.match(pattern, c) for pattern in column_patterns)
+        ]
+        if not len(columns):
+            raise Exception('No columns found matching column patterns list.')
+    else:
+        columns = VECTOR_COLUMNS
+    umap_kwarg_set = DEFAULT_UMAP_KWARGS
+    if umap_kwargs:
+        for key in umap_kwargs:
+            if key not in umap_kwarg_set:
+                raise Exception(f'Unrecognized UMAP kwarg "{key}".')
+        umap_kwarg_set.update(umap_kwargs)
+    if not name:
+        name = (
+            f'Transform of {len(cells)} cells' +
+            ' in ' + ', '.join([im.name for im in images]) +
+            f' ({len(columns)} columns)'
+        )
+
+    print('Generating data structure to fit UMAP Transform.')
+    input_data = get_umap_input_matrix(cells, columns)
+
+    print('Fitting UMAP Transform.')
     transform = umap.UMAP(**umap_kwarg_set).fit(input_data)
 
     print('Pickling UMAP Transform to save to database.')
@@ -103,6 +113,35 @@ def fit_and_create_transform(**kwargs):
     )
     instance.fitted_cells.set(cells)
     instance.pickled.save(content_file_name, content_file)
+
+    seconds = (datetime.now() - start).total_seconds()
+    print(f'Completed in {seconds} seconds.')
+
+
+def create_transform_result(**kwargs):
+    start = datetime.now()
+
+    print('Loading UMAP Transform.')
+    transform_id = kwargs.get('transform_id')
+    if transform_id is None:
+        raise Exception('UMAPTransform ID required.')
+    transform_instance = UMAPTransform.objects.get(id=transform_id)
+    with open(transform_instance.pickled.path, "rb") as f:
+        transform = pickle.load(f)
+
+    print('Generating data structure to apply UMAP Transform.')
+    images, cells = get_image_and_cell_sets(**kwargs)
+    input_data = get_umap_input_matrix(cells, transform_instance.column_names)
+
+    print(f'Applying transform to {len(cells)} cells.')
+    output_data = transform.transform(input_data)
+
+    print('Creating UMAPResult object.')
+    instance = UMAPResult.objects.create(
+        transform=transform_instance,
+        scatterplot_data=output_data.tolist()
+    )
+    instance.transformed_cells.set(cells)
 
     seconds = (datetime.now() - start).total_seconds()
     print(f'Completed in {seconds} seconds.')
