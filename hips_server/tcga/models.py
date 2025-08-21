@@ -1,4 +1,18 @@
 from django.db import models
+from django.core.files.storage import FileSystemStorage
+
+from .constants import DEFAULT_UMAP_KWARGS, VECTOR_COLUMNS, TRANSFORMS_FOLDER
+
+
+transforms_fs = FileSystemStorage(location=TRANSFORMS_FOLDER)
+
+
+def get_default_umap_kwargs():
+    return DEFAULT_UMAP_KWARGS
+
+
+def get_vector_columns():
+    return VECTOR_COLUMNS
 
 
 class Image(models.Model):
@@ -17,3 +31,19 @@ class Cell(models.Model):
 
     # Simple text storage of vector; investigate alternatives
     vector_text = models.TextField()
+
+
+class UMAPTransform(models.Model):
+    name = models.CharField(max_length=255)
+    created = models.DateTimeField(auto_now_add=True)
+    fitted_cells = models.ManyToManyField(Cell)
+    column_names = models.JSONField(default=get_vector_columns)
+    umap_kwargs = models.JSONField(default=get_default_umap_kwargs)
+    pickled = models.FileField(storage=transforms_fs)
+
+
+class UMAPResult(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    transform = models.ForeignKey(UMAPTransform, on_delete=models.CASCADE)
+    transformed_cells = models.ManyToManyField(Cell)
+    scatterplot_data = models.JSONField()
