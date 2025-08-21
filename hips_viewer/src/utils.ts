@@ -53,35 +53,42 @@ export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
   }
 }
 
-export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[], filteredIds: number[]) {
-  if (clusterIds.value[i]) return clusterIds.value[i]
+export function clusterAllPointIds(data: any, current: any, i: number, allPoints: number[]) {
   if (current.__cluster) {
     current = current.obj
   }
-  if (current._points === undefined) return [...allPoints, current]
+  const currentId = current._leaflet_id
+  if (currentId && clusterIds.value[currentId]) {
+    return clusterIds.value[currentId]
+  }
+  let currentPoints: number[] = []
+  if (current._points === undefined) return [...allPoints, current.id]
   if (current._points.length) {
     const indexes = current._points.map((p: { index: number }) => p.index)
-    let points = indexes.map((i: number) => data[i])
-    // if filters applied, only return cells that match the filters
-    if (filteredIds.length) {
-      points = points.filter((p: any) => filteredIds.includes(p.id))
-    }
-    allPoints = [...allPoints, ...points]
+    currentPoints = indexes.map((index: number) => data[index].id)
   }
   current._clusters.forEach((cluster: any) => {
-    allPoints = clusterAllPoints(data, cluster, i, allPoints, filteredIds)
+    currentPoints = clusterAllPointIds(data, cluster, i, currentPoints)
   })
-  clusterIds.value[i] = allPoints
+  if (currentId) clusterIds.value[currentId] = currentPoints
+  allPoints = [...allPoints, ...currentPoints]
   return allPoints
 }
 
-export function clusterFirstPoint(data: any, current: any, i: number) {
-  // get all points in cluster, excluding any cells that don't match filters
-  const clusterPoints = clusterAllPoints(data, current, i, [], [...filterMatchCellIds.value])
-  // prioritize returning a selected cell
-  let cell = clusterPoints.find(cell => selectedCellIds.value.has(cell.id))
-  // if no cells selected, return any cell
-  if (!cell && clusterPoints.length) cell = clusterPoints[0]
+export function clusterFirstPointId(data: any, current: any, i: number) {
+  // get all points in cluster
+  let clusterPointIds = new Set(clusterAllPointIds(data, current, i, []))
+  // exclude any cells that don't match filters
+  if (filterMatchCellIds.value.size) {
+    clusterPointIds = clusterPointIds.intersection(filterMatchCellIds.value)
+  }
+  // default to first cell
+  let [cell] = clusterPointIds
+  // if any selected, prioritize selected
+  const selectedIds = clusterPointIds.intersection(selectedCellIds.value)
+  if (selectedIds.size) {
+    [cell] = selectedIds
+  }
   return cell
 }
 
@@ -111,8 +118,10 @@ export function selectCell(event: any, cellId: number | undefined) {
       return selectCell(event, event.data.id)
     }
     else if (event.data.__cluster) {
-      const clusterPoints = clusterAllPoints(cells.value, event.data, event.index, [], [...filterMatchCellIds.value])
-      const clusterPointIds = new Set(clusterPoints.map(cell => cell.id))
+      let clusterPointIds = new Set(clusterAllPointIds(cells.value, event.data, event.index, []))
+      if (filterMatchCellIds.value.size) {
+        clusterPointIds = clusterPointIds.intersection(filterMatchCellIds.value)
+      }
       if (toggleMode) {
         if (currentIds.intersection(clusterPointIds).size === clusterPointIds.size) {
           currentIds = currentIds.difference(clusterPointIds)
