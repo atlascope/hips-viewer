@@ -39,13 +39,20 @@ def get_image_and_cell_sets(**kwargs):
     return (images, cells)
 
 
+def parse_number(v):
+    try:
+        return float(v)
+    except ValueError:
+        return v
+
+
 def get_umap_input_matrix(cells, columns):
     column_indexes = {k: VECTOR_COLUMNS.index(k) for k in columns}
     data = []
     for cell in cells:
         cell_vector = cell.vector_text.split(',')
         data.append({
-            k: float(cell_vector[i]) for k, i in column_indexes.items()
+            k: parse_number(cell_vector[i]) for k, i in column_indexes.items()
         })
     df = pd.DataFrame(data, columns=columns)
     # Drop non-numeric columns and fill NaNs
