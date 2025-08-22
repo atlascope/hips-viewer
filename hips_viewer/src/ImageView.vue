@@ -15,9 +15,10 @@ import {
 
 import CellDrawer from '@/CellDrawer.vue'
 import ColorOptions from '@/ColorOptions.vue'
-import { getCellAttribute } from './utils'
+import { getCellAttribute } from '@/utils'
 import HistogramMenu from '@/HistogramMenu.vue'
-import FilterMenu from './FilterMenu.vue'
+import FilterMenu from '@/FilterMenu.vue'
+import TransformMenu from '@/TransformMenu.vue'
 
 const props = defineProps<{
   id: number
@@ -146,6 +147,24 @@ watch(cells, drawCells)
       v-if="cells"
       class="actions"
     >
+      <v-tooltip>
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            icon
+            v-bind="tooltipProps"
+          >
+            <span class="material-symbols-outlined">transform</span>
+            <v-menu
+              activator="parent"
+              location="end"
+              :close-on-content-click="false"
+            >
+              <TransformMenu />
+            </v-menu>
+          </v-btn>
+        </template>
+        <span>UMAP Transforms</span>
+      </v-tooltip>
       <v-tooltip>
         <template #activator="{ props: tooltipProps }">
           <v-btn

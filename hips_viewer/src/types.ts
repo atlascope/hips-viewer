@@ -25,7 +25,9 @@ export interface Thumbnail {
 
 export interface TreeItem {
   title: string
-  value?: string
+  subtitle?: string
+  disabled?: boolean
+  value?: any
   children?: TreeItem[]
 }
 
