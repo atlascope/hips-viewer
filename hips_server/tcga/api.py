@@ -1,3 +1,5 @@
+import json
+
 from ninja import NinjaAPI, ModelSchema
 from ninja.pagination import paginate
 from typing import List
@@ -31,6 +33,10 @@ class UMAPResultSchema(ModelSchema):
     class Config:
         model = UMAPResult
         model_fields = ['id', 'created', 'transform', 'scatterplot_data']
+
+    @staticmethod
+    def resolve_scatterplot_data(obj):
+        return json.loads(obj.scatterplot_data)
 
 
 @api.get('/images', response=List[ImageSchema])
