@@ -37,3 +37,18 @@ export interface FilterOption {
     max: number | undefined
   }
 }
+
+export interface UMAPTransform {
+  id: number
+  name: string
+  created: string
+  column_names: string[]
+  umap_kwargs: Record<string, any>
+}
+
+export interface UMAPResult {
+  id: number
+  created: string
+  transform: number
+  scatterplot_data: number[][]
+}
