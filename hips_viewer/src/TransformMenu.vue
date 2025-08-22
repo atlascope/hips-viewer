@@ -2,7 +2,11 @@
 import createScatterplot from 'regl-scatterplot'
 import { onMounted, ref, computed, watch } from 'vue'
 import { fetchUMAPTransformResults, fetchUMAPTransforms } from '@/api'
-import { umapTransformResults, umapTransforms, selectedCellIds, cells, filterMatchCellIds, cellColors } from './store'
+import {
+  umapTransformResults, umapTransforms,
+  selectedCellIds, cells, filterMatchCellIds,
+  cellColors, selectedColor,
+} from './store'
 import type { UMAPTransform, UMAPResult, TreeItem, Cell, ScatterPoint } from './types'
 import { normalizePoints, rgbToHex } from './utils'
 
@@ -59,7 +63,14 @@ function init() {
     width,
     height,
     pointSize: 3,
+    pointSizeSelected: 0,
+    lassoOnLongPress: true,
+    lassoMinDist: 1,
+    lassoMinDelay: 0,
+    lassoColor: selectedColor.value,
   })
+  scatterplot.value.subscribe('select', scatterSelect)
+  scatterplot.value.subscribe('deselect', () => scatterSelect({ points: [] }))
   fetchUMAPTransforms().then((transforms) => {
     umapTransforms.value = transforms
     transforms.forEach((t: UMAPTransform) => {
@@ -70,9 +81,27 @@ function init() {
   })
 }
 
-function select(selected: any) {
+function selectResult(selected: any) {
   if (resultSelection.value) resultSelection.value.blur()
   selectedResult.value = selected
+}
+
+function scatterSelect({ points }: any) {
+  if (!scatterData.value) return
+  const selected = scatterData.value.map((p, i) => {
+    if (points.includes(i)) return p.id
+    return undefined
+  }).filter(id => id) as number[]
+  selectedCellIds.value = new Set(selected)
+}
+
+function updateScatterSelection() {
+  if (!scatterData.value) return
+  const selectedIndexes = scatterData.value.map((p, i) => {
+    if (selectedCellIds.value.has(p.id)) return i
+    return undefined
+  }).filter(i => i)
+  scatterplot.value.select(selectedIndexes, { preventEvent: true })
 }
 
 function drawResult() {
@@ -95,6 +124,7 @@ onMounted(init)
 watch(selectedResult, () => {
   setTimeout(drawResult, 10)
 })
+watch(selectedCellIds, updateScatterSelection)
 </script>
 
 <template>
@@ -163,7 +193,7 @@ watch(selectedResult, () => {
                 <v-list-item
                   :class="props.value ? '' : 'half-opacity'"
                   width="350px"
-                  @click="() => { if (props.value) select(props.value) }"
+                  @click="() => { if (props.value) selectResult(props.value) }"
                 >
                   {{ props.title }}
                   <v-chip
