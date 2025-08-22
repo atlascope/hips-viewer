@@ -18,7 +18,7 @@ import {
   histCellIds,
   histColormapName,
 } from './store'
-import type { Cell, FilterOption } from './types'
+import type { Cell, FilterOption, ScatterPoint } from './types'
 
 export interface RGB { r: number, g: number, b: number }
 
@@ -366,5 +366,18 @@ export function cellDistribution() {
       const colormapFunction = numericColormap(vmin, vmax, rgbColors)
       return rgbToHex(colormapFunction(bucketedMin[v]))
     },
+  }))
+}
+
+// regl-scatterplot requires points to be normalized for performance
+export function normalizePoints(points: ScatterPoint[]) {
+  const xMin = Math.min(...points.map(p => p.x))
+  const xMax = Math.max(...points.map(p => p.x))
+  const yMin = Math.min(...points.map(p => p.y))
+  const yMax = Math.max(...points.map(p => p.y))
+  return points.map(p => ({
+    ...p,
+    x: (p.x - xMin) / (xMax - xMin),
+    y: (p.y - yMin) / (yMax - yMin),
   }))
 }

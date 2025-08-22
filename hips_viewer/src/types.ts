@@ -52,5 +52,11 @@ export interface UMAPResult {
   id: number
   created: string
   transform: number
-  scatterplot_data: number[][]
+  scatterplot_data: ScatterPoint[]
+}
+
+export interface ScatterPoint {
+  id: number
+  x: number
+  y: number
 }

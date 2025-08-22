@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import createScatterplot from 'regl-scatterplot'
+import { onMounted, ref, computed, watch } from 'vue'
 import { fetchUMAPTransformResults, fetchUMAPTransforms } from '@/api'
-import { umapTransformResults, umapTransforms } from './store'
-import type { UMAPTransform, UMAPResult, TreeItem } from './types'
+import { umapTransformResults, umapTransforms, selectedCellIds, cells, filterMatchCellIds, cellColors } from './store'
+import type { UMAPTransform, UMAPResult, TreeItem, Cell, ScatterPoint } from './types'
+import { normalizePoints, rgbToHex } from './utils'
 
+const scatterCanvas = ref()
+const scatterplot = ref()
 const resultSelection = ref()
 const selectedResult = ref<UMAPResult>()
 
@@ -28,7 +32,34 @@ const nestedResultOptions = computed(() => {
   return nested
 })
 
+const imageCellIds = computed(() => new Set(cells.value.map((cell: Cell) => cell.id)))
+
+const scatterData = computed(() => {
+  if (!selectedResult.value) return undefined
+  const currentData = selectedResult.value.scatterplot_data.filter((p: ScatterPoint) => {
+    return imageCellIds.value.has(p.id) && (!filterMatchCellIds.value.size || filterMatchCellIds.value.has(p.id))
+  })
+  return normalizePoints(currentData)
+})
+
+const scatterSelectedIndices = computed(() => scatterData.value?.map((p, i) => {
+  if (selectedCellIds.value.has(p.id)) return i
+  return undefined
+}).filter(i => i))
+
+const scatterColors = computed(() => scatterData.value?.map((p) => {
+  return rgbToHex(cellColors.value[p.id])
+}))
+
 function init() {
+  const canvas = scatterCanvas.value
+  const { width, height } = canvas.getBoundingClientRect()
+  scatterplot.value = createScatterplot({
+    canvas,
+    width,
+    height,
+    pointSize: 3,
+  })
   fetchUMAPTransforms().then((transforms) => {
     umapTransforms.value = transforms
     transforms.forEach((t: UMAPTransform) => {
@@ -44,7 +75,26 @@ function select(selected: any) {
   selectedResult.value = selected
 }
 
+function drawResult() {
+  scatterplot.value.clear()
+  if (scatterData.value) {
+    const drawPoints = scatterData.value.map((p, i) => ([p.x, p.y, i]))
+    scatterplot.value.draw(drawPoints, { select: scatterSelectedIndices.value })
+    scatterplot.value.zoomToArea(
+      { x: 0, y: 0, width: 1.2, height: 1.2 },
+      { transition: true },
+    )
+    scatterplot.value.set({
+      colorBy: 'valueA',
+      pointColor: scatterColors.value,
+    })
+  }
+}
+
 onMounted(init)
+watch(selectedResult, () => {
+  setTimeout(drawResult, 10)
+})
 </script>
 
 <template>
@@ -135,6 +185,29 @@ onMounted(init)
           </template>
         </v-select>
       </div>
+      <canvas
+        ref="scatterCanvas"
+        class="scatter-canvas"
+      />
+      <div
+        v-if="scatterData && selectedResult"
+        class="centered-row"
+      >
+        Showing {{ scatterData.length }} of {{ selectedResult.scatterplot_data.length }} transformed cells
+        <v-tooltip>
+          <template #activator="{ props: tooltipProps }">
+            <span
+              class="material-symbols-outlined"
+              v-bind="tooltipProps"
+            >
+              info
+            </span>
+          </template>
+          <div style="width: 200px">
+            Some cells that were transformed in this result are not shown if they do not belong to the current image or have been hidden by any applied filters.
+          </div>
+        </v-tooltip>
+      </div>
     </v-card-text>
   </v-card>
 </template>
@@ -147,6 +220,10 @@ onMounted(init)
   padding: 4px;
 }
 .half-opacity {
-    opacity: 0.5;
+  opacity: 0.5;
+}
+.scatter-canvas {
+  width: 320px;
+  height: 500px;
 }
 </style>
