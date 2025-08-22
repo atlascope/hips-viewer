@@ -142,11 +142,13 @@ def create_transform_result(**kwargs):
 
     print(f'Applying transform to {len(cells)} cells.')
     output_data = transform.transform(input_data)
+    df = pd.DataFrame(output_data, columns=['x', 'y'])
+    df['id'] = [cell.id for cell in cells]
 
     print('Creating UMAPResult object.')
     instance = UMAPResult.objects.create(
         transform=transform_instance,
-        scatterplot_data=output_data.tolist()
+        scatterplot_data=df.to_json(orient='records')
     )
     instance.transformed_cells.set(cells)
 
