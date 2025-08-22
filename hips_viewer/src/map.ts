@@ -10,8 +10,7 @@ import {
 } from '@/store'
 import {
   selectCell,
-  clusterFirstPointId, numericColormap,
-  getCellAttribute, hexToRgb,
+  clusterFirstPointId, numericColormap, hexToRgb,
 } from './utils'
 import type { Cell } from './types'
 
@@ -127,7 +126,7 @@ export function updateColors() {
   }
 
   const values = [...new Set(cells.value.map(
-    (cell: any) => getCellAttribute(cell, colorBy.value),
+    (cell: any) => cell[colorBy.value],
   ).map(
     (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v),
   ).filter((v: any) => v !== undefined))]
@@ -171,7 +170,7 @@ export function updateColors() {
 
   if (colormapFunction) {
     const getCellColor = (cell: any) => {
-      const value = getCellAttribute(cell, colorBy.value)
+      const value = cell[colorBy.value]
       if (value === undefined) return { r: 0, g: 0, b: 0 }
       return colormapFunction(value)
     }
