@@ -80,20 +80,6 @@ export function clusterFirstPointId(data: any, current: any, i: number) {
   return cell
 }
 
-export function getCellAttribute(cell: Cell, attrName: string) {
-  if (cell[attrName]) return cell[attrName]
-  else if (cellColumns.value && cell.vector_text) {
-    const index = cellColumns.value.indexOf(attrName)
-    const vector = cell.vector_text.split(',')
-    if (index >= 0 && vector && vector[index]) {
-      const value = vector[index]
-      if (!isNaN(parseFloat(value))) return parseFloat(value)
-      return value
-    }
-  }
-  return undefined
-}
-
 export function selectCell(event: any, cellId: number | undefined) {
   if (annotationMode.value === 'polygon') return
   // create local copy without proxy for set operations
@@ -205,13 +191,8 @@ export function resetFilterOptions() {
 }
 
 export function addFilterOption(attr: string) {
-  const vectorIndex = cellColumns.value.indexOf(attr)
   const allValues = cells.value.map((cell: Cell) => {
-    let cellValue = cell[attr]?.toString()
-    if (cellValue === undefined && cell.vector_text) {
-      const vector = cell.vector_text.split(',')
-      cellValue = vector[vectorIndex]
-    }
+    const cellValue = cell[attr]?.toString()
     if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
       return parseFloat(parseFloat(cellValue).toPrecision(2))
     }
@@ -237,13 +218,8 @@ export function getFilterMatchIds(selectedOnly: boolean) {
     if (selectedOnly && !selectedCellIds.value.has(cell.id)) return false
     for (const key in currentFilters.value) {
       const filterValue = currentFilters.value[key]
-      let vectorIndex = cellColumns.value.indexOf(key)
-      if (vectorIndex < 0) vectorIndex = filterVectorIndices.value[key]
-      let cellValue = cell[key]?.toString()
-      if (cellValue === undefined && vectorIndex >= 0 && cell.vector_text) {
-        const vector = cell.vector_text.split(',')
-        cellValue = vector[vectorIndex]
-      }
+      const cellValue = cell[key]?.toString()
+
       if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
         const numericValue = parseFloat(parseFloat(cellValue).toPrecision(2))
         if (filterValue.length === 2) {
@@ -282,7 +258,7 @@ export function cellDistribution() {
   const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
 
   const values = [...new Set(cells.value.map(
-    (cell: any) => getCellAttribute(cell, histAttribute.value),
+    (cell: any) => cell[histAttribute.value],
   ).map(
     (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v),
   ).filter((v: any) => v !== undefined)),
@@ -291,7 +267,7 @@ export function cellDistribution() {
   const cellIds: Record<string | number, Set<number>> = {}
   const counts: Record<string | number, number> = {}
   histCells.forEach((cell: any) => {
-    const key = getCellAttribute(cell, histAttribute.value)
+    const key = cell[histAttribute.value]
     if (key !== undefined) {
       counts[key] = (counts[key] ?? 0) + 1
 

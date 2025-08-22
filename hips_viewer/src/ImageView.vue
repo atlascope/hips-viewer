@@ -15,7 +15,6 @@ import {
 
 import CellDrawer from '@/CellDrawer.vue'
 import ColorOptions from '@/ColorOptions.vue'
-import { getCellAttribute } from './utils'
 import HistogramMenu from '@/HistogramMenu.vue'
 import FilterMenu from './FilterMenu.vue'
 
@@ -44,15 +43,27 @@ function init() {
   })
 }
 
-function getCells() {
+async function getCells() {
   status.value = 'Fetching cell data...'
-  fetchImageCells(props.image.id).then((data) => {
-    cells.value = data
-  })
-  fetchCellColumns().then((data) => {
-    cellColumns.value = data
-    attributeOptions.value = [...defaultAttributes, ...data]
-  })
+  const columnData = await fetchCellColumns()
+  cellColumns.value = columnData
+  attributeOptions.value = [...defaultAttributes, ...columnData]
+
+  const cellData = await fetchImageCells(props.image.id)
+
+  status.value = 'Processing vector data...'
+  for (let i = 0; i < cellData.length; i++) {
+    const vectorValues = cellData[i].vector_text?.split(',') || []
+    const vector = vectorValues.map((value) => {
+      if (!isNaN(parseFloat(value))) return parseFloat(value)
+      return value
+    })
+    for (let index = 0; index < columnData.length; index++) {
+      const column = columnData[index]
+      cellData[i][column] = vector[index]
+    }
+  }
+  cells.value = cellData
 }
 
 function drawCells() {
@@ -77,7 +88,7 @@ function onHoverOver({ data, mouse }: any) {
       Object.entries(data).filter(([k]) => !tooltipExclude.includes(k)),
     )
     if (colorBy.value && !tooltipContent.value[colorBy.value]) {
-      tooltipContent.value[colorBy.value] = getCellAttribute(data, colorBy.value)
+      tooltipContent.value[colorBy.value] = data[colorBy.value]
     }
     tooltipPosition.value = mouse.map
   }

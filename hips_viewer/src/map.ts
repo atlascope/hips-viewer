@@ -8,7 +8,7 @@ import {
   filterMatchCellIds,
 } from '@/store'
 import {
-  selectCell, getCellAttribute, clusterFirstPointId,
+  selectCell, clusterFirstPointId,
 } from './utils'
 import type { Cell } from './types'
 import { colormaps } from './colors'
@@ -126,7 +126,7 @@ export function updateColors() {
   }
 
   const values = [...new Set(cells.value.map(
-    (cell: any) => getCellAttribute(cell, colorBy.value),
+    (cell: any) => cell[colorBy.value],
   ).map(
     (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v),
   ).filter((v: any) => v !== undefined))]
@@ -137,7 +137,7 @@ export function updateColors() {
     const domain: [number, number] = [Math.min(...values), Math.max(...values)]
     const colorFunction = colormap.getNumericColorFunction(domain)
     getCellColor = (cell: any) => {
-      const value = getCellAttribute(cell, colorBy.value)
+      const value = cell[colorBy.value]
       if (value === undefined) return { r: 0, g: 0, b: 0 }
       return colorFunction(value as number)
     }
@@ -152,7 +152,7 @@ export function updateColors() {
   else {
     const colorFunction = colormap.getStringColorFunction(values as string[])
     getCellColor = (cell: any) => {
-      const value = getCellAttribute(cell, colorBy.value)
+      const value = cell[colorBy.value]
       if (value === undefined) return { r: 0, g: 0, b: 0 }
       return colorFunction(value as string)
     }
