@@ -3,7 +3,7 @@ import createScatterplot from 'regl-scatterplot'
 import { onMounted, ref, computed, watch } from 'vue'
 import { fetchUMAPTransformResults, fetchUMAPTransforms } from '@/api'
 import {
-  umapTransformResults, umapTransforms,
+  umapTransformResults, umapTransforms, umapSelectedResult,
   selectedCellIds, cells, filterMatchCellIds,
   cellColors, selectedColor,
 } from './store'
@@ -13,7 +13,6 @@ import { normalizePoints, rgbToHex } from './utils'
 const scatterCanvas = ref()
 const scatterplot = ref()
 const resultSelection = ref()
-const selectedResult = ref<UMAPResult>()
 
 const nestedResultOptions = computed(() => {
   const nested: TreeItem[] = []
@@ -39,8 +38,8 @@ const nestedResultOptions = computed(() => {
 const imageCellIds = computed(() => new Set(cells.value.map((cell: Cell) => cell.id)))
 
 const scatterData = computed(() => {
-  if (!selectedResult.value) return undefined
-  const currentData = selectedResult.value.scatterplot_data.filter((p: ScatterPoint) => {
+  if (!umapSelectedResult.value) return undefined
+  const currentData = umapSelectedResult.value.scatterplot_data.filter((p: ScatterPoint) => {
     return imageCellIds.value.has(p.id) && (!filterMatchCellIds.value.size || filterMatchCellIds.value.has(p.id))
   })
   return normalizePoints(currentData)
@@ -71,19 +70,22 @@ function init() {
   })
   scatterplot.value.subscribe('select', scatterSelect)
   scatterplot.value.subscribe('deselect', () => scatterSelect({ points: [] }))
-  fetchUMAPTransforms().then((transforms) => {
-    umapTransforms.value = transforms
-    transforms.forEach((t: UMAPTransform) => {
-      fetchUMAPTransformResults(t.id).then((results) => {
-        umapTransformResults.value[t.id] = results
+  if (!umapTransforms.value) {
+    fetchUMAPTransforms().then((transforms) => {
+      umapTransforms.value = transforms
+      transforms.forEach((t: UMAPTransform) => {
+        fetchUMAPTransformResults(t.id).then((results) => {
+          umapTransformResults.value[t.id] = results
+        })
       })
     })
-  })
+  }
+  if (umapSelectedResult.value) drawResult()
 }
 
 function selectResult(selected: any) {
   if (resultSelection.value) resultSelection.value.blur()
-  selectedResult.value = selected
+  umapSelectedResult.value = selected
 }
 
 function scatterSelect({ points }: any) {
@@ -121,7 +123,7 @@ function drawResult() {
 }
 
 onMounted(init)
-watch(selectedResult, () => {
+watch(umapSelectedResult, () => {
   setTimeout(drawResult, 10)
 })
 watch(selectedCellIds, updateScatterSelection)
@@ -155,7 +157,7 @@ watch(selectedCellIds, updateScatterSelection)
       <div v-else>
         <v-select
           ref="resultSelection"
-          v-model="selectedResult"
+          v-model="umapSelectedResult"
           label="UMAP Transform Result"
           density="compact"
           hide-details
@@ -181,7 +183,7 @@ watch(selectedCellIds, updateScatterSelection)
           </template>
           <template #no-data>
             <v-treeview
-              :model-value:selected="[selectedResult]"
+              :model-value:selected="[umapSelectedResult]"
               :items="nestedResultOptions"
               item-disabled="disabled"
               select-strategy="single-leaf"
@@ -220,10 +222,10 @@ watch(selectedCellIds, updateScatterSelection)
         class="scatter-canvas"
       />
       <div
-        v-if="scatterData && selectedResult"
+        v-if="scatterData && umapSelectedResult"
         class="centered-row"
       >
-        Showing {{ scatterData.length }} of {{ selectedResult.scatterplot_data.length }} transformed cells
+        Showing {{ scatterData.length }} of {{ umapSelectedResult.scatterplot_data.length }} transformed cells
         <v-tooltip>
           <template #activator="{ props: tooltipProps }">
             <span

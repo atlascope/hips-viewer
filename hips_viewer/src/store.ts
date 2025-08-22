@@ -73,6 +73,7 @@ export const filterMatchCellIds = ref<Set<number>>(new Set<number>())
 
 export const umapTransforms = ref<UMAPTransform[]>()
 export const umapTransformResults = ref<Record<number, UMAPResult[]>>({})
+export const umapSelectedResult = ref<UMAPResult>()
 
 // Store watchers
 watch(colormapType, () => colormapName.value = undefined)
