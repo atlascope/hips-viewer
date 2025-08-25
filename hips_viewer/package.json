@@ -15,7 +15,8 @@
   "dependencies": {
     "@fontsource/roboto": "5.2.5",
     "@mdi/font": "7.4.47",
-    "colorbrewer": "^1.6.1",
+    "@types/d3-scale-chromatic": "^3.1.0",
+    "d3-scale-chromatic": "^3.1.0",
     "geojs": "^1.14.12",
     "regl-scatterplot": "^1.14.1",
     "vue": "^3.5.13",

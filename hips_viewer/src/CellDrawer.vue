@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Cell, Thumbnail } from '@/types'
+import type { Cell, RGB, Thumbnail } from '@/types'
 import { cellColors, filterMatchCellIds, selectedCellIds, selectedColor } from './store'
-import { clickCellThumbnail, rgbToHex, type RGB } from './utils'
+import { clickCellThumbnail, rgbToHex } from './utils'
 
 const props = defineProps<{
   cells: Cell[]
@@ -17,9 +17,19 @@ const filteredThumbnails = computed(() => {
     return !filterMatchCellIds.value.size || filterMatchCellIds.value.has(t.id)
   })
 })
-const hexCellColors = computed(() => Object.fromEntries(
-  Object.entries(cellColors.value).map(([cellId, rgbColor]) => [cellId, rgbToHex(rgbColor as RGB)]),
-))
+const hexCellColors = computed(() => {
+  if (!cellColors.value) {
+    return Object.fromEntries(
+      thumbnails.value.map((t: Thumbnail) => [t.id, '#000']),
+    )
+  }
+  return Object.fromEntries(
+    Object.entries(cellColors.value).map(([cellId, rgbColor]) => {
+      if (rgbColor) return [cellId, rgbToHex(rgbColor as RGB)]
+      return [cellId, 'transparent']
+    }),
+  )
+})
 
 function loadThumbnails({ done }: any) {
   if (props.cells.length === thumbnails.value.length) done('empty')
@@ -67,9 +77,9 @@ function loadThumbnails({ done }: any) {
         :style="`border-color:${
           selectedCellIds.has(thumbnail.id) ? selectedColor: hexCellColors[thumbnail.id]
         };border-width:${
-          cellColors[thumbnail.id] ? 4 : 0
+          hexCellColors[thumbnail.id] ? 4 : 0
         }px;padding:${
-          cellColors[thumbnail.id] ? 0 : 4
+          hexCellColors[thumbnail.id] ? 0 : 4
         }px`"
         class="cell-thumbnail"
         @click="(e) => clickCellThumbnail(e, thumbnail.id)"
