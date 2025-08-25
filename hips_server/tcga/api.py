@@ -72,6 +72,6 @@ def transform_results(request, transform_id):
 
 
 @api.get('/umap/results/{result_id}/transformed', response=List[int])
-@paginate
+@paginate()
 def result_transformed(request, result_id):
     return [cell.id for cell in UMAPResult.objects.get(id=result_id).transformed_cells.all()]
