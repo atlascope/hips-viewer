@@ -52,10 +52,10 @@ export async function fetchCellColumns() {
 
 export async function fetchUMAPTransforms() {
   const url = `${baseURL}/umap/transforms`
-  return await cachedFetch(url, 'umap-cache')
+  return (await fetch(url)).json()
 }
 
 export async function fetchUMAPTransformResults(transformId: number) {
   const url = `${baseURL}/umap/transforms/${transformId}/results`
-  return await cachedFetch(url, 'umap-cache')
+  return (await fetch(url)).json()
 }
