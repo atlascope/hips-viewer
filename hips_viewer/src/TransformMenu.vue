@@ -14,7 +14,7 @@ const scatterCanvas = ref()
 const scatterplot = ref()
 const resultSelection = ref()
 
-const nestedResultOptions = computed(() => {
+const nestedResults = computed(() => {
   const nested: TreeItem[] = []
   umapTransforms.value?.forEach((transform: UMAPTransform) => {
     const parent: TreeItem = { title: `UMAPTransform ${transform.id}`, subtitle: transform.name, children: [] }
@@ -184,7 +184,7 @@ watch(selectedCellIds, updateScatterSelection)
           <template #no-data>
             <v-treeview
               :model-value:selected="[umapSelectedResult]"
-              :items="nestedResultOptions"
+              :items="nestedResults"
               item-disabled="disabled"
               select-strategy="single-leaf"
               density="compact"
