@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand
-from tcga.umap import fit_and_create_transform
 from tcga.models import UMAPTransform, UMAPResult
 
 # Example Usage
