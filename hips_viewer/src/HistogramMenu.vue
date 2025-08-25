@@ -9,6 +9,7 @@ import { histAttribute, histNumBuckets, cellData, chartData, showHistogram, hist
   histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor,
   filterMatchCellIds, histColormapName, colormapName } from '@/store'
+import { colormaps } from './colors'
 
 import AttributeSelect from './AttributeSelect.vue'
 import ColormapSelect from './ColormapSelect.vue'
@@ -133,7 +134,7 @@ watchEffect(async () => {
   changeHistSelection()
 })
 
-watch([histNumBuckets, histCellIds, histColormapName], () => {
+watch([histNumBuckets, histCellIds], () => {
   histSelectedBars.value = new Set<number>()
   cellData.value = cellDistribution()
 })
@@ -144,9 +145,11 @@ watch([
 ], () => {
   if (!cellData.value) return
 
+  const colormap = colormaps.find(cmap => cmap.name === histColormapName.value)
+
   const labels = cellData.value.map(c => c.key)
   const colors = cellData.value.map((c, index) => {
-    return histSelectedBars.value.has(index) ? selectedColor.value : c.color()
+    return histSelectedBars.value.has(index) ? selectedColor.value : c.color(colormap)
   })
   const counts = cellData.value.map((c) => {
     if (!c.cellIds) return 0

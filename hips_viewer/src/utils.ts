@@ -14,10 +14,8 @@ import {
   histAttribute,
   showHistogram,
   histCellIds,
-  histColormapName,
 } from './store'
-import { colormaps } from './colors'
-import type { Cell, FilterOption, RGB } from './types'
+import type { Cell, Colormap, FilterOption, RGB } from './types'
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
 export function hexToRgb(hex: string): RGB {
@@ -253,8 +251,7 @@ export function resetCurrentFilters() {
 }
 
 export function cellDistribution() {
-  const colormap = colormaps.find(cmap => cmap.name === histColormapName.value)
-  if (!(cells.value && histCellIds.value && colormap)) return []
+  if (!(cells.value && histCellIds.value)) return []
   const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
 
   const values = [...new Set(cells.value.map(
@@ -279,12 +276,15 @@ export function cellDistribution() {
   showHistogram.value = values.length > histNumBuckets.value
 
   if (values.length < histNumBuckets.value || !values.every(v => typeof v === 'number')) {
-    const colorFunction = colormap.getStringColorFunction(values as string[])
     return values.map(v => ({
       key: `${v}`,
       count: counts[v] ?? 0,
       cellIds: cellIds[v],
-      color: () => rgbToHex(colorFunction(v as string)),
+      color: (colormap: Colormap) => {
+        if (!colormap) return '#000'
+        const colorFunction = colormap.getStringColorFunction(values as string[])
+        return rgbToHex(colorFunction(v as string))
+      },
     }))
   }
 
@@ -305,11 +305,14 @@ export function cellDistribution() {
     cellIds[value]?.forEach(id => bucketedCellIds[bucketKey].add(id))
   })
 
-  const colorFunction = colormap.getNumericColorFunction([vmin, vmax])
   return Object.keys(bucketedCounts).sort((a, b) => (parseFloat(a) - parseFloat(b))).map(v => ({
     key: `${bucketedMin[v].toFixed(2)}`,
     count: bucketedCounts[v],
     cellIds: bucketedCellIds[v],
-    color: () => rgbToHex(colorFunction(bucketedMin[v])),
+    color: (colormap: Colormap) => {
+      if (!colormap) return '#000'
+      const colorFunction = colormap.getNumericColorFunction([vmin, vmax])
+      return rgbToHex(colorFunction(bucketedMin[v]))
+    },
   }))
 }
