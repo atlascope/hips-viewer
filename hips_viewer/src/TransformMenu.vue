@@ -90,8 +90,9 @@ function selectResult(selected: any) {
 
 function scatterSelect({ points }: any) {
   if (!scatterData.value) return
+  const pointSet = new Set(points)
   const selected = scatterData.value.map((p, i) => {
-    if (points.includes(i)) return p.id
+    if (pointSet.has(i)) return p.id
     return undefined
   }).filter(id => id) as number[]
   selectedCellIds.value = new Set(selected)
