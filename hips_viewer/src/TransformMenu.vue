@@ -218,6 +218,28 @@ watch(selectedCellIds, updateScatterSelection)
           </template>
         </v-select>
       </div>
+      <div
+        v-if="scatterData && umapSelectedResult"
+        style="float: right"
+      >
+        <v-tooltip>
+          <template #activator="{ props: tooltipProps }">
+            <span
+              class="material-symbols-outlined"
+              v-bind="tooltipProps"
+            >
+              help
+            </span>
+          </template>
+          <div style="width: 200px">
+            <div style="font-weight: bold;">
+              Interactive scatterplot controls
+            </div>
+            <div>Drag to pan, scroll to zoom</div>
+            <div>(Shift + Drag) OR (Click and Hold for 1s, then Drag) to draw a lasso selection</div>
+          </div>
+        </v-tooltip>
+      </div>
       <canvas
         ref="scatterCanvas"
         class="scatter-canvas"
