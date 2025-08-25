@@ -1,4 +1,4 @@
-FROM python:3.13-alpine
+FROM python:3.13-slim
 
 # Prevents Python from writing pyc files to disk
 ENV PYTHONDONTWRITEBYTECODE=1

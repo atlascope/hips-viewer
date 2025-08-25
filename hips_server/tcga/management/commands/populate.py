@@ -12,6 +12,8 @@ from tcga.constants import (
     VECTOR_COLUMNS,
 )
 
+# Example Usage
+# python manage.py populate --cases TCGA-3C-AALI-01Z-00-DX1 --no_cache
 
 class Command(BaseCommand):
     requires_migrations_checks = True
