@@ -5,6 +5,7 @@ SAMPLE_DATA_SERVER = 'https://demo.kitware.com/histomicstk/api/v1'
 SAMPLE_DATA_COLLECTION = '686fddd7f5546bd5eacbe40b'
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 DOWNLOADS_FOLDER = Path(PROJECT_ROOT, 'data', 'downloads')
+TRANSFORMS_FOLDER = Path(PROJECT_ROOT, 'data', 'transforms')
 IMAGE_SUFFIXES = ['.svs']
 VECTOR_COLUMNS = [
     'Identifier.ObjectCode',
@@ -184,3 +185,45 @@ VECTOR_COLUMNS = [
     'Cytoplasm.Haralick.IMC2.Mean',
     'Cytoplasm.Haralick.IMC2.Range'
 ]
+# from https://umap-learn.readthedocs.io/en/latest/api.html
+DEFAULT_UMAP_KWARGS = dict(
+    n_neighbors=15,
+    n_components=2,
+    metric='euclidean',
+    metric_kwds=None,
+    output_metric='euclidean',
+    output_metric_kwds=None,
+    n_epochs=None,
+    learning_rate=1.0,
+    init='spectral',
+    min_dist=0.1,
+    spread=1.0,
+    low_memory=True,
+    n_jobs=-1,
+    set_op_mix_ratio=1.0,
+    local_connectivity=1.0,
+    repulsion_strength=1.0,
+    negative_sample_rate=5,
+    transform_queue_size=4.0,
+    a=None,
+    b=None,
+    random_state=None,
+    angular_rp_forest=False,
+    target_n_neighbors=-1,
+    target_metric='categorical',
+    target_metric_kwds=None,
+    target_weight=0.5,
+    transform_seed=42,
+    transform_mode='embedding',
+    force_approximation_algorithm=False,
+    verbose=False,
+    tqdm_kwds=None,
+    unique=False,
+    densmap=False,
+    dens_lambda=2.0,
+    dens_frac=0.3,
+    dens_var_shift=0.1,
+    output_dens=False,
+    disconnection_distance=None,
+    precomputed_knn=[None, None, None]
+)
