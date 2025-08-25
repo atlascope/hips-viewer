@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import colorbrewer from 'colorbrewer'
 
 import { ref, watchEffect, watch, onMounted, computed } from 'vue'
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js'
@@ -9,9 +8,11 @@ import { cellDistribution } from '@/utils'
 import { histAttribute, histNumBuckets, cellData, chartData, showHistogram, histPrevSelectedCellIds,
   histSelectionType, histSelectedBars, histCellIdsDirty, histPrevViewport,
   histogramScale, histCellIds, selectedCellIds, cells, map, cellFeature, selectedColor,
-  filterMatchCellIds, histColormapName, histColormapType, colormapType, colormapName } from '@/store'
+  filterMatchCellIds, histColormapName, colormapName } from '@/store'
+import { colormaps } from './colors'
 
 import AttributeSelect from './AttributeSelect.vue'
+import ColormapSelect from './ColormapSelect.vue'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
@@ -45,7 +46,6 @@ const debouncedUpdateHistBuckets = (n: number) => {
 }
 
 function syncWithMapColors() {
-  histColormapType.value = colormapType.value
   histColormapName.value = colormapName.value
 }
 
@@ -145,9 +145,11 @@ watch([
 ], () => {
   if (!cellData.value) return
 
+  const colormap = colormaps.find(cmap => cmap.name === histColormapName.value)
+
   const labels = cellData.value.map(c => c.key)
   const colors = cellData.value.map((c, index) => {
-    return histSelectedBars.value.has(index) ? selectedColor.value : c.color()
+    return histSelectedBars.value.has(index) ? selectedColor.value : c.color(colormap)
   })
   const counts = cellData.value.map((c) => {
     if (!c.cellIds) return 0
@@ -271,28 +273,14 @@ watch([
       </div>
       <v-label>({{ histIncludedCellIds.size }} / {{ cells.length }})</v-label>
 
-      <v-expansion-panels class="pt-2">
+      <v-expansion-panels class="pt-2 color-options">
         <v-expansion-panel>
           <v-expansion-panel-title>Color Options</v-expansion-panel-title>
           <v-expansion-panel-text>
-            <v-tabs
-              v-model="histColormapType"
-              density="compact"
-            >
-              <v-tab value="qualitative">
-                Qualitative
-              </v-tab>
-              <v-tab value="sequential">
-                Sequential
-              </v-tab>
-              <v-tab value="diverging">
-                Diverging
-              </v-tab>
-            </v-tabs>
-            <v-select
-              v-model="histColormapName"
+            <ColormapSelect
+              :model="histColormapName"
               label="Colormap"
-              :items="colorbrewer.schemeGroups[histColormapType]"
+              @select="(v:string) => histColormapName = v"
             />
 
             <v-btn
@@ -310,6 +298,13 @@ watch([
 
 <style>
 .chart-container {
-    min-width: 500px;
+  min-width: 500px;
+}
+.color-options .v-expansion-panel-title {
+  padding: 0px 4px;
+  min-height: 40px !important;
+}
+.color-options .v-expansion-panel-text__wrapper {
+  padding: 0px!important
 }
 </style>

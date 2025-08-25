@@ -1,5 +1,3 @@
-import colorbrewer from 'colorbrewer'
-
 import {
   cellColumns,
   cells,
@@ -16,14 +14,11 @@ import {
   histAttribute,
   showHistogram,
   histCellIds,
-  histColormapName,
 } from './store'
-import type { Cell, FilterOption } from './types'
-
-export interface RGB { r: number, g: number, b: number }
+import type { Cell, Colormap, FilterOption, RGB } from './types'
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-export function hexToRgb(hex: string) {
+export function hexToRgb(hex: string): RGB {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (result) {
     return {
@@ -32,7 +27,7 @@ export function hexToRgb(hex: string) {
       b: parseInt(result[3], 16) / 255,
     }
   }
-  return null
+  return { r: 0, g: 0, b: 0 }
 }
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
@@ -42,15 +37,6 @@ export function rgbToHex(color: RGB) {
   g *= 255
   b *= 255
   return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)
-}
-
-// from https://stackoverflow.com/questions/66123016/interpolate-between-two-colours-based-on-a-percentage-value
-export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
-  return {
-    r: rgbA.r * (1 - proportion) + rgbB.r * proportion,
-    g: rgbA.g * (1 - proportion) + rgbB.g * proportion,
-    b: rgbA.b * (1 - proportion) + rgbB.b * proportion,
-  }
 }
 
 export function clusterAllPointIds(data: any, current: any, i: number, allPoints: number[]) {
@@ -264,21 +250,6 @@ export function resetCurrentFilters() {
   }
 }
 
-export function numericColormap(valMin: number, valMax: number, rgbColors: { r: number, g: number, b: number }[]) {
-  const colormapFunction = (v: any) => {
-    const valueProportion = (v - valMin) / (valMax - valMin)
-    const maxIndex = rgbColors.length - 1
-    if (valueProportion === 0) return rgbColors[0]
-    if (valueProportion === 1) return rgbColors[maxIndex]
-    const index = Math.floor(maxIndex * valueProportion)
-    const indexProportion = index / maxIndex
-    const interpolationProportion = (valueProportion - indexProportion) * maxIndex
-    const interpolated = colorInterpolate(rgbColors[index], rgbColors[index + 1], interpolationProportion)
-    return interpolated
-  }
-  return colormapFunction
-}
-
 export function cellDistribution() {
   if (!(cells.value && histCellIds.value)) return []
   const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
@@ -305,17 +276,14 @@ export function cellDistribution() {
   showHistogram.value = values.length > histNumBuckets.value
 
   if (values.length < histNumBuckets.value || !values.every(v => typeof v === 'number')) {
-    return values.map((v, i) => ({
+    return values.map(v => ({
       key: `${v}`,
       count: counts[v] ?? 0,
       cellIds: cellIds[v],
-      color: () => {
-        // @ts-ignore
-        const colormapSets = colorbrewer[histColormapName.value]
-        let colors = colormapSets[values.length]
-        if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-
-        return colors[i]
+      color: (colormap: Colormap) => {
+        if (!colormap) return '#000'
+        const colorFunction = colormap.getStringColorFunction(values as string[])
+        return rgbToHex(colorFunction(v as string))
       },
     }))
   }
@@ -341,15 +309,10 @@ export function cellDistribution() {
     key: `${bucketedMin[v].toFixed(2)}`,
     count: bucketedCounts[v],
     cellIds: bucketedCellIds[v],
-    color: () => {
-      // @ts-ignore
-      const colormapSets = colorbrewer[histColormapName.value]
-      let colors = colormapSets[Object.keys(bucketedCounts).length]
-      if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-      const rgbColors = colors.map(hexToRgb)
-
-      const colormapFunction = numericColormap(vmin, vmax, rgbColors)
-      return rgbToHex(colormapFunction(bucketedMin[v]))
+    color: (colormap: Colormap) => {
+      if (!colormap) return '#000'
+      const colorFunction = colormap.getNumericColorFunction([vmin, vmax])
+      return rgbToHex(colorFunction(bucketedMin[v]))
     },
   }))
 }

@@ -1,5 +1,4 @@
 import geo from 'geojs'
-import colorbrewer from 'colorbrewer'
 
 import {
   cells, map, maxZoom, cellFeature, pointFeature,
@@ -9,10 +8,10 @@ import {
   filterMatchCellIds,
 } from '@/store'
 import {
-  selectCell,
-  clusterFirstPointId, numericColormap, hexToRgb,
+  selectCell, clusterFirstPointId,
 } from './utils'
 import type { Cell } from './types'
+import { colormaps } from './colors'
 
 export async function createMap(mapId: string, tileUrl: string) {
   const tileInfo = await (await fetch(tileUrl)).json()
@@ -120,7 +119,8 @@ export function lassoSelect(polygon: { x: number, y: number }[]) {
 }
 
 export function updateColors() {
-  if (!(colormapName.value && colorBy.value && cells.value && colorLegend.value)) {
+  const colormap = colormaps.find(cmap => cmap.name === colormapName.value)
+  if (!(colormap && colorBy.value && cells.value && colorLegend.value)) {
     colorLegend.value.categories([])
     return
   }
@@ -130,25 +130,32 @@ export function updateColors() {
   ).map(
     (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v),
   ).filter((v: any) => v !== undefined))]
-  // @ts-ignore
-  const colormapSets = colorbrewer[colormapName.value]
-  let colors = colormapSets[values.length]
-  if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-  const rgbColors = colors.map(hexToRgb)
 
-  let colormapFunction
+  let getCellColor
+  const colors = colormap.colors
   if (values.every(v => typeof v === 'number')) {
-    const range = [Math.min(...values), Math.max(...values)]
+    const domain: [number, number] = [Math.min(...values), Math.max(...values)]
+    const colorFunction = colormap.getNumericColorFunction(domain)
+    getCellColor = (cell: any) => {
+      const value = cell[colorBy.value]
+      if (value === undefined) return { r: 0, g: 0, b: 0 }
+      return colorFunction(value as number)
+    }
     colorLegend.value.categories([{
       name: colorBy.value,
       type: 'continuous',
       scale: 'linear',
-      domain: range,
+      domain,
       colors,
     }])
-    colormapFunction = numericColormap(range[0], range[1], rgbColors)
   }
   else {
+    const colorFunction = colormap.getStringColorFunction(values as string[])
+    getCellColor = (cell: any) => {
+      const value = cell[colorBy.value]
+      if (value === undefined) return { r: 0, g: 0, b: 0 }
+      return colorFunction(value as string)
+    }
     colorLegend.value.categories([{
       name: colorBy.value,
       type: 'discrete',
@@ -156,24 +163,10 @@ export function updateColors() {
       domain: values,
       colors,
     }])
-    colormapFunction = (v: any) => {
-      const index = values.indexOf(v)
-      if (index >= 0) {
-        const proportion = values.indexOf(v) / values.length
-        return rgbColors[Math.round(rgbColors.length * proportion)]
-      }
-
-      return { r: 0, g: 0, b: 0 }
-    }
   }
   colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
 
-  if (colormapFunction) {
-    const getCellColor = (cell: any) => {
-      const value = cell[colorBy.value]
-      if (value === undefined) return { r: 0, g: 0, b: 0 }
-      return colormapFunction(value)
-    }
+  if (getCellColor) {
     cellColors.value = Object.fromEntries(cells.value.map((cell: Cell) => [cell.id, getCellColor(cell)]))
     updateColorFunctions()
   }
