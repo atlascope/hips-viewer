@@ -37,3 +37,17 @@ export interface FilterOption {
     max: number | undefined
   }
 }
+
+export interface RGB {
+  r: number
+  g: number
+  b: number
+}
+
+export interface Colormap {
+  name: string
+  type: 'categorical' | 'sequential'
+  colors: string[]
+  getNumericColorFunction: (domain: [number, number]) => (value: number) => RGB
+  getStringColorFunction: (domain: string[]) => (value: string) => RGB
+}

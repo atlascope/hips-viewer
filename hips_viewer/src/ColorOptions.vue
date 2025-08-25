@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import colorbrewer from 'colorbrewer'
 import {
   selectedColor, colorBy,
-  colormapName, colormapType, status,
+  colormapName, status,
   unappliedColorChanges,
 } from '@/store'
 import { updateColors } from '@/map'
 import AttributeSelect from './AttributeSelect.vue'
+import ColormapSelect from './ColormapSelect.vue'
 
 const showPicker = ref(false)
 
@@ -22,7 +22,10 @@ function update() {
 </script>
 
 <template>
-  <v-card variant="outlined">
+  <v-card
+    variant="outlined"
+    width="350"
+  >
     <div class="menu-title">
       Color Options
     </div>
@@ -38,7 +41,7 @@ function update() {
         v-model="selectedColor"
         class="mb-3"
         mode="rgb"
-        width="375px"
+        width="315px"
         hide-inputs
         flat
       />
@@ -48,24 +51,10 @@ function update() {
         label="Color By Attribute"
         @select="(v) => colorBy = v"
       />
-      <v-tabs
-        v-model="colormapType"
-        density="compact"
-      >
-        <v-tab value="qualitative">
-          Qualitative
-        </v-tab>
-        <v-tab value="sequential">
-          Sequential
-        </v-tab>
-        <v-tab value="diverging">
-          Diverging
-        </v-tab>
-      </v-tabs>
-      <v-select
-        v-model="colormapName"
+      <ColormapSelect
+        :model="colormapName"
         label="Colormap"
-        :items="colorbrewer.schemeGroups[colormapType]"
+        @select="(v: string) => colormapName = v"
       />
       <v-btn
         v-if="unappliedColorChanges"
@@ -89,7 +78,7 @@ function update() {
     display: none
 }
 .v-color-picker-preview__track {
-    width: 350px !important;
+    width: 300px !important;
     padding-left: 20px;
 }
  .v-treeview-node__content {

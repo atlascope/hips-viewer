@@ -1,5 +1,3 @@
-import colorbrewer from 'colorbrewer'
-
 import {
   cellColumns,
   cells,
@@ -16,14 +14,11 @@ import {
   histAttribute,
   showHistogram,
   histCellIds,
-  histColormapName,
 } from './store'
-import type { Cell, FilterOption } from './types'
-
-export interface RGB { r: number, g: number, b: number }
+import type { Cell, Colormap, FilterOption, RGB } from './types'
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
-export function hexToRgb(hex: string) {
+export function hexToRgb(hex: string): RGB {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
   if (result) {
     return {
@@ -32,7 +27,7 @@ export function hexToRgb(hex: string) {
       b: parseInt(result[3], 16) / 255,
     }
   }
-  return null
+  return { r: 0, g: 0, b: 0 }
 }
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
@@ -44,59 +39,43 @@ export function rgbToHex(color: RGB) {
   return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)
 }
 
-// from https://stackoverflow.com/questions/66123016/interpolate-between-two-colours-based-on-a-percentage-value
-export function colorInterpolate(rgbA: RGB, rgbB: RGB, proportion: number) {
-  return {
-    r: rgbA.r * (1 - proportion) + rgbB.r * proportion,
-    g: rgbA.g * (1 - proportion) + rgbB.g * proportion,
-    b: rgbA.b * (1 - proportion) + rgbB.b * proportion,
-  }
-}
-
-export function clusterAllPoints(data: any, current: any, i: number, allPoints: any[], filteredIds: number[]) {
-  if (clusterIds.value[i]) return clusterIds.value[i]
+export function clusterAllPointIds(data: any, current: any, i: number, allPoints: number[]) {
   if (current.__cluster) {
     current = current.obj
   }
-  if (current._points === undefined) return [...allPoints, current]
+  const currentId = current._leaflet_id
+  if (currentId && clusterIds.value[currentId]) {
+    return clusterIds.value[currentId]
+  }
+  let currentPoints: number[] = []
+  if (current._points === undefined) return [...allPoints, current.id]
   if (current._points.length) {
     const indexes = current._points.map((p: { index: number }) => p.index)
-    let points = indexes.map((i: number) => data[i])
-    // if filters applied, only return cells that match the filters
-    if (filteredIds.length) {
-      points = points.filter((p: any) => filteredIds.includes(p.id))
-    }
-    allPoints = [...allPoints, ...points]
+    currentPoints = indexes.map((index: number) => data[index].id)
   }
   current._clusters.forEach((cluster: any) => {
-    allPoints = clusterAllPoints(data, cluster, i, allPoints, filteredIds)
+    currentPoints = clusterAllPointIds(data, cluster, i, currentPoints)
   })
-  clusterIds.value[i] = allPoints
+  if (currentId) clusterIds.value[currentId] = currentPoints
+  allPoints = [...allPoints, ...currentPoints]
   return allPoints
 }
 
-export function clusterFirstPoint(data: any, current: any, i: number) {
-  // get all points in cluster, excluding any cells that don't match filters
-  const clusterPoints = clusterAllPoints(data, current, i, [], [...filterMatchCellIds.value])
-  // prioritize returning a selected cell
-  let cell = clusterPoints.find(cell => selectedCellIds.value.has(cell.id))
-  // if no cells selected, return any cell
-  if (!cell && clusterPoints.length) cell = clusterPoints[0]
-  return cell
-}
-
-export function getCellAttribute(cell: Cell, attrName: string) {
-  if (cell[attrName]) return cell[attrName]
-  else if (cellColumns.value && cell.vector_text) {
-    const index = cellColumns.value.indexOf(attrName)
-    const vector = cell.vector_text.split(',')
-    if (index >= 0 && vector && vector[index]) {
-      const value = vector[index]
-      if (!isNaN(parseFloat(value))) return parseFloat(value)
-      return value
-    }
+export function clusterFirstPointId(data: any, current: any, i: number) {
+  // get all points in cluster
+  let clusterPointIds = new Set(clusterAllPointIds(data, current, i, []))
+  // exclude any cells that don't match filters
+  if (filterMatchCellIds.value.size) {
+    clusterPointIds = clusterPointIds.intersection(filterMatchCellIds.value)
   }
-  return undefined
+  // default to first cell
+  let [cell] = clusterPointIds
+  // if any selected, prioritize selected
+  const selectedIds = clusterPointIds.intersection(selectedCellIds.value)
+  if (selectedIds.size) {
+    [cell] = selectedIds
+  }
+  return cell
 }
 
 export function selectCell(event: any, cellId: number | undefined) {
@@ -111,8 +90,10 @@ export function selectCell(event: any, cellId: number | undefined) {
       return selectCell(event, event.data.id)
     }
     else if (event.data.__cluster) {
-      const clusterPoints = clusterAllPoints(cells.value, event.data, event.index, [], [...filterMatchCellIds.value])
-      const clusterPointIds = new Set(clusterPoints.map(cell => cell.id))
+      let clusterPointIds = new Set(clusterAllPointIds(cells.value, event.data, event.index, []))
+      if (filterMatchCellIds.value.size) {
+        clusterPointIds = clusterPointIds.intersection(filterMatchCellIds.value)
+      }
       if (toggleMode) {
         if (currentIds.intersection(clusterPointIds).size === clusterPointIds.size) {
           currentIds = currentIds.difference(clusterPointIds)
@@ -208,13 +189,8 @@ export function resetFilterOptions() {
 }
 
 export function addFilterOption(attr: string) {
-  const vectorIndex = cellColumns.value.indexOf(attr)
   const allValues = cells.value.map((cell: Cell) => {
-    let cellValue = cell[attr]?.toString()
-    if (cellValue === undefined && cell.vector_text) {
-      const vector = cell.vector_text.split(',')
-      cellValue = vector[vectorIndex]
-    }
+    const cellValue = cell[attr]?.toString()
     if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
       return parseFloat(parseFloat(cellValue).toPrecision(2))
     }
@@ -240,13 +216,8 @@ export function getFilterMatchIds(selectedOnly: boolean) {
     if (selectedOnly && !selectedCellIds.value.has(cell.id)) return false
     for (const key in currentFilters.value) {
       const filterValue = currentFilters.value[key]
-      let vectorIndex = cellColumns.value.indexOf(key)
-      if (vectorIndex < 0) vectorIndex = filterVectorIndices.value[key]
-      let cellValue = cell[key]?.toString()
-      if (cellValue === undefined && vectorIndex >= 0 && cell.vector_text) {
-        const vector = cell.vector_text.split(',')
-        cellValue = vector[vectorIndex]
-      }
+      const cellValue = cell[key]?.toString()
+
       if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
         const numericValue = parseFloat(parseFloat(cellValue).toPrecision(2))
         if (filterValue.length === 2) {
@@ -279,27 +250,12 @@ export function resetCurrentFilters() {
   }
 }
 
-export function numericColormap(valMin: number, valMax: number, rgbColors: { r: number, g: number, b: number }[]) {
-  const colormapFunction = (v: any) => {
-    const valueProportion = (v - valMin) / (valMax - valMin)
-    const maxIndex = rgbColors.length - 1
-    if (valueProportion === 0) return rgbColors[0]
-    if (valueProportion === 1) return rgbColors[maxIndex]
-    const index = Math.floor(maxIndex * valueProportion)
-    const indexProportion = index / maxIndex
-    const interpolationProportion = (valueProportion - indexProportion) * maxIndex
-    const interpolated = colorInterpolate(rgbColors[index], rgbColors[index + 1], interpolationProportion)
-    return interpolated
-  }
-  return colormapFunction
-}
-
 export function cellDistribution() {
   if (!(cells.value && histCellIds.value)) return []
   const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
 
   const values = [...new Set(cells.value.map(
-    (cell: any) => getCellAttribute(cell, histAttribute.value),
+    (cell: any) => cell[histAttribute.value],
   ).map(
     (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v),
   ).filter((v: any) => v !== undefined)),
@@ -308,7 +264,7 @@ export function cellDistribution() {
   const cellIds: Record<string | number, Set<number>> = {}
   const counts: Record<string | number, number> = {}
   histCells.forEach((cell: any) => {
-    const key = getCellAttribute(cell, histAttribute.value)
+    const key = cell[histAttribute.value]
     if (key !== undefined) {
       counts[key] = (counts[key] ?? 0) + 1
 
@@ -320,17 +276,14 @@ export function cellDistribution() {
   showHistogram.value = values.length > histNumBuckets.value
 
   if (values.length < histNumBuckets.value || !values.every(v => typeof v === 'number')) {
-    return values.map((v, i) => ({
+    return values.map(v => ({
       key: `${v}`,
       count: counts[v] ?? 0,
       cellIds: cellIds[v],
-      color: () => {
-        // @ts-ignore
-        const colormapSets = colorbrewer[histColormapName.value]
-        let colors = colormapSets[values.length]
-        if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-
-        return colors[i]
+      color: (colormap: Colormap) => {
+        if (!colormap) return '#000'
+        const colorFunction = colormap.getStringColorFunction(values as string[])
+        return rgbToHex(colorFunction(v as string))
       },
     }))
   }
@@ -356,15 +309,10 @@ export function cellDistribution() {
     key: `${bucketedMin[v].toFixed(2)}`,
     count: bucketedCounts[v],
     cellIds: bucketedCellIds[v],
-    color: () => {
-      // @ts-ignore
-      const colormapSets = colorbrewer[histColormapName.value]
-      let colors = colormapSets[Object.keys(bucketedCounts).length]
-      if (!colors) colors = colormapSets[Math.max(...Object.keys(colormapSets).map(v => parseInt(v)))]
-      const rgbColors = colors.map(hexToRgb)
-
-      const colormapFunction = numericColormap(vmin, vmax, rgbColors)
-      return rgbToHex(colormapFunction(bucketedMin[v]))
+    color: (colormap: Colormap) => {
+      if (!colormap) return '#000'
+      const colorFunction = colormap.getNumericColorFunction([vmin, vmax])
+      return rgbToHex(colorFunction(bucketedMin[v]))
     },
   }))
 }
