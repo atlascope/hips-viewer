@@ -20,6 +20,12 @@ export async function createMap(mapId: string, tileUrl: string) {
     '#' + mapId, tileInfo.sizeX, tileInfo.sizeY, tileInfo.tileWidth, tileInfo.tileHeight,
   )
   map.value = geo.map(params.map)
+  map.value.autoResize(true)
+  map.value.geoOn('geo_resize', () => {
+    if (colorLegend.value) {
+      colorLegend.value.width(colorLegend.value.canvas().clientWidth - 20)
+    }
+  })
   params.layer.url = `${tileUrl}/zxy/{z}/{x}/{y}`
   map.value.createLayer('osm', params.layer)
   const ui = map.value.createLayer('ui')
