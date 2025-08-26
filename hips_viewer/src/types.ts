@@ -25,7 +25,9 @@ export interface Thumbnail {
 
 export interface TreeItem {
   title: string
-  value?: string
+  subtitle?: string
+  disabled?: boolean
+  value?: any
   children?: TreeItem[]
 }
 
@@ -50,4 +52,25 @@ export interface Colormap {
   colors: string[]
   getNumericColorFunction: (domain: [number, number]) => (value: number) => RGB
   getStringColorFunction: (domain: string[]) => (value: string) => RGB
+}
+
+export interface UMAPTransform {
+  id: number
+  name: string
+  created: string
+  column_names: string[]
+  umap_kwargs: Record<string, any>
+}
+
+export interface UMAPResult {
+  id: number
+  created: string
+  transform: number
+  scatterplot_data: ScatterPoint[]
+}
+
+export interface ScatterPoint {
+  id: number
+  x: number
+  y: number
 }

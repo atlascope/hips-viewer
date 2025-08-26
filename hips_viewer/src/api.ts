@@ -49,3 +49,13 @@ export async function fetchCellColumns() {
   const url = `${baseURL}/cells/columns`
   return await cachedFetch(url, 'cell-data-cache')
 }
+
+export async function fetchUMAPTransforms() {
+  const url = `${baseURL}/umap/transforms`
+  return (await fetch(url)).json()
+}
+
+export async function fetchUMAPTransformResults(transformId: number) {
+  const url = `${baseURL}/umap/transforms/${transformId}/results`
+  return (await fetch(url)).json()
+}

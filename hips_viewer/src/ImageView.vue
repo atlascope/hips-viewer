@@ -16,7 +16,8 @@ import {
 import CellDrawer from '@/CellDrawer.vue'
 import ColorOptions from '@/ColorOptions.vue'
 import HistogramMenu from '@/HistogramMenu.vue'
-import FilterMenu from './FilterMenu.vue'
+import FilterMenu from '@/FilterMenu.vue'
+import TransformMenu from '@/TransformMenu.vue'
 
 const props = defineProps<{
   id: number
@@ -163,17 +164,17 @@ watch(cells, drawCells)
             icon
             v-bind="tooltipProps"
           >
-            <span class="material-symbols-outlined">palette</span>
+            <span class="material-symbols-outlined">transform</span>
             <v-menu
               activator="parent"
               location="end"
               :close-on-content-click="false"
             >
-              <ColorOptions />
+              <TransformMenu />
             </v-menu>
           </v-btn>
         </template>
-        <span>Color Options</span>
+        <span>UMAP Transforms</span>
       </v-tooltip>
       <v-tooltip>
         <template #activator="{ props: tooltipProps }">
@@ -210,6 +211,24 @@ watch(cells, drawCells)
           </v-btn>
         </template>
         <span>Cell Histogram</span>
+      </v-tooltip>
+      <v-tooltip>
+        <template #activator="{ props: tooltipProps }">
+          <v-btn
+            icon
+            v-bind="tooltipProps"
+          >
+            <span class="material-symbols-outlined">palette</span>
+            <v-menu
+              activator="parent"
+              location="end"
+              :close-on-content-click="false"
+            >
+              <ColorOptions />
+            </v-menu>
+          </v-btn>
+        </template>
+        <span>Color Options</span>
       </v-tooltip>
       <v-btn
         v-tooltip="'Toggle Tooltip'"

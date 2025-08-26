@@ -4,7 +4,7 @@ import {
   resetFilterOptions,
   resetFilterVectorIndices,
 } from './utils'
-import type { FilterOption } from './types'
+import type { FilterOption, UMAPTransform, UMAPResult } from './types'
 import { updateColorFunctions, updateOpacityFunctions } from './map'
 
 // Store variables
@@ -66,6 +66,10 @@ export const currentFilters = ref<Record<string, (string | number)[]>>({})
 export const hiddenFilters = ref<Set<string>>(new Set())
 export const filterPopulation = ref<'all' | 'selected'>('all')
 export const filterMatchCellIds = ref<Set<number>>(new Set<number>())
+
+export const umapTransforms = ref<UMAPTransform[]>()
+export const umapTransformResults = ref<Record<number, UMAPResult[]>>({})
+export const umapSelectedResult = ref<UMAPResult>()
 
 // Store watchers
 watch([selectedColor, colorBy, colormapName], () => {
