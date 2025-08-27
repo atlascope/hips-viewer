@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { addHoverCallback, addZoomCallback, createFeatures, createMap, updateColors } from '@/map'
+import { processCellVectors } from '@/utils'
 import { fetchCellColumns, fetchImageCells } from '@/api'
 import type { Image } from '@/types'
 import {
@@ -52,29 +53,9 @@ async function getCells() {
 
   const cellData = await fetchImageCells(props.image.id)
   cells.value = cellData
+
   await new Promise(r => setTimeout(r, 1000))
-
-  status.value = 'Processing vector data...'
-  statusProgress.value = 0
-  for (let i = 0; i < cellData.length; i++) {
-    if (i % 10_000 === 0) {
-      statusProgress.value = (i / cellData.length) * 100
-      await new Promise(r => setTimeout(r, 100))
-    }
-    const vectorValues = cellData[i].vector_text?.split(',') || []
-    const vector = vectorValues.map((value) => {
-      if (!isNaN(parseFloat(value))) return parseFloat(value)
-      return value
-    })
-    for (let index = 0; index < columnData.length; index++) {
-      const column = columnData[index]
-      cellData[i][column] = vector[index]
-    }
-  }
-  status.value = undefined
-  statusProgress.value = 0
-
-  cells.value = cellData
+  await processCellVectors(cellData, columnData)
 }
 
 function drawCells() {

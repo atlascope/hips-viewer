@@ -14,6 +14,8 @@ import {
   histAttribute,
   showHistogram,
   histCellIds,
+  status,
+  statusProgress,
 } from './store'
 import type { Cell, FilterOption, Colormap, RGB, ScatterPoint } from './types'
 
@@ -325,4 +327,28 @@ export function normalizePoints(points: ScatterPoint[]) {
     x: (p.x - xMin) / (xMax - xMin),
     y: (p.y - yMin) / (yMax - yMin),
   }))
+}
+
+export async function processCellVectors(cellData: Cell[], columnData: string[]) {
+  status.value = 'Processing vector data...'
+  statusProgress.value = 0
+  for (let i = 0; i < cellData.length; i++) {
+    if (i % 10_000 === 0) {
+      statusProgress.value = (i / cellData.length) * 100
+      await new Promise(r => setTimeout(r, 100))
+    }
+    const vectorValues = cellData[i].vector_text?.split(',') || []
+    const vector = vectorValues.map((value) => {
+      if (!isNaN(parseFloat(value))) return parseFloat(value)
+      return value
+    })
+    for (let index = 0; index < columnData.length; index++) {
+      const column = columnData[index]
+      cellData[i][column] = vector[index]
+    }
+  }
+  status.value = undefined
+  statusProgress.value = 0
+
+  cells.value = cellData
 }
