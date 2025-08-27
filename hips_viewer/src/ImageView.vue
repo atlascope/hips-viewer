@@ -7,7 +7,7 @@ import {
   status, cells, cellFeature, pointFeature,
   cellDrawerHeight, cellDrawerResizing,
   tooltipEnabled, tooltipContent, tooltipPosition,
-  colormapName, map, fetchProgress,
+  colormapName, map, statusProgress,
   attributeOptions, cellColumns,
   colorBy, colorLegend,
   annotationLayer, annotationMode,
@@ -51,9 +51,16 @@ async function getCells() {
   attributeOptions.value = [...defaultAttributes, ...columnData]
 
   const cellData = await fetchImageCells(props.image.id)
+  cells.value = cellData
+  await new Promise(r => setTimeout(r, 1000))
 
   status.value = 'Processing vector data...'
+  statusProgress.value = 0
   for (let i = 0; i < cellData.length; i++) {
+    if (i % 10_000 === 0) {
+      statusProgress.value = (i / cellData.length) * 100
+      await new Promise(r => setTimeout(r, 100))
+    }
     const vectorValues = cellData[i].vector_text?.split(',') || []
     const vector = vectorValues.map((value) => {
       if (!isNaN(parseFloat(value))) return parseFloat(value)
@@ -64,6 +71,9 @@ async function getCells() {
       cellData[i][column] = vector[index]
     }
   }
+  status.value = undefined
+  statusProgress.value = 0
+
   cells.value = cellData
 }
 
@@ -129,8 +139,8 @@ watch(cells, drawCells)
       >
         {{ status }}
         <v-progress-linear
-          v-if="fetchProgress"
-          :model-value="fetchProgress"
+          v-if="statusProgress"
+          :model-value="statusProgress"
         />
       </v-card>
       <v-btn
