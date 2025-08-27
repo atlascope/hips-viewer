@@ -96,7 +96,13 @@ function onHoverOver({ data, mouse }: any) {
 }
 
 function resizeCellDrawer(e: MouseEvent) {
-  if (cellDrawerResizing.value) cellDrawerHeight.value = window.innerHeight - e.y
+  if (cellDrawerResizing.value) {
+    cellDrawerHeight.value = window.innerHeight - e.y
+    if (map.value) {
+      const node = map.value.node()
+      map.value.size({ width: node.width(), height: node.height() })
+    }
+  }
 }
 
 onMounted(init)
