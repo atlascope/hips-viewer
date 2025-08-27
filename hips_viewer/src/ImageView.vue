@@ -29,7 +29,7 @@ const defaultColor = '#00ff00'
 const defaultAttributes = [
   'classification', 'orientation', 'width', 'height', 'x', 'y',
 ]
-const tooltipExclude = ['id', 'vector_text']
+const tooltipExclude = computed(() => ['id', 'vector_text', ...(cellColumns.value || [])])
 const mapId = computed(() => 'map-' + props.id)
 const colorLegendShown = computed(() =>
   cells.value && colorBy.value && colormapName.value
@@ -96,7 +96,7 @@ function onZoom({ zoomLevel }: any) {
 function onHoverOver({ data, mouse }: any) {
   if (tooltipEnabled.value) {
     tooltipContent.value = Object.fromEntries(
-      Object.entries(data).filter(([k]) => !tooltipExclude.includes(k)),
+      Object.entries(data).filter(([k]) => !tooltipExclude.value.includes(k)),
     )
     if (colorBy.value && !tooltipContent.value[colorBy.value]) {
       tooltipContent.value[colorBy.value] = data[colorBy.value]
