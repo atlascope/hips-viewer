@@ -147,22 +147,19 @@ export function clickCellThumbnail(event: any, cellId: number | undefined) {
 
 export function resetFilterVectorIndices() {
   filterVectorIndices.value = {
-    area: cellColumns.value.indexOf('Size.Area'),
-    orientation: cellColumns.value.indexOf('Orientation.Orientation'),
-    circularity: cellColumns.value.indexOf('Shape.Circularity'),
-    eccentricity: cellColumns.value.indexOf('Shape.Eccentricity'),
-    axis_ratio: cellColumns.value.indexOf('Shape.MinorMajorAxisRatio'),
+    'Size.Area': cellColumns.value.indexOf('Size.Area'),
+    'Orientation.Orientation': cellColumns.value.indexOf('Orientation.Orientation'),
+    'Shape.Circularity': cellColumns.value.indexOf('Shape.Circularity'),
+    'Shape.Eccentricity': cellColumns.value.indexOf('Shape.Eccentricity'),
+    'Shape.MinorMajorAxisRatio': cellColumns.value.indexOf('Shape.MinorMajorAxisRatio'),
   }
 }
 
 export function resetFilterOptions() {
   const classifications: Set<string> = new Set()
-  const vectorRanges = {
-    area: { min: undefined, max: undefined },
-    orientation: { min: undefined, max: undefined },
-    circularity: { min: undefined, max: undefined },
-    eccentricity: { min: undefined, max: undefined },
-    axis_ratio: { min: undefined, max: undefined },
+  const vectorRanges: Record<string, Record<any, any>> = {}
+  for (const key in filterVectorIndices.value) {
+    vectorRanges[key] = { min: undefined, max: undefined }
   }
   cells.value.forEach((cell: Cell) => {
     classifications.add(cell.classification)
@@ -180,12 +177,12 @@ export function resetFilterOptions() {
   })
   filterOptions.value = [
     { label: 'classification', options: [...classifications] },
-    { label: 'area', range: vectorRanges.area },
-    { label: 'orientation', range: vectorRanges.orientation },
-    { label: 'circularity', range: vectorRanges.circularity },
-    { label: 'eccentricity', range: vectorRanges.eccentricity },
-    { label: 'axis_ratio', range: vectorRanges.axis_ratio },
   ]
+  for (const key in vectorRanges) {
+    filterOptions.value.push({
+      label: key, range: vectorRanges[key] as FilterOption['range'],
+    })
+  }
 }
 
 export function addFilterOption(attr: string) {
