@@ -1,11 +1,9 @@
 import {
-  cellColumns,
   cells,
   selectedCellIds,
   map,
   maxZoom,
   annotationMode,
-  filterVectorIndices,
   filterOptions,
   currentFilters,
   filterMatchCellIds,
@@ -16,6 +14,7 @@ import {
   histCellIds,
   status,
   statusProgress,
+  cellVectorsProcessed,
 } from './store'
 import type { Cell, FilterOption, Colormap, RGB, ScatterPoint } from './types'
 
@@ -147,35 +146,32 @@ export function clickCellThumbnail(event: any, cellId: number | undefined) {
   }
 }
 
-export function resetFilterVectorIndices() {
-  filterVectorIndices.value = {
-    'Size.Area': cellColumns.value.indexOf('Size.Area'),
-    'Orientation.Orientation': cellColumns.value.indexOf('Orientation.Orientation'),
-    'Shape.Circularity': cellColumns.value.indexOf('Shape.Circularity'),
-    'Shape.Eccentricity': cellColumns.value.indexOf('Shape.Eccentricity'),
-    'Shape.MinorMajorAxisRatio': cellColumns.value.indexOf('Shape.MinorMajorAxisRatio'),
-  }
-}
+const defaultFilterAttrs = [
+  'Size.Area',
+  'Orientation.Orientation',
+  'Shape.Circularity',
+  'Shape.Eccentricity',
+  'Shape.MinorMajorAxisRatio',
+]
 
 export function resetFilterOptions() {
   const classifications: Set<string> = new Set()
   const vectorRanges: Record<string, Record<any, any>> = {}
-  for (const key in filterVectorIndices.value) {
-    vectorRanges[key] = { min: undefined, max: undefined }
+  for (const attr of defaultFilterAttrs) {
+    vectorRanges[attr] = { min: undefined, max: undefined }
   }
   cells.value.forEach((cell: Cell) => {
     classifications.add(cell.classification)
-    if (cell.vector_text) {
-      const vector = cell.vector_text.split(',')
-      Object.entries(filterVectorIndices.value).forEach(([key, index]) => {
-        let value: number = parseFloat(vector[index])
-        value = parseFloat(value.toPrecision(2))
+    defaultFilterAttrs.forEach((attr) => {
+      const cellValue = cell[attr]?.toString()
+      if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
+        const value = parseFloat(parseFloat(cellValue).toPrecision(2))
         // @ts-ignore
-        const range = vectorRanges[key]
+        const range = vectorRanges[attr]
         if (range.min === undefined || range.min > value) range.min = value
         if (range.max === undefined || range.max < value) range.max = value
-      })
-    }
+      }
+    })
   })
   filterOptions.value = [
     { label: 'classification', options: [...classifications] },
@@ -350,5 +346,6 @@ export async function processCellVectors(cellData: Cell[], columnData: string[])
   status.value = undefined
   statusProgress.value = 0
 
+  cellVectorsProcessed.value = true
   cells.value = cellData
 }

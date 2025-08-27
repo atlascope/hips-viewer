@@ -12,6 +12,7 @@ import {
   attributeOptions, cellColumns,
   colorBy, colorLegend,
   annotationLayer, annotationMode,
+  cellVectorsProcessed,
 } from '@/store'
 
 import CellDrawer from '@/CellDrawer.vue'
@@ -175,21 +176,30 @@ watch(cells, drawCells)
       </v-tooltip>
       <v-tooltip>
         <template #activator="{ props: tooltipProps }">
-          <v-btn
-            icon
+          <div
             v-bind="tooltipProps"
           >
-            <span class="material-symbols-outlined">filter_alt</span>
-            <v-menu
-              activator="parent"
-              location="end"
-              :close-on-content-click="false"
+            <v-btn
+              icon
+              :disabled="cellVectorsProcessed === false"
             >
-              <FilterMenu />
-            </v-menu>
-          </v-btn>
+              <span class="material-symbols-outlined">filter_alt</span>
+              <v-menu
+                activator="parent"
+                location="end"
+                :close-on-content-click="false"
+              >
+                <FilterMenu />
+              </v-menu>
+            </v-btn>
+          </div>
         </template>
-        <span>Filter/Select by Attribute</span>
+        <span v-if="cellVectorsProcessed">
+          Filter/Select by Attribute
+        </span>
+        <span v-else>
+          Filter unavailable until vector data is processed
+        </span>
       </v-tooltip>
       <v-tooltip>
         <template #activator="{ props: tooltipProps }">
