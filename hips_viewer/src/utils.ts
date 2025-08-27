@@ -333,11 +333,7 @@ export async function processCellVectors(cellData: Cell[], columnData: string[])
       statusProgress.value = (i / cellData.length) * 100
       await new Promise(r => setTimeout(r, 100))
     }
-    const vectorValues = cellData[i].vector_text?.split(',') || []
-    const vector = vectorValues.map((value) => {
-      if (!isNaN(parseFloat(value))) return parseFloat(value)
-      return value
-    })
+    const vector = cellData[i].vector || []
     for (let index = 0; index < columnData.length; index++) {
       const column = columnData[index]
       cellData[i][column] = vector[index]

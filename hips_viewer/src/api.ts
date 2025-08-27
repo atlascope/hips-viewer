@@ -26,7 +26,7 @@ export async function fetchImages() {
 
 export async function fetchImageCells(imageId: number) {
   statusProgress.value = 0
-  const limit = 100000
+  const limit = 10000
   let results: Cell[] = []
   let total: number | undefined = undefined
   while (!total || results.length < total) {

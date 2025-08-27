@@ -2,6 +2,7 @@ import re
 import umap
 import tempfile
 import pickle
+import numpy as np
 import pandas as pd
 
 from datetime import datetime
@@ -41,6 +42,8 @@ def get_image_and_cell_sets(**kwargs):
 
 def parse_number(v):
     try:
+        if np.isnan(float(v)):
+            return None
         return float(v)
     except ValueError:
         return v

@@ -4,6 +4,7 @@ from ninja import NinjaAPI, ModelSchema
 from ninja.pagination import paginate
 from typing import List
 from .models import Image, Cell, UMAPTransform, UMAPResult
+from .umap import parse_number
 
 from tcga.constants import VECTOR_COLUMNS
 
@@ -18,9 +19,15 @@ class ImageSchema(ModelSchema):
 
 
 class CellSchema(ModelSchema):
+    vector: List[str | float | None]
+
     class Config:
         model = Cell
-        model_fields = ['id', 'x', 'y', 'width', 'height', 'orientation', 'classification', 'vector_text']
+        model_fields = ['id', 'x', 'y', 'width', 'height', 'orientation', 'classification']
+
+    @staticmethod
+    def resolve_vector(obj):
+        return [parse_number(v) for v in obj.vector_text.split(',')]
 
 
 class UMAPTransformSchema(ModelSchema):
