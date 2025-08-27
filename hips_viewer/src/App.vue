@@ -37,7 +37,10 @@ onMounted(() => {
           :value="image"
         />
 
-        <v-tab v-if="images && images.length == 0" value="no-image">
+        <v-tab
+          v-if="images && images.length == 0"
+          value="no-image"
+        >
           No images found
         </v-tab>
       </v-tabs>
