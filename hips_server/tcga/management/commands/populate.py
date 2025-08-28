@@ -88,12 +88,13 @@ class Command(BaseCommand):
                     # ints/floats stay numeric; strings pass through; NaN/Inf -> None (JSON null)
                     if isinstance(v, float):
                         if math.isnan(v) or math.isinf(v):
-                            return None
+                            return ''
                         return int(v) if v.is_integer() else v
                     return v
 
                 # Save Cells to database
                 cell_data = []
+                total_cells = 0
                 for roi_name, roi_group in list(vector.groupby('roiname')):
                     components = roi_name.split('_')[2:]
                     roi = {}
@@ -109,13 +110,15 @@ class Command(BaseCommand):
                             height=row['Size.MajorAxisLength'] * 2,
                             orientation=0 - row['Orientation.Orientation'],
                             classification=row['Classif.StandardClass'],
-                            vector=[_clean(v) for v in row],
+                            vector=[str(_clean(v)) for v in row],
                         ))
                         if len(cell_data) >= 10000:
                             cells = Cell.objects.bulk_create(cell_data)
+                            total_cells += len(cells)
+                            print(f'Created {total_cells} Cells so far...')
                             cell_data = []
                 cells = Cell.objects.bulk_create(cell_data)
                 seconds = (datetime.now() - start).total_seconds()
-                print(f'Created {len(cells)} Cells in {seconds} seconds.')
+                print(f'Created {total_cells} Cells in {seconds} seconds.')
 
         print('Done.')
