@@ -31,7 +31,7 @@ export async function createMap(mapId: string, tileUrl: string) {
   const ui = map.value.createLayer('ui')
   ui.createWidget('slider', { position: { right: 40, top: 40 } })
   colorLegend.value = ui.createWidget('colorLegend', {
-    position: { bottom: 10, left: 10, right: 10 },
+    position: { bottom: 50, left: 10, right: 10 },
     ticks: 10,
     width: '1000',
   })
