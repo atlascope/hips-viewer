@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tcga', '0003_remove_cell_vector_text_cell_vector'),
+        ('tcga', '0003_cell_vector'),
     ]
 
     operations = [
