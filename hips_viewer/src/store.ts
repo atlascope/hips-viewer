@@ -7,6 +7,9 @@ import type { FilterOption, UMAPTransform, UMAPResult } from './types'
 import { updateColorFunctions, updateOpacityFunctions } from './map'
 
 // Store variables
+export const images = ref()
+export const currentImage = ref()
+
 export const map = ref()
 export const maxZoom = ref()
 export const status = ref()
@@ -70,7 +73,63 @@ export const umapTransforms = ref<UMAPTransform[]>()
 export const umapTransformResults = ref<Record<number, UMAPResult[]>>({})
 export const umapSelectedResult = ref<UMAPResult>()
 
+function resetStore() {
+  // Reset everything except images and currentImage
+  map.value = undefined
+  maxZoom.value = undefined
+  status.value = undefined
+  statusProgress.value = 0
+  cells.value = undefined
+  cellColumns.value = undefined
+  cellVectorsProcessed.value = false
+  cellColors.value = undefined
+  clusterIds.value = {}
+  selectedCellIds.value = new Set()
+  cellFeature.value = undefined
+  pointFeature.value = undefined
+  annotationLayer.value = undefined
+  annotationMode.value = undefined
+  annotationBoolean.value = undefined
+  lastAnnotation.value = undefined
+  cellDrawerHeight.value = 0
+  cellDrawerResizing.value = false
+  tooltipEnabled.value = false
+  tooltipContent.value = undefined
+  tooltipPosition.value = undefined
+  unappliedColorChanges.value = false
+  histAttribute.value = 'classification'
+  showHistogram.value = false
+  histNumBuckets.value = 50
+  histCellIds.value = new Set()
+  histSelectionType.value = 'all'
+  histCellIdsDirty.value = false
+  histPrevViewport.value = undefined
+  histPrevSelectedCellIds.value = new Set()
+  histogramScale.value = 'linear'
+  histSelectedBars.value = new Set()
+  cellData.value = null
+  chartData.value = undefined
+  histColormapName.value = 'Set1'
+  colorLegend.value = undefined
+  selectedColor.value = '#000'
+  colorBy.value = 'classification'
+  colormapName.value = 'Set1'
+  attributeOptions.value = undefined
+  filterOptions.value = undefined
+  currentFilters.value = {}
+  hiddenFilters.value = new Set()
+  filterPopulation.value = 'all'
+  filterMatchCellIds.value = new Set()
+  umapTransforms.value = undefined
+  umapTransformResults.value = {}
+  umapSelectedResult.value = undefined
+}
+
 // Store watchers
+watch(currentImage, () => {
+  resetStore()
+})
+
 watch([selectedColor, colorBy, colormapName], () => {
   unappliedColorChanges.value = !!(
     selectedColor.value && colorBy.value && colormapName.value

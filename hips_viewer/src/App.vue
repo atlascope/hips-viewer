@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { fetchImages } from '@/api'
 import ImageView from '@/ImageView.vue'
-
-const images = ref()
-const currentImage = ref()
+import { currentImage, images } from './store'
 
 onMounted(() => {
   fetchImages().then((data) => {

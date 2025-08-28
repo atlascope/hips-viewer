@@ -98,6 +98,7 @@ function resizeCellDrawer(e: MouseEvent) {
 }
 
 onMounted(init)
+watch(() => props.id, init)
 watch(cells, drawCells)
 </script>
 
