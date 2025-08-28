@@ -126,9 +126,7 @@ function resetStore() {
 }
 
 // Store watchers
-watch(currentImage, () => {
-  resetStore()
-})
+watch(currentImage, resetStore)
 
 watch([selectedColor, colorBy, colormapName], () => {
   unappliedColorChanges.value = !!(
