@@ -2,6 +2,8 @@ import json
 
 from ninja import NinjaAPI, ModelSchema
 from ninja.pagination import paginate
+from ninja.decorators import decorate_view
+from django.views.decorators.cache import cache_page
 from typing import List
 from .models import Image, Cell, UMAPTransform, UMAPResult
 from .umap import parse_number
@@ -52,6 +54,7 @@ def images(request):
 
 
 @api.get('/images/{image_id}/cells', response=List[CellSchema])
+@decorate_view(cache_page(None))
 @paginate()
 def cells(request, image_id):
     return Cell.objects.filter(image__id=image_id)
