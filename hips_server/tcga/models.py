@@ -30,7 +30,7 @@ class Cell(models.Model):
     classification = models.CharField(max_length=255)
 
     # Simple text storage of vector; investigate alternatives
-    vector_text = models.TextField()
+    vector = models.JSONField(default=list)
 
 
 class UMAPTransform(models.Model):

@@ -53,7 +53,7 @@ def get_umap_input_matrix(cells, columns):
     column_indexes = {k: VECTOR_COLUMNS.index(k) for k in columns}
     data = []
     for cell in cells:
-        cell_vector = cell.vector_text.split(',')
+        cell_vector = cell.vector
         data.append({
             k: parse_number(cell_vector[i]) for k, i in column_indexes.items()
         })

@@ -2,11 +2,8 @@ import json
 
 from ninja import NinjaAPI, ModelSchema
 from ninja.pagination import paginate
-from ninja.decorators import decorate_view
-from django.views.decorators.cache import cache_page
 from typing import List
 from .models import Image, Cell, UMAPTransform, UMAPResult
-from .umap import parse_number
 
 from tcga.constants import VECTOR_COLUMNS
 
@@ -21,15 +18,9 @@ class ImageSchema(ModelSchema):
 
 
 class CellSchema(ModelSchema):
-    vector: List[str | float | None]
-
     class Config:
         model = Cell
-        model_fields = ['id', 'x', 'y', 'width', 'height', 'orientation', 'classification']
-
-    @staticmethod
-    def resolve_vector(obj):
-        return [parse_number(v) for v in obj.vector_text.split(',')]
+        model_fields = ['id', 'x', 'y', 'width', 'height', 'orientation', 'classification', 'vector']
 
 
 class UMAPTransformSchema(ModelSchema):
@@ -54,7 +45,6 @@ def images(request):
 
 
 @api.get('/images/{image_id}/cells', response=List[CellSchema])
-@decorate_view(cache_page(None))
 @paginate()
 def cells(request, image_id):
     return Cell.objects.filter(image__id=image_id)
