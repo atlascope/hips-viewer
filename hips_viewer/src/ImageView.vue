@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
 import { addHoverCallback, addZoomCallback, createFeatures, createMap, updateColors } from '@/map'
+import { processCellVectors } from '@/utils'
 import { fetchCellColumns, fetchImageCells } from '@/api'
 import type { Image } from '@/types'
 import {
   status, cells, cellFeature, pointFeature,
   cellDrawerHeight, cellDrawerResizing,
   tooltipEnabled, tooltipContent, tooltipPosition,
-  colormapName, map, fetchProgress,
+  colormapName, map, statusProgress,
   attributeOptions, cellColumns,
   colorBy, colorLegend,
   annotationLayer, annotationMode,
+  cellVectorsProcessed,
 } from '@/store'
 
 import CellDrawer from '@/CellDrawer.vue'
@@ -29,7 +31,7 @@ const defaultColor = '#00ff00'
 const defaultAttributes = [
   'classification', 'orientation', 'width', 'height', 'x', 'y',
 ]
-const tooltipExclude = ['id', 'vector_text']
+const tooltipExclude = computed(() => ['id', 'vector_text', ...(cellColumns.value || [])])
 const mapId = computed(() => 'map-' + props.id)
 const colorLegendShown = computed(() =>
   cells.value && colorBy.value && colormapName.value
@@ -51,20 +53,10 @@ async function getCells() {
   attributeOptions.value = [...defaultAttributes, ...columnData]
 
   const cellData = await fetchImageCells(props.image.id)
-
-  status.value = 'Processing vector data...'
-  for (let i = 0; i < cellData.length; i++) {
-    const vectorValues = cellData[i].vector_text?.split(',') || []
-    const vector = vectorValues.map((value) => {
-      if (!isNaN(parseFloat(value))) return parseFloat(value)
-      return value
-    })
-    for (let index = 0; index < columnData.length; index++) {
-      const column = columnData[index]
-      cellData[i][column] = vector[index]
-    }
-  }
   cells.value = cellData
+
+  await new Promise(r => setTimeout(r, 1000))
+  await processCellVectors(cellData, columnData)
 }
 
 function drawCells() {
@@ -86,7 +78,7 @@ function onZoom({ zoomLevel }: any) {
 function onHoverOver({ data, mouse }: any) {
   if (tooltipEnabled.value) {
     tooltipContent.value = Object.fromEntries(
-      Object.entries(data).filter(([k]) => !tooltipExclude.includes(k)),
+      Object.entries(data).filter(([k]) => !tooltipExclude.value.includes(k)),
     )
     if (colorBy.value && !tooltipContent.value[colorBy.value]) {
       tooltipContent.value[colorBy.value] = data[colorBy.value]
@@ -129,8 +121,8 @@ watch(cells, drawCells)
       >
         {{ status }}
         <v-progress-linear
-          v-if="fetchProgress"
-          :model-value="fetchProgress"
+          v-if="statusProgress"
+          :model-value="statusProgress"
         />
       </v-card>
       <v-btn
@@ -184,21 +176,30 @@ watch(cells, drawCells)
       </v-tooltip>
       <v-tooltip>
         <template #activator="{ props: tooltipProps }">
-          <v-btn
-            icon
+          <div
             v-bind="tooltipProps"
           >
-            <span class="material-symbols-outlined">filter_alt</span>
-            <v-menu
-              activator="parent"
-              location="end"
-              :close-on-content-click="false"
+            <v-btn
+              icon
+              :disabled="cellVectorsProcessed === false"
             >
-              <FilterMenu />
-            </v-menu>
-          </v-btn>
+              <span class="material-symbols-outlined">filter_alt</span>
+              <v-menu
+                activator="parent"
+                location="end"
+                :close-on-content-click="false"
+              >
+                <FilterMenu />
+              </v-menu>
+            </v-btn>
+          </div>
         </template>
-        <span>Filter/Select by Attribute</span>
+        <span v-if="cellVectorsProcessed">
+          Filter/Select by Attribute
+        </span>
+        <span v-else>
+          Filter unavailable until vector data is processed
+        </span>
       </v-tooltip>
       <v-tooltip>
         <template #activator="{ props: tooltipProps }">

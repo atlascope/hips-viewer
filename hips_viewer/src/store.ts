@@ -2,7 +2,6 @@ import { ref, watch } from 'vue'
 import {
   resetCurrentFilters,
   resetFilterOptions,
-  resetFilterVectorIndices,
 } from './utils'
 import type { FilterOption, UMAPTransform, UMAPResult } from './types'
 import { updateColorFunctions, updateOpacityFunctions } from './map'
@@ -11,10 +10,11 @@ import { updateColorFunctions, updateOpacityFunctions } from './map'
 export const map = ref()
 export const maxZoom = ref()
 export const status = ref()
-export const fetchProgress = ref(0)
+export const statusProgress = ref(0)
 
 export const cells = ref()
 export const cellColumns = ref()
+export const cellVectorsProcessed = ref(false)
 export const cellColors = ref()
 export const clusterIds = ref<Record<number, number[]>>({})
 export const selectedCellIds = ref<Set<number>>(new Set<number>())
@@ -61,7 +61,6 @@ export const colormapName = ref<string | undefined>('Set1')
 export const attributeOptions = ref()
 
 export const filterOptions = ref<FilterOption[]>()
-export const filterVectorIndices = ref<Record<string, number>>({})
 export const currentFilters = ref<Record<string, (string | number)[]>>({})
 export const hiddenFilters = ref<Set<string>>(new Set())
 export const filterPopulation = ref<'all' | 'selected'>('all')
@@ -88,9 +87,8 @@ watch(cells, () => {
   histCellIds.value = new Set(cells.value?.map((c: any) => c.id))
 })
 
-watch([cells, cellColumns], () => {
-  if (cells.value && cellColumns.value && !filterOptions.value) {
-    resetFilterVectorIndices()
+watch([cells, cellColumns, cellVectorsProcessed], () => {
+  if (cells.value && cellColumns.value && !filterOptions.value && cellVectorsProcessed.value) {
     resetFilterOptions()
     resetCurrentFilters()
   }

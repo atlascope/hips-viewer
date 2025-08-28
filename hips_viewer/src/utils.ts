@@ -1,11 +1,9 @@
 import {
-  cellColumns,
   cells,
   selectedCellIds,
   map,
   maxZoom,
   annotationMode,
-  filterVectorIndices,
   filterOptions,
   currentFilters,
   filterMatchCellIds,
@@ -14,6 +12,9 @@ import {
   histAttribute,
   showHistogram,
   histCellIds,
+  status,
+  statusProgress,
+  cellVectorsProcessed,
 } from './store'
 import type { Cell, FilterOption, Colormap, RGB, ScatterPoint } from './types'
 
@@ -145,47 +146,41 @@ export function clickCellThumbnail(event: any, cellId: number | undefined) {
   }
 }
 
-export function resetFilterVectorIndices() {
-  filterVectorIndices.value = {
-    area: cellColumns.value.indexOf('Size.Area'),
-    orientation: cellColumns.value.indexOf('Orientation.Orientation'),
-    circularity: cellColumns.value.indexOf('Shape.Circularity'),
-    eccentricity: cellColumns.value.indexOf('Shape.Eccentricity'),
-    axis_ratio: cellColumns.value.indexOf('Shape.MinorMajorAxisRatio'),
-  }
-}
+const defaultFilterAttrs = [
+  'Size.Area',
+  'Orientation.Orientation',
+  'Shape.Circularity',
+  'Shape.Eccentricity',
+  'Shape.MinorMajorAxisRatio',
+]
 
 export function resetFilterOptions() {
   const classifications: Set<string> = new Set()
-  const vectorRanges = {
-    area: { min: undefined, max: undefined },
-    orientation: { min: undefined, max: undefined },
-    circularity: { min: undefined, max: undefined },
-    eccentricity: { min: undefined, max: undefined },
-    axis_ratio: { min: undefined, max: undefined },
+  const vectorRanges: Record<string, Record<any, any>> = {}
+  for (const attr of defaultFilterAttrs) {
+    vectorRanges[attr] = { min: undefined, max: undefined }
   }
   cells.value.forEach((cell: Cell) => {
     classifications.add(cell.classification)
-    if (cell.vector_text) {
-      const vector = cell.vector_text.split(',')
-      Object.entries(filterVectorIndices.value).forEach(([key, index]) => {
-        let value: number = parseFloat(vector[index])
-        value = parseFloat(value.toPrecision(2))
+    defaultFilterAttrs.forEach((attr) => {
+      const cellValue = cell[attr]?.toString()
+      if (cellValue && /^(-|\+|\.|e|\d)+$/.test(cellValue)) {
+        const value = parseFloat(parseFloat(cellValue).toPrecision(2))
         // @ts-ignore
-        const range = vectorRanges[key]
+        const range = vectorRanges[attr]
         if (range.min === undefined || range.min > value) range.min = value
         if (range.max === undefined || range.max < value) range.max = value
-      })
-    }
+      }
+    })
   })
   filterOptions.value = [
     { label: 'classification', options: [...classifications] },
-    { label: 'area', range: vectorRanges.area },
-    { label: 'orientation', range: vectorRanges.orientation },
-    { label: 'circularity', range: vectorRanges.circularity },
-    { label: 'eccentricity', range: vectorRanges.eccentricity },
-    { label: 'axis_ratio', range: vectorRanges.axis_ratio },
   ]
+  for (const key in vectorRanges) {
+    filterOptions.value.push({
+      label: key, range: vectorRanges[key] as FilterOption['range'],
+    })
+  }
 }
 
 export function addFilterOption(attr: string) {
@@ -328,4 +323,29 @@ export function normalizePoints(points: ScatterPoint[]) {
     x: (p.x - xMin) / (xMax - xMin),
     y: (p.y - yMin) / (yMax - yMin),
   }))
+}
+
+export async function processCellVectors(cellData: Cell[], columnData: string[]) {
+  status.value = 'Processing vector data...'
+  statusProgress.value = 0
+  for (let i = 0; i < cellData.length; i++) {
+    if (i % 10_000 === 0) {
+      statusProgress.value = (i / cellData.length) * 100
+      await new Promise(r => setTimeout(r, 100))
+    }
+    const vectorValues = cellData[i].vector_text?.split(',') || []
+    const vector = vectorValues.map((value) => {
+      if (!isNaN(parseFloat(value))) return parseFloat(value)
+      return value
+    })
+    for (let index = 0; index < columnData.length; index++) {
+      const column = columnData[index]
+      cellData[i][column] = vector[index]
+    }
+  }
+  status.value = undefined
+  statusProgress.value = 0
+
+  cellVectorsProcessed.value = true
+  cells.value = cellData
 }

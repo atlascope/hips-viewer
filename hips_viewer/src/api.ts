@@ -1,5 +1,5 @@
 import type { Cell } from './types'
-import { fetchProgress, status } from './store'
+import { statusProgress, status } from './store'
 
 export const baseURL = 'http://localhost:8000/api'
 
@@ -25,7 +25,7 @@ export async function fetchImages() {
 }
 
 export async function fetchImageCells(imageId: number) {
-  fetchProgress.value = 0
+  statusProgress.value = 0
   const limit = 100000
   let results: Cell[] = []
   let total: number | undefined = undefined
@@ -34,12 +34,12 @@ export async function fetchImageCells(imageId: number) {
     const response: { items: Cell[], count: number } = await cachedFetch(url, 'cell-data-cache')
     if (!total) total = response.count
     results = [...results, ...response.items]
-    fetchProgress.value = results.length / total * 100
+    statusProgress.value = results.length / total * 100
   }
-  fetchProgress.value = 100
+  statusProgress.value = 100
   // wait for progress bar to render updates
   await new Promise(r => setTimeout(r, 150))
-  fetchProgress.value = 0
+  statusProgress.value = 0
   status.value = 'Drawing cells...'
   await new Promise(r => setTimeout(r, 150))
   return results
