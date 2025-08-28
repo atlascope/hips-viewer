@@ -31,7 +31,7 @@ const defaultColor = '#00ff00'
 const defaultAttributes = [
   'classification', 'orientation', 'width', 'height', 'x', 'y',
 ]
-const tooltipExclude = computed(() => ['id', 'vector_text', ...(cellColumns.value || [])])
+const tooltipExclude = computed(() => ['id', 'vector', ...(cellColumns.value || [])])
 const mapId = computed(() => 'map-' + props.id)
 const colorLegendShown = computed(() =>
   cells.value && colorBy.value && colormapName.value

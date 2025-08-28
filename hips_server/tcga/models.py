@@ -28,9 +28,7 @@ class Cell(models.Model):
     height = models.FloatField()
     orientation = models.FloatField()
     classification = models.CharField(max_length=255)
-
-    # Simple text storage of vector; investigate alternatives
-    vector_text = models.TextField()
+    vector = models.JSONField(default=list)
 
 
 class UMAPTransform(models.Model):

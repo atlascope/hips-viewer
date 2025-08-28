@@ -20,7 +20,7 @@ class ImageSchema(ModelSchema):
 class CellSchema(ModelSchema):
     class Config:
         model = Cell
-        model_fields = ['id', 'x', 'y', 'width', 'height', 'orientation', 'classification', 'vector_text']
+        model_fields = ['id', 'x', 'y', 'width', 'height', 'orientation', 'classification', 'vector']
 
 
 class UMAPTransformSchema(ModelSchema):

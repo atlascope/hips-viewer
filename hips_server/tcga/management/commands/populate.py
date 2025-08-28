@@ -1,3 +1,4 @@
+import math
 import girder_client
 from datetime import datetime
 
@@ -80,8 +81,16 @@ class Command(BaseCommand):
                 print(f'Reading vector data for {case_name}.')
                 start = datetime.now()
                 vector = get_case_vector(case_folder)
-                # Ensure correct column ordering for vector_text field
+                # Ensure correct column ordering for vector field
                 vector = vector[VECTOR_COLUMNS]
+
+                def _clean(v):
+                    # ints/floats stay numeric; strings pass through; NaN/Inf -> None (JSON null)
+                    if isinstance(v, float):
+                        if math.isnan(v) or math.isinf(v):
+                            return None
+                        return int(v) if v.is_integer() else v
+                    return v
 
                 # Save Cells to database
                 cell_data = []
@@ -100,7 +109,7 @@ class Command(BaseCommand):
                             height=row['Size.MajorAxisLength'] * 2,
                             orientation=0 - row['Orientation.Orientation'],
                             classification=row['Classif.StandardClass'],
-                            vector_text=','.join(str(v) for v in row),
+                            vector=[_clean(v) for v in row],
                         ))
                 cells = Cell.objects.bulk_create(cell_data)
                 seconds = (datetime.now() - start).total_seconds()

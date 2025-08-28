@@ -12,8 +12,8 @@ export interface Cell {
   height: number
   orientation: number
   classification: string
-  vector_text?: string
-  [vector_column: string]: string | number | undefined
+  vector?: (string | number)[]
+  [vector_column: string]: string | number | undefined | (string | number)[]
 }
 
 export interface Thumbnail {
