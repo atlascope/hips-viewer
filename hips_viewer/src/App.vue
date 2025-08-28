@@ -3,11 +3,26 @@ import { onMounted } from 'vue'
 import { fetchImages } from '@/api'
 import ImageView from '@/ImageView.vue'
 import { currentImage, images, status } from './store'
+import type { Image } from './types'
 
 onMounted(() => {
+  let targetId: number | undefined
+  const path = window.location.pathname
+  const pattern = /\/images\/(\d+)/g
+  path.matchAll(pattern).forEach((match) => {
+    targetId = parseInt(match[1])
+  })
+
   fetchImages().then((data) => {
     images.value = data
-    if (images.value.length) currentImage.value = images.value[0]
+    if (images.value.length) {
+      if (targetId) {
+        currentImage.value = images.value.find((im: Image) => im.id === targetId)
+      }
+      if (!currentImage.value) {
+        currentImage.value = images.value[0]
+      }
+    }
   })
 })
 </script>
