@@ -16,7 +16,7 @@ import {
   statusProgress,
   cellVectorsProcessed,
 } from './store'
-import type { Cell, FilterOption, Colormap, RGB, ScatterPoint } from './types'
+import type { Cell, FilterOption, Colormap, RGB } from './types'
 
 // from https://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
 export function hexToRgb(hex: string): RGB {
@@ -309,19 +309,6 @@ export function cellDistribution() {
       const colorFunction = colormap.getNumericColorFunction([vmin, vmax])
       return rgbToHex(colorFunction(bucketedMin[v]))
     },
-  }))
-}
-
-// regl-scatterplot requires points to be normalized for performance
-export function normalizePoints(points: ScatterPoint[]) {
-  const xMin = Math.min(...points.map(p => p.x))
-  const xMax = Math.max(...points.map(p => p.x))
-  const yMin = Math.min(...points.map(p => p.y))
-  const yMax = Math.max(...points.map(p => p.y))
-  return points.map(p => ({
-    ...p,
-    x: (p.x - xMin) / (xMax - xMin),
-    y: (p.y - yMin) / (yMax - yMin),
   }))
 }
 

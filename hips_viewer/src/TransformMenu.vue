@@ -8,7 +8,7 @@ import {
   cellColors, selectedColor,
 } from './store'
 import type { UMAPTransform, UMAPResult, TreeItem, Cell, ScatterPoint } from './types'
-import { normalizePoints, rgbToHex } from './utils'
+import { rgbToHex } from './utils'
 
 const scatterCanvas = ref()
 const scatterplot = ref()
@@ -39,10 +39,9 @@ const imageCellIds = computed(() => new Set(cells.value.map((cell: Cell) => cell
 
 const scatterData = computed(() => {
   if (!umapSelectedResult.value) return undefined
-  const currentData = umapSelectedResult.value.scatterplot_data.filter((p: ScatterPoint) => {
+  return umapSelectedResult.value.scatterplot_data.filter((p: ScatterPoint) => {
     return imageCellIds.value.has(p.id) && (!filterMatchCellIds.value.size || filterMatchCellIds.value.has(p.id))
   })
-  return normalizePoints(currentData)
 })
 
 const scatterSelectedIndices = computed(() => scatterData.value?.map((p, i) => {
