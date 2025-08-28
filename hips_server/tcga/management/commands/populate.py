@@ -111,6 +111,9 @@ class Command(BaseCommand):
                             classification=row['Classif.StandardClass'],
                             vector=[_clean(v) for v in row],
                         ))
+                        if len(cell_data) >= 10000:
+                            cells = Cell.objects.bulk_create(cell_data)
+                            cell_data = []
                 cells = Cell.objects.bulk_create(cell_data)
                 seconds = (datetime.now() - start).total_seconds()
                 print(f'Created {len(cells)} Cells in {seconds} seconds.')
