@@ -81,7 +81,7 @@ class Command(BaseCommand):
                 print(f'Reading vector data for {case_name}.')
                 start = datetime.now()
                 vector = get_case_vector(case_folder)
-                # Ensure correct column ordering for vector_text field
+                # Ensure correct column ordering for vector field
                 vector = vector[VECTOR_COLUMNS]
 
                 def _clean(v):
