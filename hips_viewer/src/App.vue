@@ -2,7 +2,7 @@
 import { onMounted } from 'vue'
 import { fetchImages } from '@/api'
 import ImageView from '@/ImageView.vue'
-import { currentImage, images } from './store'
+import { currentImage, images, status } from './store'
 
 onMounted(() => {
   fetchImages().then((data) => {
@@ -29,6 +29,7 @@ onMounted(() => {
       item-title="name"
       max-width="300px"
       placeholder="Select an Image"
+      :disabled="!!status"
       return-object
       hide-details
     />
