@@ -98,6 +98,7 @@ function resizeCellDrawer(e: MouseEvent) {
 }
 
 onMounted(init)
+watch(() => props.id, init)
 watch(cells, drawCells)
 </script>
 
@@ -109,11 +110,11 @@ watch(cells, drawCells)
     <div
       :id="mapId"
       class="map"
-      :style="{height: `calc(100% - ${cellDrawerHeight + 70}px) !important`}"
+      :style="{height: `calc(100% - ${cellDrawerHeight}px) !important`}"
     />
     <div
       class="status"
-      :style="{bottom: cellDrawerHeight + (colorLegendShown ? 180 : 80) + 'px'}"
+      :style="{bottom: cellDrawerHeight + (colorLegendShown ? 110 : 10) + 'px'}"
     >
       <v-card
         v-if="status"
@@ -135,7 +136,7 @@ watch(cells, drawCells)
     </div>
     <span
       class="material-symbols-outlined cell-drawer-resize"
-      :style="{bottom: cellDrawerHeight + 55 + 'px'}"
+      :style="{bottom: cellDrawerHeight - 15 + 'px'}"
       @mousedown="cellDrawerResizing = true"
       @mouseup="cellDrawerResizing = false"
     >
@@ -281,7 +282,7 @@ watch(cells, drawCells)
 }
 .cell-drawer {
     width: 100%;
-    bottom: 70px;
+    bottom: 0px;
     border-top: 2px solid black !important;
 }
 .cell-drawer-resize {
@@ -293,7 +294,7 @@ watch(cells, drawCells)
 }
 .actions {
     position: absolute;
-    top: 15px;
+    top: 65px;
     left: 10px;
     display: flex;
     flex-direction: column;
