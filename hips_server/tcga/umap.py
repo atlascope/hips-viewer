@@ -42,6 +42,8 @@ def get_image_and_cell_sets(**kwargs):
 
 def parse_number(v):
     try:
+        if v is None:
+            return None
         if np.isnan(float(v)):
             return None
         return float(v)
@@ -146,6 +148,8 @@ def create_transform_result(**kwargs):
     print(f'Applying transform to {len(cells)} cells.')
     output_data = transform.transform(input_data)
     df = pd.DataFrame(output_data, columns=['x', 'y'])
+    # normalize
+    df = (df - df.min()) / (df.max() - df.min())
     df['id'] = [cell.id for cell in cells]
 
     print('Creating UMAPResult object.')
