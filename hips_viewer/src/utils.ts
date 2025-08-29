@@ -335,8 +335,12 @@ export async function processCellVectors(cellData: Cell[], columnData: string[])
     }
     const vector = cellData[i].vector || []
     for (let index = 0; index < columnData.length; index++) {
+      let value: string | number = vector[index]
+      if (!isNaN(parseFloat(value))) {
+        value = parseFloat(value)
+      }
       const column = columnData[index]
-      cellData[i][column] = vector[index]
+      cellData[i][column] = value
     }
   }
   status.value = undefined

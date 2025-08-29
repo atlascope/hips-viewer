@@ -1,15 +1,41 @@
 services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: hips
+      POSTGRES_USER: hips
+      POSTGRES_PASSWORD: hips
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   django:
     build:
       context: ./hips_server
       dockerfile: Dockerfile
     command: ["./manage.py", "runserver", "0.0.0.0:8000"]
+    environment:
+      DB_NAME: hips
+      DB_USER: hips
+      DB_PASSWORD: hips
+      DB_HOST: db
+      DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - 8000:8000
     volumes:
       - ./hips_server:/app
       - ./data:/data
     working_dir: /app
+
   vue:
     image: node:latest
     command: ["npm", "run", "serve"]
@@ -20,3 +46,6 @@ services:
     working_dir: /web
     environment:
       - API_ROOT=http://localhost:8000/api/
+
+volumes:
+  pgdata:
