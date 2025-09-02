@@ -9,9 +9,7 @@ import {
   filterMatchCellIds,
   clusterIds,
   histNumBuckets,
-  histAttribute,
   showHistogram,
-  histCellIds,
   status,
   statusProgress,
   cellVectorsProcessed,
@@ -245,12 +243,12 @@ export function resetCurrentFilters() {
   }
 }
 
-export function cellDistribution() {
-  if (!(cells.value && histCellIds.value)) return []
-  const histCells = cells.value.filter((cell: any) => histCellIds.value.has(cell.id))
+export function cellDistribution(cellPopulation: Set<number>, attribute: string) {
+  if (!(cells.value && cellPopulation)) return []
+  const histCells = cells.value.filter((cell: any) => cellPopulation.has(cell.id))
 
   const values = [...new Set(cells.value.map(
-    (cell: any) => cell[histAttribute.value],
+    (cell: any) => cell[attribute],
   ).map(
     (v: any) => isNaN(parseFloat(v)) ? v : parseFloat(v),
   ).filter((v: any) => v !== undefined)),
@@ -259,7 +257,7 @@ export function cellDistribution() {
   const cellIds: Record<string | number, Set<number>> = {}
   const counts: Record<string | number, number> = {}
   histCells.forEach((cell: any) => {
-    const key = cell[histAttribute.value]
+    const key = cell[attribute]
     if (key !== undefined) {
       counts[key] = (counts[key] ?? 0) + 1
 
