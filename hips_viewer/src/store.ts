@@ -126,7 +126,14 @@ function resetStore() {
 }
 
 // Store watchers
-watch(currentImage, resetStore)
+watch(currentImage, () => {
+  resetStore()
+  let url = window.location.origin
+  if (currentImage.value?.id) {
+    url += `/images/${currentImage.value.id}`
+  }
+  window.history.pushState({}, '', url)
+})
 
 watch([selectedColor, colorBy, colormapName], () => {
   unappliedColorChanges.value = !!(
