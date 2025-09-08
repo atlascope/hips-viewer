@@ -36,7 +36,7 @@ export const lastAnnotation = ref()
 export const cellDrawerHeight = ref(0)
 export const cellDrawerResizing = ref(false)
 
-export const tooltipType = ref<'cell' | 'cluster' | null>(null)
+export const tooltipEnabled = ref(false)
 export const tooltipContent = ref()
 export const tooltipPosition = ref()
 
@@ -101,7 +101,7 @@ function resetStore() {
   lastAnnotation.value = undefined
   cellDrawerHeight.value = 0
   cellDrawerResizing.value = false
-  tooltipType.value = null
+  tooltipEnabled.value = false
   tooltipContent.value = undefined
   tooltipPosition.value = undefined
   unappliedColorChanges.value = false

@@ -7,7 +7,7 @@ import type { Image } from '@/types'
 import {
   status, cells, cellFeature, pointFeature,
   cellDrawerHeight, cellDrawerResizing,
-  tooltipType, tooltipContent, tooltipPosition,
+  tooltipEnabled, tooltipContent, tooltipPosition,
   colormapName, map, statusProgress,
   attributeOptions, cellColumns,
   colorBy, colorLegend,
@@ -39,6 +39,7 @@ const props = defineProps<{
   image: Image
 }>()
 
+const cellsVisible = ref(false)
 const ZOOM_THRESHOLD = 7
 const defaultColor = '#00ff00'
 const defaultAttributes = [
@@ -88,19 +89,21 @@ function drawCells() {
 }
 
 function onZoom({ zoomLevel }: any) {
-  cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
-  pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
+  cellsVisible.value = zoomLevel > ZOOM_THRESHOLD
+  cellFeature.value.visible(cellsVisible.value)
+  pointFeature.value.visible(!cellsVisible.value)
   map.value.draw()
 }
 
 function onHoverCluster({ data, mouse }: any) {
-  if (tooltipType.value === 'cluster') {
+  if (!cellsVisible.value) {
+    let cellIds = []
     const cluster = data.obj
-    const cellIds = clusterIds.value ? clusterIds.value[cluster._leaflet_id] : []
-    tooltipContent.value = {
-      count: cluster._count,
-      leaflet_id: cluster._leaflet_id,
-      cluster_id: cellIds,
+    if (cluster) {
+      cellIds = clusterIds.value ? clusterIds.value[cluster._leaflet_id] : []
+    }
+    else {
+      cellIds = [data.id]
     }
 
     const cellData = cellDistribution(new Set(cellIds), 'classification')
@@ -126,7 +129,7 @@ function onHoverCluster({ data, mouse }: any) {
 }
 
 function onHoverOver({ data, mouse }: any) {
-  if (tooltipType.value === 'cell') {
+  if (cellsVisible.value) {
     tooltipContent.value = Object.fromEntries(
       Object.entries(data).filter(([k]) => !tooltipExclude.value.includes(k)),
     )
@@ -147,16 +150,8 @@ function resizeCellDrawer(e: MouseEvent) {
   }
 }
 
-function changeTooltipType() {
-  if (tooltipType.value === null) {
-    tooltipType.value = 'cell'
-  }
-  else if (tooltipType.value === 'cell') {
-    tooltipType.value = 'cluster'
-  }
-  else {
-    tooltipType.value = null
-  }
+function toggleTooltip() {
+  tooltipEnabled.value = !tooltipEnabled.value
   tooltipPosition.value = undefined
 }
 
@@ -304,10 +299,10 @@ watch(cells, drawCells)
       <v-btn
         v-tooltip="'Toggle Tooltip'"
         icon
-        @click="changeTooltipType"
+        @click="toggleTooltip"
       >
         <span class="material-symbols-outlined">
-          {{ (tooltipType === null) ? 'subtitles_off' : (tooltipType === 'cell') ? 'subtitles' : 'clock_loader_40' }}
+          {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
         </span>
       </v-btn>
       <v-btn
@@ -329,11 +324,11 @@ watch(cells, drawCells)
       </v-btn>
     </div>
     <v-card
-      v-if="tooltipType && tooltipContent && tooltipPosition"
+      v-if="tooltipEnabled && tooltipPosition"
       :style="{top: tooltipPosition.y + 'px', left: tooltipPosition.x + 'px'}"
       class="tooltip"
     >
-      <div v-if="tooltipType === 'cell'">
+      <div v-if="cellsVisible && tooltipContent">
         <div
           v-for="[key, value] in Object.entries(tooltipContent)"
           :key="key"
@@ -341,7 +336,7 @@ watch(cells, drawCells)
           <strong>{{ key }}:</strong> {{ value }}
         </div>
       </div>
-      <div v-else-if="tooltipType === 'cluster'">
+      <div v-else>
         <Doughnut
           :options="chartOptions"
           :data="chartData"
