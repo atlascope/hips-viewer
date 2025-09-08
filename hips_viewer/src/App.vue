@@ -5,14 +5,18 @@ import ImageView from '@/ImageView.vue'
 import { currentImage, images, status } from './store'
 import type { Image } from './types'
 
-onMounted(() => {
+function imageIDFromURL() {
   let targetId: number | undefined
   const path = window.location.pathname
   const pattern = /\/images\/(\d+)/g
   path.matchAll(pattern).forEach((match) => {
     targetId = parseInt(match[1])
   })
+  return targetId
+}
 
+onMounted(() => {
+  const targetId = imageIDFromURL()
   fetchImages().then((data) => {
     images.value = data
     if (images.value.length) {
@@ -22,6 +26,13 @@ onMounted(() => {
       if (!currentImage.value) {
         currentImage.value = images.value[0]
       }
+    }
+  })
+
+  window.addEventListener('popstate', function () {
+    const targetId = imageIDFromURL()
+    if (targetId) {
+      currentImage.value = images.value.find((im: Image) => im.id === targetId)
     }
   })
 })
