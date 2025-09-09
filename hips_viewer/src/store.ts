@@ -4,7 +4,11 @@ import {
   resetFilterOptions,
 } from './utils'
 import type { FilterOption, UMAPTransform, UMAPResult } from './types'
-import { updateColorFunctions, updateOpacityFunctions } from './map'
+import {
+  updateColorFunctions,
+  updateHeatmapVisibility,
+  updateOpacityFunctions,
+} from './map'
 
 // Store variables
 export const images = ref()
@@ -74,6 +78,8 @@ export const umapTransformResults = ref<Record<number, UMAPResult[]>>({})
 export const umapSelectedResult = ref<UMAPResult>()
 
 export const showDensityHeatmap = ref<boolean>(false)
+export const heatmapLayer = ref()
+export const heatmapFeature = ref()
 
 function resetStore() {
   // Reset everything except images and currentImage
@@ -125,6 +131,9 @@ function resetStore() {
   umapTransforms.value = undefined
   umapTransformResults.value = {}
   umapSelectedResult.value = undefined
+  showDensityHeatmap.value = false
+  heatmapFeature.value = undefined
+  heatmapLayer.value = undefined
 }
 
 // Store watchers
@@ -161,3 +170,5 @@ watch([cells, cellColumns, cellVectorsProcessed], () => {
 })
 
 watch(filterMatchCellIds, updateOpacityFunctions)
+
+watch(showDensityHeatmap, updateHeatmapVisibility)

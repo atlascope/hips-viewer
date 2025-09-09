@@ -14,6 +14,7 @@ import {
   annotationLayer, annotationMode,
   cellVectorsProcessed,
   showDensityHeatmap,
+  heatmapFeature,
 } from '@/store'
 
 import CellDrawer from '@/CellDrawer.vue'
@@ -61,9 +62,10 @@ async function getCells() {
 }
 
 function drawCells() {
-  if (cellFeature.value && pointFeature.value) {
+  if (cellFeature.value && pointFeature.value && heatmapFeature.value) {
     cellFeature.value.data(cells.value).draw()
     pointFeature.value.data(cells.value).draw()
+    heatmapFeature.value.data(cells.value).draw()
     updateColors()
     cellDrawerHeight.value = 80
     status.value = undefined
@@ -289,11 +291,13 @@ watch(cells, drawCells)
 .status {
     right: 10px;
     width: fit-content;
+    z-index: 3;
 }
 .cell-drawer {
     width: 100%;
     bottom: 0px;
     border-top: 2px solid black !important;
+    z-index: 3;
 }
 .cell-drawer-resize {
     width: 100%;
@@ -309,6 +313,7 @@ watch(cells, drawCells)
     display: flex;
     flex-direction: column;
     row-gap: 10px;
+    z-index: 3;
 }
 .tooltip {
     position: absolute !important;

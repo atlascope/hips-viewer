@@ -5,7 +5,8 @@ import {
   colorBy, colormapName, colorLegend, cellColors,
   selectedCellIds, selectedColor, annotationLayer,
   annotationMode, annotationBoolean, lastAnnotation,
-  filterMatchCellIds,
+  filterMatchCellIds, showDensityHeatmap,
+  heatmapFeature, heatmapLayer,
 } from '@/store'
 import {
   selectCell, clusterFirstPointId,
@@ -65,6 +66,7 @@ export async function createMap(mapId: string, tileUrl: string) {
 export function createFeatures(color: string, zoomThreshold: number) {
   const cellLayer = map.value.createLayer('feature', {
     features: ['marker'],
+    zIndex: 2,
   })
   cellFeature.value = cellLayer.createFeature('marker').style({
     radius: (item: any) => item.width / (2 ** (maxZoom.value + 1)),
@@ -94,6 +96,23 @@ export function createFeatures(color: string, zoomThreshold: number) {
   pointFeature.value.geoOn(geo.event.feature.mouseclick, (e: any) => {
     if (pointFeature.value.visible()) selectCell(e, undefined)
   })
+
+  heatmapLayer.value = map.value.createLayer('feature', {
+    features: ['heatmap'],
+    opacity: 0.5,
+    zIndex: 1,
+  })
+  heatmapFeature.value = heatmapLayer.value.createFeature('heatmap', {
+    binned: 'auto',
+    style: {
+      radius: 0.1,
+      blurRadius: 0.1,
+      gaussian: true,
+      scaleWithZoom: true,
+      intensity: () => 0.25,
+    },
+  })
+  heatmapLayer.value.visible(false)
 }
 
 export function addZoomCallback(callback: Function) {
@@ -213,5 +232,12 @@ export function updateOpacityFunctions() {
     pointFeature.value.style('fillOpacity', opacityFunction)
     if (cellFeature.value.visible()) cellFeature.value.draw()
     if (pointFeature.value.visible()) pointFeature.value.draw()
+  }
+}
+
+export function updateHeatmapVisibility() {
+  if (heatmapLayer.value) {
+    heatmapLayer.value.visible(showDensityHeatmap.value)
+    map.value.draw()
   }
 }
