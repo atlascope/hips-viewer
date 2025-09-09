@@ -13,6 +13,7 @@ import {
   colorBy, colorLegend,
   annotationLayer, annotationMode,
   cellVectorsProcessed,
+  showDensityHeatmap,
 } from '@/store'
 
 import CellDrawer from '@/CellDrawer.vue'
@@ -254,6 +255,15 @@ watch(cells, drawCells)
         @click="() => annotationLayer.mode('polygon')"
       >
         <span class="material-symbols-outlined"> lasso_select </span>
+      </v-btn>
+      <v-btn
+        v-tooltip="'Toggle Density Heatmap'"
+        icon
+        @click="showDensityHeatmap = !showDensityHeatmap"
+      >
+        <span class="material-symbols-outlined">
+          {{ showDensityHeatmap ? 'grid_on' : 'grid_off' }}
+        </span>
       </v-btn>
     </div>
     <v-card

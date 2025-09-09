@@ -73,6 +73,8 @@ export const umapTransforms = ref<UMAPTransform[]>()
 export const umapTransformResults = ref<Record<number, UMAPResult[]>>({})
 export const umapSelectedResult = ref<UMAPResult>()
 
+export const showDensityHeatmap = ref<boolean>(false)
+
 function resetStore() {
   // Reset everything except images and currentImage
   map.value = undefined
