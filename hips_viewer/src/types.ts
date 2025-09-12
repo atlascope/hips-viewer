@@ -12,7 +12,7 @@ export interface Cell {
   height: number
   orientation: number
   classification: string
-  vector?: (string | number)[]
+  vector?: string[]
   [vector_column: string]: string | number | undefined | (string | number)[]
 }
 
