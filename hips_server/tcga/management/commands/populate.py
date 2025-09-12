@@ -118,6 +118,7 @@ class Command(BaseCommand):
                             print(f'Created {total_cells} Cells so far...')
                             cell_data = []
                 cells = Cell.objects.bulk_create(cell_data)
+                total_cells += len(cells)
                 seconds = (datetime.now() - start).total_seconds()
                 print(f'Created {total_cells} Cells in {seconds} seconds.')
 
