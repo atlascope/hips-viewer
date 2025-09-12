@@ -123,6 +123,10 @@ export function addHoverCallback(callback: Function, feature: any) {
   feature.geoOn(geo.event.feature.mouseover, callback)
 }
 
+export function addMouseOffCallback(callback: Function, feature: any) {
+  feature.geoOn(geo.event.feature.mouseoff, callback)
+}
+
 export function lassoSelect(polygon: { x: number, y: number }[]) {
   let foundCells = cellFeature.value.polygonSearch({ outer: polygon }).found
   if (filterMatchCellIds.value.size) {

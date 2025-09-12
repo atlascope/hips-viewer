@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
-import { addHoverCallback, addZoomCallback, createFeatures, createMap, updateColors } from '@/map'
-import { processCellVectors } from '@/utils'
+import { computed, onMounted, watch, ref } from 'vue'
+import { addHoverCallback, addMouseOffCallback, addZoomCallback, createFeatures, createMap, updateColors } from '@/map'
+import { processCellVectors, cellDistribution } from '@/utils'
 import { fetchCellColumns, fetchImageCells } from '@/api'
 import type { Image } from '@/types'
 import {
@@ -12,10 +12,11 @@ import {
   attributeOptions, cellColumns,
   colorBy, colorLegend,
   annotationLayer, annotationMode,
-  cellVectorsProcessed,
+  cellVectorsProcessed, clusterIds,
   showDensityHeatmap,
   heatmapFeature,
 } from '@/store'
+import { colormaps } from '@/colors'
 
 import CellDrawer from '@/CellDrawer.vue'
 import ColorOptions from '@/ColorOptions.vue'
@@ -23,11 +24,22 @@ import HistogramMenu from '@/HistogramMenu.vue'
 import FilterMenu from '@/FilterMenu.vue'
 import TransformMenu from '@/TransformMenu.vue'
 
+import { Doughnut } from 'vue-chartjs'
+import { Chart as ChartJS, Tooltip, Legend, ArcElement } from 'chart.js'
+
+ChartJS.register(Tooltip, Legend, ArcElement)
+
+const chartOptions = {
+  responsive: true,
+}
+const chartData = ref()
+
 const props = defineProps<{
   id: number
   image: Image
 }>()
 
+const cellsVisible = ref(false)
 const ZOOM_THRESHOLD = 7
 const defaultColor = '#00ff00'
 const defaultAttributes = [
@@ -45,6 +57,10 @@ function init() {
     createFeatures(defaultColor, ZOOM_THRESHOLD)
     addZoomCallback(onZoom)
     addHoverCallback(onHoverOver, cellFeature.value)
+    addHoverCallback(onHoverCluster, pointFeature.value)
+    addMouseOffCallback(() => {
+      tooltipPosition.value = undefined
+    }, pointFeature.value)
   })
 }
 
@@ -73,13 +89,47 @@ function drawCells() {
 }
 
 function onZoom({ zoomLevel }: any) {
-  cellFeature.value.visible(zoomLevel > ZOOM_THRESHOLD)
-  pointFeature.value.visible(zoomLevel <= ZOOM_THRESHOLD)
+  cellsVisible.value = zoomLevel > ZOOM_THRESHOLD
+  cellFeature.value.visible(cellsVisible.value)
+  pointFeature.value.visible(!cellsVisible.value)
   map.value.draw()
 }
 
+function onHoverCluster({ data, mouse }: any) {
+  if (!cellsVisible.value) {
+    let cellIds = []
+    const cluster = data.obj
+    if (cluster) {
+      cellIds = clusterIds.value ? clusterIds.value[cluster._leaflet_id] : []
+    }
+    else {
+      cellIds = [data.id]
+    }
+
+    const cellData = cellDistribution(new Set(cellIds), 'classification')
+
+    const colormap = colormaps.find(cmap => cmap.name === colormapName.value)
+    if (!colormap) return console.error('colormap not found:', colormapName.value)
+
+    const labels = cellData.map(c => c.key)
+    const colors = cellData.map(c => c.color(colormap))
+    const counts = cellData.map(c => c.cellIds ? c.cellIds.size : 0)
+
+    chartData.value = {
+      labels,
+      datasets: [{
+        label: 'Count',
+        data: counts,
+        backgroundColor: colors,
+      }],
+    }
+
+    tooltipPosition.value = mouse.map
+  }
+}
+
 function onHoverOver({ data, mouse }: any) {
-  if (tooltipEnabled.value) {
+  if (cellsVisible.value) {
     tooltipContent.value = Object.fromEntries(
       Object.entries(data).filter(([k]) => !tooltipExclude.value.includes(k)),
     )
@@ -98,6 +148,11 @@ function resizeCellDrawer(e: MouseEvent) {
       map.value.size({ width: node.width(), height: node.height() })
     }
   }
+}
+
+function toggleTooltip() {
+  tooltipEnabled.value = !tooltipEnabled.value
+  tooltipPosition.value = undefined
 }
 
 onMounted(init)
@@ -244,7 +299,7 @@ watch(cells, drawCells)
       <v-btn
         v-tooltip="'Toggle Tooltip'"
         icon
-        @click="tooltipEnabled = !tooltipEnabled"
+        @click="toggleTooltip"
       >
         <span class="material-symbols-outlined">
           {{ tooltipEnabled ? 'subtitles' : 'subtitles_off' }}
@@ -269,15 +324,23 @@ watch(cells, drawCells)
       </v-btn>
     </div>
     <v-card
-      v-if="tooltipEnabled && tooltipContent && tooltipPosition"
+      v-if="tooltipEnabled && tooltipPosition"
       :style="{top: tooltipPosition.y + 'px', left: tooltipPosition.x + 'px'}"
       class="tooltip"
     >
-      <div
-        v-for="[key, value] in Object.entries(tooltipContent)"
-        :key="key"
-      >
-        {{ key }}: {{ value }}
+      <div v-if="cellsVisible && tooltipContent">
+        <div
+          v-for="[key, value] in Object.entries(tooltipContent)"
+          :key="key"
+        >
+          <strong>{{ key }}:</strong> {{ value }}
+        </div>
+      </div>
+      <div v-else>
+        <Doughnut
+          :options="chartOptions"
+          :data="chartData"
+        />
       </div>
     </v-card>
   </div>
@@ -319,6 +382,7 @@ watch(cells, drawCells)
     position: absolute !important;
     width: fit-content;
     padding: 10px !important;
+    z-index: 3;
 }
 .menu-title {
     background-color: #ddd;

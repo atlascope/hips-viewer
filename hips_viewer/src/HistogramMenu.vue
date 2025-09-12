@@ -136,7 +136,7 @@ watchEffect(async () => {
 
 watch([histNumBuckets, histCellIds], () => {
   histSelectedBars.value = new Set<number>()
-  cellData.value = cellDistribution()
+  cellData.value = cellDistribution(histCellIds.value, histAttribute.value)
 })
 
 watch([
