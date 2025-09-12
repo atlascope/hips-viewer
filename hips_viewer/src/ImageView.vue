@@ -382,6 +382,7 @@ watch(cells, drawCells)
     position: absolute !important;
     width: fit-content;
     padding: 10px !important;
+    z-index: 3;
 }
 .menu-title {
     background-color: #ddd;
